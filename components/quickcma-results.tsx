@@ -630,53 +630,16 @@ const QuickCMAResults = ({ data }: QuickCMAResultsProps) => {
       {/* Subject Property */}
       <div className="mb-4">
         <h2 className="text-xl font-semibold mb-2">Subject Property</h2>
-        <p>Address: {quickCmaReport.subjectProperty.address}</p>
-        <p>
-          {quickCmaReport.subjectProperty.city}, {quickCmaReport.subjectProperty.state}{" "}
-          {quickCmaReport.subjectProperty.zipCode}
-        </p>
-      </div>
-
-      {/* CMA Results */}
-      <div className="mb-4">
-        <h2 className="text-xl font-semibold mb-2">CMA Results</h2>
-        <p>Average Price: {formatCurrency(quickCmaReport.averagePrice)}</p>
-        <p>Low Price: {formatCurrency(quickCmaReport.lowPrice)}</p>
-        <p>High Price: {formatCurrency(quickCmaReport.highPrice)}</p>
-        <p>Median Price: {formatCurrency(quickCmaReport.medianPrice)}</p>
-        <p>Average Price Per Square Foot: {formatCurrency(quickCmaReport.averagePricePerSquareFoot)}</p>
-      </div>
-
-      {/* Property Details */}
-      <div className="mb-4">
-        <h2 className="text-xl font-semibold mb-2">Property Details</h2>
-        <p>Bedrooms: {quickCmaReport.bedrooms}</p>
-        <p>Bathrooms: {quickCmaReport.bathrooms}</p>
-        <p>Square Footage: {quickCmaReport.squareFootage}</p>
-        <p>Year Built: {quickCmaReport.yearBuilt}</p>
-        <p>Property Type: {quickCmaReport.propertyType}</p>
+        <p>Address: {data.address}</p>
       </div>
 
       {/* Agent Branding */}
       <div>
         <h2 className="text-xl font-semibold mb-2">Agent Information</h2>
-        {data.userBranding?.photo && (
-          <Image
-            src={data.userBranding.photo || "/placeholder.svg"}
-            alt="Agent Photo"
-            width={100}
-            height={100}
-            className="rounded-full mb-2"
-          />
-        )}
         {brandLogo && (
           <Image src={brandLogo || "/placeholder.svg"} alt="Brand Logo" width={100} height={50} className="mb-2" />
         )}
-        <p>Name: {data.userBranding?.name}</p>
-        <p>Title: {data.userBranding?.title}</p>
-        <p>Company: {data.userBranding?.company}</p>
-        <p>Phone: {data.userBranding?.phone}</p>
-        <p>Email: {data.userBranding?.email}</p>
+        <p>Brand: {data.userBranding?.brand || "Independent"}</p>
       </div>
     </div>
   )

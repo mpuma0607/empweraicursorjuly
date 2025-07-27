@@ -14,6 +14,7 @@ import { saveUserCreation, generateCreationTitle } from "@/lib/auto-save-creatio
 import { toast } from "@/hooks/use-toast"
 import { getUserBrandingProfile } from "@/app/profile/branding/actions"
 import { useTenantConfig } from "@/hooks/useTenantConfig"
+import { QuickCMAResults } from "./quickcma-results"
 
 interface QuickCMAFormProps {
   onAnalysisComplete?: (data: any) => void
@@ -452,7 +453,9 @@ Generated on ${new Date().toLocaleDateString()}`
       </Card>
 
       {analysisData && !analysisData.error && (
-        <div ref={resultsRef}>{/* QuickCMAResults component should be placed here */}</div>
+        <div ref={resultsRef}>
+          <QuickCMAResults data={analysisData} />
+        </div>
       )}
     </div>
   )
