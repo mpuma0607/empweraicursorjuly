@@ -1,6 +1,17 @@
 import { NextResponse } from "next/server"
 import { analyzeComparables } from "@/components/actions"
 
+export async function GET() {
+  return NextResponse.json({ 
+    message: "Use POST method with address in body",
+    example: {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: { address: "123 Main St, New York, NY 10001" }
+    }
+  })
+}
+
 export async function POST(request: Request) {
   try {
     const { address } = await request.json()
