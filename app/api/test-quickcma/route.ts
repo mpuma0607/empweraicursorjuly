@@ -7,8 +7,13 @@ export async function GET() {
     example: {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: { address: "123 Main St, New York, NY 10001" }
-    }
+      body: { address: "1600 Pennsylvania Avenue NW, Washington, DC 20500" }
+    },
+    testAddresses: [
+      "1600 Pennsylvania Avenue NW, Washington, DC 20500",
+      "350 Fifth Avenue, New York, NY 10118",
+      "1 Apple Park Way, Cupertino, CA 95014"
+    ]
   })
 }
 
@@ -19,7 +24,7 @@ export async function POST(request: Request) {
     if (!address) {
       return NextResponse.json({ 
         error: "Address is required",
-        testAddress: "123 Main St, New York, NY 10001"
+        testAddress: "1600 Pennsylvania Avenue NW, Washington, DC 20500"
       })
     }
 
@@ -40,7 +45,8 @@ export async function POST(request: Request) {
         hasAnalysisText: !!result.analysisText,
         hasComparables: result.comparableData?.comparables?.length > 0,
         totalComparables: result.comparableData?.totalComparables || 0,
-        address: result.address
+        address: result.address,
+        rawData: result.rawData
       },
       debug: {
         openaiKeyExists: !!process.env.OPENAI_API_KEY,

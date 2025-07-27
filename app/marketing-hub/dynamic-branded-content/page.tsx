@@ -114,7 +114,7 @@ export default function DynamicBrandedContentPage() {
             selectedBrand: profile.brand || prev.selectedBrand,
             name: prev.name || user.name || `${user.firstName || ""} ${user.lastName || ""}`.trim(),
             email: prev.email || user.email || "",
-            phone: prev.phone || user.phone || "",
+            phone: prev.phone || "",
           }))
         }
       } catch (error) {
