@@ -1,9 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { useQuery } from "@apollo/client"
-import { GET_QUICK_CMA_REPORT } from "../graphql/queries"
-import { useRouter } from "next/router"
+import { useRouter } from "next/navigation"
 import { formatCurrency } from "../utils/formatting"
 import { RingLoader } from "react-spinners"
 import Image from "next/image"
@@ -96,15 +94,6 @@ interface QuickCMAResultsProps {
 
 const QuickCMAResults = ({ data }: QuickCMAResultsProps) => {
   const router = useRouter()
-  const { reportId } = router.query
-  const {
-    loading,
-    error,
-    data: queryData,
-  } = useQuery<QuickCmaReportData>(GET_QUICK_CMA_REPORT, {
-    variables: { reportId },
-    skip: !reportId,
-  })
 
   const [isDownloading, setIsDownloading] = useState(false)
   const [isSendingEmail, setIsSendingEmail] = useState(false)
@@ -367,23 +356,14 @@ const QuickCMAResults = ({ data }: QuickCMAResultsProps) => {
       : null
   }
 
-  if (loading) {
+  // Check if we have data to display
+  if (!data || !data.address) {
     return (
       <div className="flex justify-center items-center h-screen">
         <RingLoader color="#36D7B7" size={150} />
       </div>
     )
   }
-
-  if (error) {
-    return <p>Error loading report...</p>
-  }
-
-  if (!queryData?.quickCmaReport) {
-    return <p>Report not found.</p>
-  }
-
-  const { quickCmaReport } = queryData
 
   return (
     <div className="mt-8 space-y-6">
