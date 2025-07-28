@@ -42,13 +42,17 @@ export default function HomePage() {
   const handleSignup = () => {
     trackEvent("button_click", { button: "get_started", location: "header" })
     console.log("Signup clicked - redirecting to plans page")
-    window.location.href = "https://www.thenextlevelu.com?msopen=/member/plans/all"
+    // Use the correct MemberSpace subdomain based on tenant config
+    const subdomain = (tenantConfig.auth?.settings?.memberspace as any)?.subdomain || "getempowerai"
+    window.location.href = `https://${subdomain}.memberspace.com/plans/all`
   }
 
   const handlePricing = () => {
     trackEvent("button_click", { button: "pricing", location: "pricing_section" })
     console.log("Pricing clicked - redirecting to plans page")
-    window.location.href = "https://www.thenextlevelu.com?msopen=/member/plans/all"
+    // Use the correct MemberSpace subdomain based on tenant config
+    const subdomain = (tenantConfig.auth?.settings?.memberspace as any)?.subdomain || "getempowerai"
+    window.location.href = `https://${subdomain}.memberspace.com/plans/all`
   }
 
   const handleWatchDemo = (toolName: string) => {
@@ -80,6 +84,14 @@ export default function HomePage() {
     }
 
     return videoMap[toolName] || "https://www.youtube.com/embed/qF050toaVYU?autoplay=0&rel=0&modestbranding=1"
+  }
+
+  // Function to scroll to pricing section
+  const scrollToPricing = () => {
+    const pricingSection = document.getElementById('pricing')
+    if (pricingSection) {
+      pricingSection.scrollIntoView({ behavior: 'smooth' })
+    }
   }
 
   return (
@@ -119,7 +131,7 @@ export default function HomePage() {
               >
                 Sign In
               </button>
-              <Button onClick={handleSignup} className="bg-[#b6a888] hover:bg-[#a39577] text-black font-semibold">
+              <Button onClick={scrollToPricing} className="bg-[#b6a888] hover:bg-[#a39577] text-black font-semibold">
                 Get Started
               </Button>
             </div>
@@ -134,7 +146,7 @@ export default function HomePage() {
             >
               Sign In
             </button>
-            <Button onClick={handleSignup} className="bg-[#b6a888] hover:bg-[#a39577] text-black font-semibold">
+            <Button onClick={scrollToPricing} className="bg-[#b6a888] hover:bg-[#a39577] text-black font-semibold">
               Get Started
             </Button>
           </div>
@@ -158,7 +170,7 @@ export default function HomePage() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
               size="lg"
-              onClick={handleSignup}
+              onClick={scrollToPricing}
               className="bg-[#b6a888] hover:bg-[#a39577] text-black font-semibold text-lg px-8 py-4"
             >
               Start Your Journey
@@ -754,7 +766,7 @@ export default function HomePage() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
               size="lg"
-              onClick={handleSignup}
+              onClick={scrollToPricing}
               className="bg-[#b6a888] hover:bg-[#a39577] text-black font-semibold text-lg px-8 py-4"
             >
               Start Your Free Trial
