@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Brain, Megaphone, Target, GraduationCap, Briefcase, Users, ShoppingBag, User, BookOpen } from "lucide-react"
 import Link from "next/link"
 import { useTenantConfig } from "@/contexts/tenant-context"
+import { isFeatureHidden } from "@/lib/tenant-config"
 
 export default function PortalPage() {
   const tenantConfig = useTenantConfig()
@@ -79,6 +80,12 @@ export default function PortalPage() {
     },
   ]
 
+  // Filter out hidden hubs based on tenant config
+  const filteredHubs = hubs.filter((hub) => {
+    const hubKey = hub.title.toLowerCase().replace(" ", "-")
+    return !isFeatureHidden(hubKey, tenantConfig)
+  })
+
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
@@ -109,7 +116,7 @@ export default function PortalPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
-            {hubs.map((hub, index) => (
+            {filteredHubs.map((hub, index) => (
               <Card
                 key={index}
                 className="h-full bg-white hover:bg-gray-50 transition-all duration-300 border-0 shadow-lg hover:shadow-2xl group"
