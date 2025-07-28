@@ -42,17 +42,22 @@ export default function HomePage() {
   const handleSignup = () => {
     trackEvent("button_click", { button: "get_started", location: "header" })
     console.log("Signup clicked - redirecting to plans page")
-    // Use the correct MemberSpace subdomain based on tenant config
-    const subdomain = (tenantConfig.auth?.settings?.memberspace as any)?.subdomain || "getempowerai"
-    window.location.href = `https://${subdomain}.memberspace.com/plans/all`
+    // Use the correct MemberSpace URL format with specific plan ID
+    window.location.href = "https://getempowerai.com?msopen=/member/plans/aovbmu4gxb"
   }
 
   const handlePricing = () => {
     trackEvent("button_click", { button: "pricing", location: "pricing_section" })
     console.log("Pricing clicked - redirecting to plans page")
-    // Use the correct MemberSpace subdomain based on tenant config
-    const subdomain = (tenantConfig.auth?.settings?.memberspace as any)?.subdomain || "getempowerai"
-    window.location.href = `https://${subdomain}.memberspace.com/plans/all`
+    // Use the correct MemberSpace URL format with specific plan ID
+    window.location.href = "https://getempowerai.com?msopen=/member/plans/aovbmu4gxb"
+  }
+
+  const handleAnnualPricing = () => {
+    trackEvent("button_click", { button: "annual_pricing", location: "pricing_section" })
+    console.log("Annual pricing clicked - redirecting to annual plan")
+    // Use the correct MemberSpace URL format with annual plan ID
+    window.location.href = "https://getempowerai.com?msopen=/member/plans/dkophgnbcp"
   }
 
   const handleWatchDemo = (toolName: string) => {
@@ -88,9 +93,19 @@ export default function HomePage() {
 
   // Function to scroll to pricing section
   const scrollToPricing = () => {
+    console.log("Scrolling to pricing section...")
     const pricingSection = document.getElementById('pricing')
     if (pricingSection) {
-      pricingSection.scrollIntoView({ behavior: 'smooth' })
+      console.log("Found pricing section, scrolling...")
+      // Add a small offset to account for any fixed headers
+      const offset = 80 // Adjust this value based on your header height
+      const elementPosition = pricingSection.offsetTop - offset
+      window.scrollTo({
+        top: elementPosition,
+        behavior: 'smooth'
+      })
+    } else {
+      console.log("Pricing section not found!")
     }
   }
 
@@ -662,7 +677,7 @@ export default function HomePage() {
                 </ul>
 
                 <Button
-                  onClick={handlePricing}
+                  onClick={handleAnnualPricing}
                   className="w-full bg-[#b6a888] hover:bg-[#a39577] text-black font-semibold py-3 px-6 rounded-md transition-colors"
                 >
                   Get Started Annual
