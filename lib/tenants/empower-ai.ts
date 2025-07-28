@@ -33,7 +33,7 @@ export const empowerAiConfig: TenantConfig = {
       "ideahub-empower",
     ],
     customSections: [],
-    hiddenFeatures: [],
+    hiddenFeatures: ["networking-hub"],
     customNavigation: false,
   },
   localization: {
