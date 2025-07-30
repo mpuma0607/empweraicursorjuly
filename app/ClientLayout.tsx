@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation"
 import { TenantProvider } from "@/contexts/tenant-context"
 import Navigation from "@/components/navigation"
 import Footer from "@/components/footer"
-import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
 import TenantSwitcher from "@/components/tenant-switcher"
 import { useTracking } from "@/hooks/use-tracking"
@@ -25,18 +24,16 @@ export default function ClientLayout({
   const isBegginsHomePage = pathname === "/beggins-home"
 
   return (
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-      <TenantProvider>
-        <TrackingWrapper>
-          <div className="min-h-screen flex flex-col">
-            {!isHomePage && !isBegginsHomePage && <Navigation />}
-            <main className="flex-1">{children}</main>
-            <Footer />
-            <TenantSwitcher />
-            <Toaster />
-          </div>
-        </TrackingWrapper>
-      </TenantProvider>
-    </ThemeProvider>
+    <TenantProvider>
+      <TrackingWrapper>
+        <div className="min-h-screen flex flex-col">
+          {!isHomePage && !isBegginsHomePage && <Navigation />}
+          <main className="flex-1">{children}</main>
+          <Footer />
+          <TenantSwitcher />
+          <Toaster />
+        </div>
+      </TrackingWrapper>
+    </TenantProvider>
   )
 }

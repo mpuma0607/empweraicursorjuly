@@ -40,7 +40,7 @@ export async function GET() {
 
     // Test with the working key
     const searchPrompt = "homes for sale in Tampa FL"
-    const testUrl = `https://zillow-working-api.p.rapidapi.com/search/byaiprompt?ai_search_prompt=${encodeURIComponent(searchPrompt)}&page=1&sortOrder=Homes_for_you`
+    const testUrl = `https://zillow-working-api.p.rapidapi.com/search/by-ai-prompt?ai_search_prompt=${encodeURIComponent(searchPrompt)}&page=1&sortOrder=Homes_for_you`
 
     console.log("Test URL:", testUrl)
     console.log("Using key:", workingKey.substring(0, 10) + "...")
