@@ -3,7 +3,7 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { GraduationCap, ArrowRight, Monitor, BookOpen, Users, Target, Video, FileText, Settings } from "lucide-react"
 import Link from "next/link"
-import { useTenantConfig } from "@/hooks/useTenantConfig"
+import { useTenantConfig } from "@/contexts/tenant-context"
 
 const trainingModules = [
   {
