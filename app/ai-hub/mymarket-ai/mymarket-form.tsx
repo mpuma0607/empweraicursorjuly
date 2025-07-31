@@ -342,15 +342,30 @@ export default function MyMarketForm() {
         }
       }
 
-      // Handle rental market data
-      if (data.rental_data) {
+      // Handle rental market data - check for actual API response structure
+      if (data.rental_market_trends || data.rental_data) {
+        const rentalData = data.rental_market_trends || data.rental_data || {}
         return {
           type: 'rental',
-          location: data.search_query || "Unknown Location",
-          averageRent: data.rental_data.average_rent,
-          rentTrend: data.rental_data.rent_trend,
-          rentalInventory: data.rental_data.rental_inventory,
-          description: data.rental_data.description,
+          location: data.search_query || rentalData.areaName || "Unknown Location",
+          averageRent: rentalData.average_rent || rentalData.avgRent || 'N/A',
+          rentTrend: rentalData.rent_trend || rentalData.rentTrend || 'N/A',
+          rentalInventory: rentalData.rental_inventory || rentalData.inventory || 'N/A',
+          description: rentalData.description || `Rental market data for ${rentalData.areaName || 'this area'}`,
+          aiInsights: data.ai_insights || null
+        }
+      }
+
+      // Handle case where rental data might be in a different structure
+      if (data.message === 'success' && (data.rental_market_trends || data.rental_data)) {
+        const rentalData = data.rental_market_trends || data.rental_data || {}
+        return {
+          type: 'rental',
+          location: data.search_query || rentalData.areaName || "Unknown Location",
+          averageRent: rentalData.average_rent || rentalData.avgRent || 'N/A',
+          rentTrend: rentalData.rent_trend || rentalData.rentTrend || 'N/A',
+          rentalInventory: rentalData.rental_inventory || rentalData.inventory || 'N/A',
+          description: rentalData.description || `Rental market data for ${rentalData.areaName || 'this area'}`,
           aiInsights: data.ai_insights || null
         }
       }
