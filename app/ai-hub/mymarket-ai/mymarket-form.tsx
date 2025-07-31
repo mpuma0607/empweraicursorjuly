@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast"
 import { useTenantConfig } from "@/hooks/useTenantConfig"
 import { useMemberSpaceUser } from "@/hooks/useMemberSpaceUser"
 import { analyzeMarket, MarketData } from "./actions"
-import { BarChart3, Home, Building2, MapPin, User, Mail, ArrowRight, ArrowLeft } from "lucide-react"
+import { BarChart3, Home, Building2, MapPin, User, Mail, ArrowRight, ArrowLeft, AlertCircle, DollarSign, TrendingUp } from "lucide-react"
 
 interface FormData {
   agentName: string
@@ -42,6 +42,17 @@ export default function MyMarketForm() {
     rentalType: "All_Property_Types",
     bedroomType: "All_Bedrooms"
   })
+
+  // Auto-populate agent info when user data is available
+  useEffect(() => {
+    if (user && !formData.agentName) {
+      setFormData(prev => ({
+        ...prev,
+        agentName: user.name || config?.branding.name || "Your Name",
+        agentEmail: user.email || "your.email@example.com"
+      }))
+    }
+  }, [user, config?.branding.name, formData.agentName])
 
   // Auto-populate agent info when user data is available
   useEffect(() => {
@@ -137,6 +148,49 @@ export default function MyMarketForm() {
     setStep(1)
     setResult(null)
     setError(null)
+  }
+
+  // Format market data for professional display
+  const formatMarketData = (data: any) => {
+    if (!data || typeof data !== 'object') {
+      return { error: "No data available" }
+    }
+
+    try {
+      // Handle housing market data
+      if (data.market_overview) {
+        return {
+          type: 'housing',
+          location: data.search_query || "Unknown Location",
+          typicalHomeValue: data.market_overview.typical_home_values,
+          description: data.market_overview.description,
+          forSaleInventory: data.market_overview.for_sale_inventory,
+          newListings: data.market_overview.new_listings,
+          saleToListRatio: data.market_overview["market saletolist ratio"]
+        }
+      }
+
+      // Handle rental market data
+      if (data.rental_data) {
+        return {
+          type: 'rental',
+          location: data.search_query || "Unknown Location",
+          averageRent: data.rental_data.average_rent,
+          rentTrend: data.rental_data.rent_trend,
+          rentalInventory: data.rental_data.rental_inventory,
+          description: data.rental_data.description
+        }
+      }
+
+      // Fallback for other data structures
+      return {
+        type: 'unknown',
+        location: data.search_query || "Unknown Location",
+        rawData: data
+      }
+    } catch (error) {
+      return { error: "Unable to format data" }
+    }
   }
 
   if (userLoading) {
@@ -370,7 +424,7 @@ export default function MyMarketForm() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
                   <Badge variant="outline" className="mb-2">
@@ -386,11 +440,138 @@ export default function MyMarketForm() {
                 </Button>
               </div>
               
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <pre className="text-sm overflow-auto">
-                  {JSON.stringify(result.data, null, 2)}
-                </pre>
-              </div>
+              {/* Professional Market Data Display */}
+              {(() => {
+                const formattedData = formatMarketData(result.data)
+                
+                if (formattedData.error) {
+                  return (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                      <div className="flex items-center space-x-2 text-red-800">
+                        <AlertCircle className="h-4 w-4" />
+                        <span className="font-medium">Error:</span>
+                        <span>{formattedData.error}</span>
+                      </div>
+                    </div>
+                  )
+                }
+
+                if (formattedData.type === 'housing') {
+                  return (
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <Card>
+                          <CardContent className="p-4">
+                            <div className="flex items-center space-x-2 mb-2">
+                              <DollarSign className="h-4 w-4 text-green-600" />
+                              <span className="font-semibold">Typical Home Value</span>
+                            </div>
+                            <p className="text-2xl font-bold text-green-600">
+                              ${formattedData.typicalHomeValue?.toLocaleString() || 'N/A'}
+                            </p>
+                          </CardContent>
+                        </Card>
+                        
+                        <Card>
+                          <CardContent className="p-4">
+                            <div className="flex items-center space-x-2 mb-2">
+                              <Home className="h-4 w-4 text-blue-600" />
+                              <span className="font-semibold">For Sale Inventory</span>
+                            </div>
+                            <p className="text-2xl font-bold text-blue-600">
+                              {formattedData.forSaleInventory?.toLocaleString() || 'N/A'}
+                            </p>
+                          </CardContent>
+                        </Card>
+                        
+                        <Card>
+                          <CardContent className="p-4">
+                            <div className="flex items-center space-x-2 mb-2">
+                              <TrendingUp className="h-4 w-4 text-purple-600" />
+                              <span className="font-semibold">Sale/List Ratio</span>
+                            </div>
+                            <p className="text-2xl font-bold text-purple-600">
+                              {formattedData.saleToListRatio || 'N/A'}
+                            </p>
+                          </CardContent>
+                        </Card>
+                      </div>
+                      
+                      {formattedData.description && (
+                        <Card>
+                          <CardContent className="p-4">
+                            <h4 className="font-semibold mb-2">Market Overview</h4>
+                            <p className="text-gray-700">{formattedData.description}</p>
+                          </CardContent>
+                        </Card>
+                      )}
+                    </div>
+                  )
+                }
+
+                if (formattedData.type === 'rental') {
+                  return (
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <Card>
+                          <CardContent className="p-4">
+                            <div className="flex items-center space-x-2 mb-2">
+                              <DollarSign className="h-4 w-4 text-green-600" />
+                              <span className="font-semibold">Average Rent</span>
+                            </div>
+                            <p className="text-2xl font-bold text-green-600">
+                              ${formattedData.averageRent?.toLocaleString() || 'N/A'}
+                            </p>
+                          </CardContent>
+                        </Card>
+                        
+                        <Card>
+                          <CardContent className="p-4">
+                            <div className="flex items-center space-x-2 mb-2">
+                              <Building2 className="h-4 w-4 text-blue-600" />
+                              <span className="font-semibold">Rental Inventory</span>
+                            </div>
+                            <p className="text-2xl font-bold text-blue-600">
+                              {formattedData.rentalInventory?.toLocaleString() || 'N/A'}
+                            </p>
+                          </CardContent>
+                        </Card>
+                        
+                        <Card>
+                          <CardContent className="p-4">
+                            <div className="flex items-center space-x-2 mb-2">
+                              <TrendingUp className="h-4 w-4 text-purple-600" />
+                              <span className="font-semibold">Rent Trend</span>
+                            </div>
+                            <p className="text-2xl font-bold text-purple-600">
+                              {formattedData.rentTrend || 'N/A'}
+                            </p>
+                          </CardContent>
+                        </Card>
+                      </div>
+                      
+                      {formattedData.description && (
+                        <Card>
+                          <CardContent className="p-4">
+                            <h4 className="font-semibold mb-2">Market Overview</h4>
+                            <p className="text-gray-700">{formattedData.description}</p>
+                          </CardContent>
+                        </Card>
+                      )}
+                    </div>
+                  )
+                }
+
+                // Fallback for unknown data types
+                return (
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="font-semibold mb-2">Raw Data</h4>
+                    <pre className="text-sm overflow-auto">
+                      {JSON.stringify(result.data, null, 2)}
+                    </pre>
+                  </div>
+                )
+              })()}
             </div>
           </CardContent>
         </Card>
