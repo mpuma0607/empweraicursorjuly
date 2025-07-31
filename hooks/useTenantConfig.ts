@@ -9,6 +9,12 @@ export function useTenantConfig() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    // Only run on client side
+    if (typeof window === "undefined") {
+      setLoading(false)
+      return
+    }
+
     try {
       const tenantConfig = getTenantConfig()
       setConfig(tenantConfig)

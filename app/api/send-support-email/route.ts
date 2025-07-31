@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
     `
 
     const emailData = {
-      from: "The Next Level U Portal <noreply@marketing.thenextlevelu.com>",
+      from: "The Next Level U Portal <noreply@marketing.getempowerai.com>",
       to: ["MikePuma@c21be.com", "Jimmymcnally@c21be.com"],
       subject: `Support Request from ${name}`,
       html: emailHtml,

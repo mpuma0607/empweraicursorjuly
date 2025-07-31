@@ -78,7 +78,7 @@ export async function submitReferralForm(formData: ReferralFormData) {
     `
 
     const { data, error } = await resend.emails.send({
-      from: "Beggins University <noreply@thenextlevelu.com>",
+      from: "Beggins University <noreply@getempowerai.com>",
       to: ["relocation@c21be.com", "mikepuma@c21be.com"],
       subject: "New Agent Referral Form",
       html: emailContent,

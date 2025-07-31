@@ -148,7 +148,7 @@ export async function POST(request: NextRequest) {
     console.log("Attempting to send BizPlan wallpaper email via Resend...")
 
     const { data, error } = await resend.emails.send({
-      from: "BizPlan AI - The Next Level U <noreply@marketing.thenextlevelu.com>",
+      from: "BizPlan AI - The Next Level U <noreply@marketing.getempowerai.com>",
       to: [email],
       subject: `📱 Your Daily Goal Wallpaper - 90-Day Business Plan`,
       html: emailContent,

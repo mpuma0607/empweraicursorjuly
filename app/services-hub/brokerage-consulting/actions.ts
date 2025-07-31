@@ -45,7 +45,7 @@ export async function submitConsultingInquiry(formData: FormData) {
     `
 
     await resend.emails.send({
-      from: "noreply@marketing.thenextlevelu.com",
+      from: "noreply@marketing.getempowerai.com",
       to: "MikePuma@c21be.com",
       subject: `New Brokerage Consulting Inquiry from ${name}`,
       html: emailContent,
@@ -97,7 +97,7 @@ export async function submitNotificationRequest(formData: FormData) {
     `
 
     await resend.emails.send({
-      from: "noreply@marketing.thenextlevelu.com",
+      from: "noreply@marketing.getempowerai.com",
       to: "MikePuma@c21be.com",
       subject: `Service Notification Request from ${name}`,
       html: emailContent,

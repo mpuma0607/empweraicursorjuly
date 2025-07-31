@@ -79,7 +79,7 @@ Write an engaging, professional listing description that highlights the property
 export async function sendEmail(to: string, subject: string, content: string) {
   try {
     const { data, error } = await resend.emails.send({
-      from: "The Next Level U <noreply@thenextlevelu.com>",
+      from: "The Next Level U <noreply@getempowerai.com>",
       to: [to],
       subject: subject,
       html: content,

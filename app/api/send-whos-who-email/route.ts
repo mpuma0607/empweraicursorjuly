@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
     `
 
     const result = await resend.emails.send({
-      from: "The Next Level U <noreply@thenextlevelu.com>",
+      from: "The Next Level U <noreply@getempowerai.com>",
       to: [email],
       subject: `🏠 Property Owner Report - ${address}`,
       html: emailHtml,

@@ -31,7 +31,7 @@ export async function submitProjectInquiry(formData: FormData) {
     `
 
     await resend.emails.send({
-      from: "noreply@thenextlevelu.com",
+      from: "noreply@getempowerai.com",
       to: "MikePuma@c21be.com",
       subject: `New Moxi Design Inquiry from ${name}`,
       html: emailContent,

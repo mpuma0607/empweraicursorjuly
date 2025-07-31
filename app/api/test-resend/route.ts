@@ -9,7 +9,7 @@ export async function POST() {
     console.log("API Key exists:", !!process.env.RESEND_API_KEY)
 
     const response = await resend.emails.send({
-      from: "The Next Level U <noreply@thenextlevelu.com>",
+      from: "The Next Level U <noreply@getempowerai.com>",
       to: ["test@example.com"], // Replace with your email for testing
       subject: "Resend Test Email",
       html: `

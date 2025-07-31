@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
     `
 
     const { data: emailData, error } = await resend.emails.send({
-      from: "Mike Puma - The Next Level U <noreply@marketing.thenextlevelu.com>",
+      from: "Mike Puma - The Next Level U <noreply@marketing.getempowerai.com>",
       to: [to],
       subject: `Your ${scriptTypeLabel} for ${topicLabel} - ScriptIT by The Next Level U`,
       html: `

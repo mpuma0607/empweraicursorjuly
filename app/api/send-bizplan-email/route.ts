@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { data, error } = await resend.emails.send({
-      from: "The Next Level U <noreply@marketing.thenextlevelu.com>",
+      from: "The Next Level U <noreply@marketing.getempowerai.com>",
       to: [formData.email],
       subject: `Your 90-Day Business Plan - ${formData.name}`,
       html: `

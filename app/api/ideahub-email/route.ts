@@ -35,7 +35,7 @@ async function sendEmail(data: { to: string; name: string; content: string; imag
     }
 
     const response = await resend.emails.send({
-      from: "IdeaHub AI - The Next Level U <noreply@marketing.thenextlevelu.com>",
+      from: "IdeaHub AI - The Next Level U <noreply@marketing.getempowerai.com>",
       to: [data.to],
       subject: "Your AI-Generated Social Media Content - The Next Level U",
       html: `

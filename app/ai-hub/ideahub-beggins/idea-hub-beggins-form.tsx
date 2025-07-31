@@ -133,7 +133,7 @@ export default function IdeaHubBegginsForm() {
   const recognitionRef = useRef<any>(null)
 
   const { user, loading: userLoading } = useMemberSpaceUser()
-  const { config } = useTenantConfig()
+  const config = useTenantConfig()
 
   const [formData, setFormData] = useState<FormState>({
     primaryTopic: "",

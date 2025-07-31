@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     console.log("Action plan email API route called with data:", { to, name })
 
     const { data: emailData, error } = await resend.emails.send({
-      from: "Mike Puma - The Next Level U <noreply@marketing.thenextlevelu.com>",
+      from: "Mike Puma - The Next Level U <noreply@marketing.getempowerai.com>",
       to: [to],
       subject: `Your Daily Action Plan - ${new Date().toLocaleDateString()}`,
       html: `

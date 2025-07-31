@@ -104,7 +104,7 @@ export async function sendCMAEmail(data: CMAEmailData) {
           <!-- Footer -->
           <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0; text-align: center;">
             <p style="margin: 0 0 10px 0;">Thank you for using QuickCMA AI powered by Century 21.</p>
-            <p style="margin: 0;">For more tools and insights, visit <a href="https://thenextlevelu.com" style="color: #b6a888; text-decoration: none;">thenextlevelu.com</a></p>
+            <p style="margin: 0;">For more tools and insights, visit <a href="https://getempowerai.com" style="color: #b6a888; text-decoration: none;">getempowerai.com</a></p>
           </div>
         </div>
 
@@ -117,7 +117,7 @@ export async function sendCMAEmail(data: CMAEmailData) {
     `
 
     const result = await resend.emails.send({
-      from: "QuickCMA AI <noreply@marketing.thenextlevelu.com>",
+      from: "QuickCMA AI <noreply@marketing.getempowerai.com>",
       to: [data.email],
       subject: `CMA Report: ${data.address.split(",")[0]} - Century 21`,
       html: emailHtml,

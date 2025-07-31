@@ -135,7 +135,7 @@ export default function IdeaHubV2Form() {
   const resultsRef = useRef<HTMLDivElement>(null)
   const recognitionRef = useRef<any>(null)
   const { user, loading: userLoading } = useMemberSpaceUser()
-  const { config } = useTenantConfig()
+  const config = useTenantConfig()
 
   // Determine which brand options to show based on tenant
   const brandOptions = config.tenantId === "century21-beggins" ? begginsBrandOptions : defaultBrandOptions

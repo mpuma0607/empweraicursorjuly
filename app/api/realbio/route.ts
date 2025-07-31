@@ -249,7 +249,7 @@ async function sendEmail(formData: any, bio: string) {
     console.log("Preparing email data...")
 
     const emailData = {
-      from: "Mike Puma - The Next Level U <noreply@marketing.thenextlevelu.com>",
+      from: "Mike Puma - The Next Level U <noreply@marketing.getempowerai.com>",
       to: [formData.email],
       subject: "Your Professional Agent Bio - RealBio by The Next Level U",
       html: `
