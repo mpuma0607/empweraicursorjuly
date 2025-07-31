@@ -175,7 +175,39 @@ export function WhosWhoForm() {
     return sections.map((section) => {
       const lines = section.trim().split("\n")
       const title = lines[0].trim()
-      const content = lines.slice(1).join("\n").trim()
+      let content = lines.slice(1).join("\n").trim()
+
+      // Clean up content based on section type
+      if (title.includes("PROPERTY OVERVIEW")) {
+        // Only keep the address, remove property type, value, details, features
+        const addressMatch = content.match(/Address:\s*([^\n]+)/i)
+        content = addressMatch ? `Address: ${addressMatch[1].trim()}` : content
+      } else if (title.includes("OWNER INFORMATION")) {
+        // Only keep the first 2 primary owners, remove associated individuals, past owners
+        const primaryOwners = extractOwnerNames(summary)
+        if (primaryOwners.length > 0) {
+          content = primaryOwners.map((owner, index) => `Primary Owner ${index + 1}: ${owner}`).join('\n')
+        }
+      } else if (title.includes("CONTACT DETAILS")) {
+        // Only keep public record links for primary owners
+        const primaryOwners = extractOwnerNames(summary)
+        const urlMatches = content.match(/https?:\/\/[^\s)]+/g) || []
+        
+        // Filter content to only show public record links
+        const lines = content.split('\n')
+        const filteredLines = lines.filter(line => {
+          // Keep lines that contain URLs (public record links)
+          const hasUrl = urlMatches.some(url => line.includes(url))
+          // Remove lines with phone numbers, email addresses, social media
+          const hasPhone = /\b\d{3}[-.]?\d{3}[-.]?\d{4}\b/.test(line)
+          const hasEmail = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/.test(line)
+          const hasSocialMedia = /(facebook|twitter|instagram|linkedin|social media)/i.test(line)
+          
+          return hasUrl && !hasPhone && !hasEmail && !hasSocialMedia
+        })
+        
+        content = filteredLines.join('\n')
+      }
 
       // Extract URLs from content for the contact section
       const urls = content.match(/https?:\/\/[^\s)]+/g) || []
@@ -239,6 +271,15 @@ export function WhosWhoForm() {
       if (primaryOwners) {
         return primaryOwners
           .map(name => name.replace(/(?:Primary owner|Primary owners|Owner|Name[s]?):\s*/i, '').trim())
+          .filter(name => name && name.length > 0)
+          .slice(0, 2) // Only take first 2 owners as requested
+      }
+      
+      // If no primary owners found, look for any owner names
+      const allOwners = ownerSection[0].match(/(?:Owner|Name[s]?):\s*([^\n]+)/gi)
+      if (allOwners) {
+        return allOwners
+          .map(name => name.replace(/(?:Owner|Name[s]?):\s*/i, '').trim())
           .filter(name => name && name.length > 0)
           .slice(0, 2) // Only take first 2 owners as requested
       }
