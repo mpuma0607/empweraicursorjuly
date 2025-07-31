@@ -139,10 +139,10 @@ async function fetchMarketData(
   rentalType?: string,
   bedroomType?: string
 ): Promise<any> {
-  const apiKey = process.env.RAPIDAPI_ZILLOW_KEY
-  if (!apiKey) {
-    throw new Error("API key not configured")
-  }
+  // Use environment variable with fallback to working API key
+  const apiKey = process.env.RAPIDAPI_ZILLOW_KEY || "9a9b575487msha9008523ea904a2p1b7c7cjsnb3d79fdcbf2b"
+  
+  console.log(`MyMarket AI: Using API key (first 10 chars): ${apiKey.substring(0, 10)}...`)
 
   let endpoint = ""
   let params: Record<string, string> = {}
@@ -179,6 +179,8 @@ async function fetchMarketData(
     }
   })
 
+  console.log(`MyMarket AI: Response status: ${response.status}`)
+  
   if (!response.ok) {
     const errorText = await response.text()
     console.error(`MyMarket AI: API call failed with status ${response.status}:`, errorText)
@@ -211,5 +213,6 @@ async function fetchMarketData(
   }
 
   const data = await response.json()
+  console.log(`MyMarket AI: API response data:`, JSON.stringify(data, null, 2))
   return data
 } 
