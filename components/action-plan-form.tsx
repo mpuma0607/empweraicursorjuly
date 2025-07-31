@@ -415,7 +415,7 @@ export default function ActionPlanForm() {
           <Card className="border-0 shadow-md">
             <CardContent className="p-6">
               {result?.html ? (
-                <div className="prose prose-blue max-w-none" dangerouslySetInnerHTML={{ __html: result.html }}></div>
+                <div className="max-w-none" dangerouslySetInnerHTML={{ __html: result.html }}></div>
               ) : (
                 <div className="whitespace-pre-wrap text-gray-800">{result?.plan}</div>
               )}

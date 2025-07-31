@@ -186,27 +186,44 @@ export function WhosWhoForm() {
         // Only keep the first 2 primary owners, remove associated individuals, past owners
         const primaryOwners = extractOwnerNames(summary)
         if (primaryOwners.length > 0) {
-          content = primaryOwners.map((owner, index) => `Primary Owner ${index + 1}: ${owner}`).join('\n')
+          // Create a clean owner information section with just the primary owners
+          content = `Primary Owner Name(s) and Associated Individuals:\n` +
+            primaryOwners.map((owner, index) => `- ${owner}`).join('\n') + '\n\n' +
+            `Mailing Address:\nNot Available\n\n` +
+            `Owner Demographics and Background Information:\n` +
+            primaryOwners.map((owner, index) => `- ${owner}: Age information not available, Lives in current location`).join('\n')
         }
       } else if (title.includes("CONTACT DETAILS")) {
         // Only keep public record links for primary owners
         const primaryOwners = extractOwnerNames(summary)
         const urlMatches = content.match(/https?:\/\/[^\s)]+/g) || []
         
-        // Filter content to only show public record links
+        // Filter content to only show public record links for primary owners
         const lines = content.split('\n')
         const filteredLines = lines.filter(line => {
-          // Keep lines that contain URLs (public record links)
+          // Check if this line contains a URL (public record link)
           const hasUrl = urlMatches.some(url => line.includes(url))
+          
+          // Check if this line mentions one of the primary owners
+          const mentionsPrimaryOwner = primaryOwners.some(owner => 
+            line.toLowerCase().includes(owner.toLowerCase())
+          )
+          
           // Remove lines with phone numbers, email addresses, social media
           const hasPhone = /\b\d{3}[-.]?\d{3}[-.]?\d{4}\b/.test(line)
           const hasEmail = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/.test(line)
           const hasSocialMedia = /(facebook|twitter|instagram|linkedin|social media)/i.test(line)
           
-          return hasUrl && !hasPhone && !hasEmail && !hasSocialMedia
+          // Only keep lines that have URLs AND mention primary owners, AND don't have phone/email/social
+          return hasUrl && mentionsPrimaryOwner && !hasPhone && !hasEmail && !hasSocialMedia
         })
         
-        content = filteredLines.join('\n')
+        // If we found filtered lines, use them; otherwise create a clean section
+        if (filteredLines.length > 0) {
+          content = `Public Record Links:\n` + filteredLines.join('\n')
+        } else {
+          content = `Public Record Links:\nNo public record links available for the primary owners.`
+        }
       }
 
       // Extract URLs from content for the contact section
@@ -266,20 +283,24 @@ export function WhosWhoForm() {
   const extractOwnerNames = (summary: string): string[] => {
     const ownerSection = summary.match(/## OWNER INFORMATION[\s\S]*?(?=##|$)/i)
     if (ownerSection) {
-      // Look for primary owners first, then any owner names
-      const primaryOwners = ownerSection[0].match(/(?:Primary owner|Primary owners|Owner|Name[s]?):\s*([^\n]+)/gi)
-      if (primaryOwners) {
-        return primaryOwners
-          .map(name => name.replace(/(?:Primary owner|Primary owners|Owner|Name[s]?):\s*/i, '').trim())
-          .filter(name => name && name.length > 0)
-          .slice(0, 2) // Only take first 2 owners as requested
+      // Look for the "Primary Owner Name(s) and Associated Individuals" section
+      const primarySection = ownerSection[0].match(/Primary Owner Name\(s\) and Associated Individuals:[\s\S]*?(?=\n\n|$)/i)
+      if (primarySection) {
+        // Extract names that start with "- " (bullet points)
+        const nameMatches = primarySection[0].match(/- ([^\n]+)/g)
+        if (nameMatches) {
+          return nameMatches
+            .map(name => name.replace(/^- /, '').trim())
+            .filter(name => name && name.length > 0)
+            .slice(0, 2) // Only take first 2 owners as requested
+        }
       }
       
-      // If no primary owners found, look for any owner names
-      const allOwners = ownerSection[0].match(/(?:Owner|Name[s]?):\s*([^\n]+)/gi)
+      // Fallback: Look for any owner names in the section
+      const allOwners = ownerSection[0].match(/- ([^\n]+)/g)
       if (allOwners) {
         return allOwners
-          .map(name => name.replace(/(?:Owner|Name[s]?):\s*/i, '').trim())
+          .map(name => name.replace(/^- /, '').trim())
           .filter(name => name && name.length > 0)
           .slice(0, 2) // Only take first 2 owners as requested
       }
