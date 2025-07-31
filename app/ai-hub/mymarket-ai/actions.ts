@@ -139,8 +139,8 @@ async function fetchMarketData(
   rentalType?: string,
   bedroomType?: string
 ): Promise<any> {
-  // Use environment variable with fallback to working API key
-  const apiKey = process.env.RAPIDAPI_ZILLOW_KEY || "9a9b575487msha9008523ea904a2p1b7c7cjsnb3d79fdcbf2b"
+  // Use the working API key provided by the user
+  const apiKey = "9a9b575487msha9008523ea904a2p1b7c7cjsnb3d79fdcbf2b"
   
   console.log(`MyMarket AI: Using API key (first 10 chars): ${apiKey.substring(0, 10)}...`)
 
@@ -151,7 +151,7 @@ async function fetchMarketData(
     endpoint = "/rental_market"
     params = {
       search_query: searchQuery,
-      bedrooom_type: bedroomType || "All_Bedrooms",
+      bedroom_type: bedroomType || "All_Bedrooms",
       home_type: rentalType || "All_Property_Types"
     }
   } else {
