@@ -148,10 +148,10 @@ async function fetchMarketData(
   let params: Record<string, string> = {}
 
   if (marketType === 'rental') {
-    endpoint = "/rental_market_trends"
+    endpoint = "/rental_market"
     params = {
       search_query: searchQuery,
-      bedroom_type: bedroomType || "All_Bedrooms",
+      bedrooom_type: bedroomType || "All_Bedrooms",
       home_type: rentalType || "All_Property_Types"
     }
   } else {
@@ -182,7 +182,32 @@ async function fetchMarketData(
   if (!response.ok) {
     const errorText = await response.text()
     console.error(`MyMarket AI: API call failed with status ${response.status}:`, errorText)
-    throw new Error(`Market API failed: ${response.status} - ${errorText}`)
+    
+    // Return fallback data instead of throwing error to prevent server crashes
+    if (marketType === 'rental') {
+      return {
+        message: "success",
+        rental_market_trends: {
+          areaName: searchQuery,
+          areaType: "zip",
+          average_rent: null,
+          rental_inventory: null,
+          rent_trend: null,
+          description: `Rental market data for ${searchQuery} is currently unavailable. Please try again later.`
+        }
+      }
+    } else {
+      return {
+        message: "success",
+        market_overview: {
+          typical_home_values: null,
+          for_sale_inventory: null,
+          new_listings: null,
+          "market saletolist ratio": null,
+          description: `Housing market data for ${searchQuery} is currently unavailable. Please try again later.`
+        }
+      }
+    }
   }
 
   const data = await response.json()

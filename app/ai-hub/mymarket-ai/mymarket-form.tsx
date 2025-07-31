@@ -549,6 +549,7 @@ export default function MyMarketForm() {
                           <SelectValue placeholder="Select rental type" />
                         </SelectTrigger>
                         <SelectContent>
+                          <SelectItem value="All_Property_Types">All Property Types</SelectItem>
                           <SelectItem value="Houses">Houses</SelectItem>
                           <SelectItem value="Apartments_and_Condos">Apartments and Condos</SelectItem>
                           <SelectItem value="Townhomes">Townhomes</SelectItem>
@@ -570,7 +571,7 @@ export default function MyMarketForm() {
                           <SelectItem value="1_Bedroom">1 Bedroom</SelectItem>
                           <SelectItem value="2_Bedroom">2 Bedrooms</SelectItem>
                           <SelectItem value="3_Bedroom">3 Bedrooms</SelectItem>
-                          <SelectItem value="4_Bedroom">4 Bedrooms</SelectItem>
+                          <SelectItem value="4_Bedroom_Plus">4 Bedrooms+</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
