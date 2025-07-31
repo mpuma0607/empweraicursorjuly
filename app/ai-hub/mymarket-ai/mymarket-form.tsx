@@ -1,23 +1,22 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
-import { useTenantConfig } from "@/hooks/useTenantConfig"
-import { useMemberSpaceUser } from "@/hooks/useMemberSpaceUser"
+import { useMemberSpaceUser } from "@/hooks/use-memberspace-user"
 import { analyzeMarket, MarketData } from "./actions"
-import { BarChart3, Home, Building2, MapPin, User, Mail, ArrowRight, ArrowLeft, AlertCircle, DollarSign, TrendingUp } from "lucide-react"
+import { BarChart3, Home, Building2, MapPin, User, Mail, ArrowRight, ArrowLeft, AlertCircle, DollarSign, TrendingUp, Download } from "lucide-react"
 
 interface FormData {
   agentName: string
   agentEmail: string
-  marketType: 'rental' | 'housing' | null
+  marketType: 'housing' | 'rental' | null
   searchQuery: string
   homeType: string
   rentalType: string
@@ -25,13 +24,19 @@ interface FormData {
 }
 
 export default function MyMarketForm() {
+  const { toast } = useToast()
+  const { user, loading: isUserLoading } = useMemberSpaceUser()
+  const isLoggedIn = !!user && !isUserLoading
+
   const [step, setStep] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
-  const [result, setResult] = useState<MarketData | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const { toast } = useToast()
-  const config = useTenantConfig()
-  const { user, loading: userLoading } = useMemberSpaceUser()
+  const [result, setResult] = useState<MarketData | null>(null)
+  const [isDownloading, setIsDownloading] = useState(false)
+  const [isSendingEmail, setIsSendingEmail] = useState(false)
+  const [emailSent, setEmailSent] = useState(false)
+  const [emailError, setEmailError] = useState<string | null>(null)
+  const [email, setEmail] = useState("")
 
   const [formData, setFormData] = useState<FormData>({
     agentName: "",
@@ -43,27 +48,16 @@ export default function MyMarketForm() {
     bedroomType: "All_Bedrooms"
   })
 
-  // Auto-populate agent info when user data is available
+  // Auto-populate user data when available - exactly like other tools
   useEffect(() => {
-    if (user && !formData.agentName) {
-      setFormData(prev => ({
+    if (user && !isUserLoading) {
+      setFormData((prev) => ({
         ...prev,
-        agentName: user.name || config?.branding.name || "Your Name",
-        agentEmail: user.email || "your.email@example.com"
+        agentName: prev.agentName || user.name || `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+        agentEmail: prev.agentEmail || user.email || "",
       }))
     }
-  }, [user, config?.branding.name, formData.agentName])
-
-  // Auto-populate agent info when user data is available
-  useEffect(() => {
-    if (user && !formData.agentName) {
-      setFormData(prev => ({
-        ...prev,
-        agentName: user.name || config?.branding.name || "Your Name",
-        agentEmail: user.email || "your.email@example.com"
-      }))
-    }
-  }, [user, config?.branding.name, formData.agentName])
+  }, [user, isUserLoading])
 
   const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -135,6 +129,183 @@ export default function MyMarketForm() {
     }
   }
 
+  const handleDownloadPDF = async () => {
+    if (!result) return
+
+    setIsDownloading(true)
+    try {
+      const { jsPDF } = await import("jspdf")
+      const doc = new jsPDF()
+
+      // Add header
+      doc.setFontSize(24)
+      doc.setFont("helvetica", "bold")
+      doc.text("Market Analysis Report", 20, 25)
+
+      // Add subtitle
+      doc.setFontSize(12)
+      doc.setFont("helvetica", "normal")
+      doc.text(`${result.marketType === 'housing' ? 'Housing' : 'Rental'} Market Analysis for ${result.searchQuery}`, 20, 35)
+      doc.text(`Analyzed by ${result.agentName} on ${new Date(result.timestamp).toLocaleDateString()}`, 20, 42)
+
+      let yPosition = 60
+
+      // Add market data
+      const formattedData = formatMarketData(result.data)
+      
+      if (formattedData.type === 'housing') {
+        doc.setFontSize(16)
+        doc.setFont("helvetica", "bold")
+        doc.text("Market Overview", 20, yPosition)
+        yPosition += 10
+
+        doc.setFontSize(12)
+        doc.setFont("helvetica", "normal")
+        doc.text(`Typical Home Value: $${formattedData.typicalHomeValue?.toLocaleString() || 'N/A'}`, 20, yPosition)
+        yPosition += 8
+        doc.text(`For Sale Inventory: ${formattedData.forSaleInventory?.toLocaleString() || 'N/A'}`, 20, yPosition)
+        yPosition += 8
+        doc.text(`Sale/List Ratio: ${formattedData.saleToListRatio || 'N/A'}`, 20, yPosition)
+        yPosition += 15
+
+        if (formattedData.description) {
+          doc.setFontSize(14)
+          doc.setFont("helvetica", "bold")
+          doc.text("Market Description", 20, yPosition)
+          yPosition += 10
+
+          doc.setFontSize(10)
+          doc.setFont("helvetica", "normal")
+          const descriptionLines = doc.splitTextToSize(formattedData.description, 170)
+          doc.text(descriptionLines, 20, yPosition)
+          yPosition += descriptionLines.length * 5 + 10
+        }
+
+        if (formattedData.aiInsights) {
+          doc.setFontSize(14)
+          doc.setFont("helvetica", "bold")
+          doc.text("AI Market Analysis", 20, yPosition)
+          yPosition += 10
+
+          doc.setFontSize(10)
+          doc.setFont("helvetica", "normal")
+          const insightsLines = doc.splitTextToSize(formattedData.aiInsights, 170)
+          doc.text(insightsLines, 20, yPosition)
+        }
+      } else if (formattedData.type === 'rental') {
+        doc.setFontSize(16)
+        doc.setFont("helvetica", "bold")
+        doc.text("Rental Market Overview", 20, yPosition)
+        yPosition += 10
+
+        doc.setFontSize(12)
+        doc.setFont("helvetica", "normal")
+        doc.text(`Average Rent: $${formattedData.averageRent?.toLocaleString() || 'N/A'}`, 20, yPosition)
+        yPosition += 8
+        doc.text(`Rental Inventory: ${formattedData.rentalInventory?.toLocaleString() || 'N/A'}`, 20, yPosition)
+        yPosition += 8
+        doc.text(`Rent Trend: ${formattedData.rentTrend || 'N/A'}`, 20, yPosition)
+        yPosition += 15
+
+        if (formattedData.description) {
+          doc.setFontSize(14)
+          doc.setFont("helvetica", "bold")
+          doc.text("Market Description", 20, yPosition)
+          yPosition += 10
+
+          doc.setFontSize(10)
+          doc.setFont("helvetica", "normal")
+          const descriptionLines = doc.splitTextToSize(formattedData.description, 170)
+          doc.text(descriptionLines, 20, yPosition)
+          yPosition += descriptionLines.length * 5 + 10
+        }
+
+        if (formattedData.aiInsights) {
+          doc.setFontSize(14)
+          doc.setFont("helvetica", "bold")
+          doc.text("AI Market Analysis", 20, yPosition)
+          yPosition += 10
+
+          doc.setFontSize(10)
+          doc.setFont("helvetica", "normal")
+          const insightsLines = doc.splitTextToSize(formattedData.aiInsights, 170)
+          doc.text(insightsLines, 20, yPosition)
+        }
+      }
+
+      // Save the PDF
+      const fileName = `market-analysis-${result.searchQuery.replace(/[^a-zA-Z0-9]/g, '-')}-${new Date().toISOString().split('T')[0]}.pdf`
+      doc.save(fileName)
+
+      toast({
+        title: "Download Complete",
+        description: "Market analysis PDF has been downloaded.",
+      })
+    } catch (error) {
+      console.error("Error downloading PDF:", error)
+      toast({
+        title: "Download Failed",
+        description: "Failed to download PDF. Please try again.",
+        variant: "destructive"
+      })
+    } finally {
+      setIsDownloading(false)
+    }
+  }
+
+  const handleSendEmail = async () => {
+    if (!result || !email) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter an email address.",
+        variant: "destructive"
+      })
+      return
+    }
+
+    setIsSendingEmail(true)
+    setEmailError(null)
+
+    try {
+      const response = await fetch("/api/send-market-analysis-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          agentName: result.agentName,
+          agentEmail: result.agentEmail,
+          marketType: result.marketType,
+          searchQuery: result.searchQuery,
+          marketData: result.data,
+          timestamp: result.timestamp
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to send email")
+      }
+
+      setEmailSent(true)
+      setEmail("")
+      toast({
+        title: "Email Sent",
+        description: "Market analysis has been sent to your email.",
+      })
+    } catch (error) {
+      console.error("Error sending email:", error)
+      setEmailError("Failed to send email. Please try again.")
+      toast({
+        title: "Email Failed",
+        description: "Failed to send email. Please try again.",
+        variant: "destructive"
+      })
+    } finally {
+      setIsSendingEmail(false)
+    }
+  }
+
   const resetForm = () => {
     setFormData({
       agentName: "",
@@ -166,7 +337,8 @@ export default function MyMarketForm() {
           description: data.market_overview.description,
           forSaleInventory: data.market_overview.for_sale_inventory,
           newListings: data.market_overview.new_listings,
-          saleToListRatio: data.market_overview["market saletolist ratio"]
+          saleToListRatio: data.market_overview["market saletolist ratio"],
+          aiInsights: data.ai_insights || null
         }
       }
 
@@ -178,7 +350,8 @@ export default function MyMarketForm() {
           averageRent: data.rental_data.average_rent,
           rentTrend: data.rental_data.rent_trend,
           rentalInventory: data.rental_data.rental_inventory,
-          description: data.rental_data.description
+          description: data.rental_data.description,
+          aiInsights: data.ai_insights || null
         }
       }
 
@@ -193,7 +366,7 @@ export default function MyMarketForm() {
     }
   }
 
-  if (userLoading) {
+  if (isUserLoading) {
     return (
       <Card>
         <CardContent className="p-6">
@@ -439,6 +612,62 @@ export default function MyMarketForm() {
                   New Analysis
                 </Button>
               </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button 
+                  onClick={handleDownloadPDF} 
+                  disabled={isDownloading}
+                  className="flex items-center gap-2"
+                >
+                  {isDownloading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Downloading...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="h-4 w-4" />
+                      Download PDF
+                    </>
+                  )}
+                </Button>
+
+                <div className="flex flex-col sm:flex-row gap-2 flex-1">
+                  <Input
+                    type="email"
+                    placeholder="Enter email address"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="flex-1"
+                  />
+                  <Button 
+                    onClick={handleSendEmail} 
+                    disabled={isSendingEmail || !email}
+                    className="flex items-center gap-2"
+                  >
+                    {isSendingEmail ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <Mail className="h-4 w-4" />
+                        Send Email
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+
+              {emailError && (
+                <div className="text-red-600 text-sm">{emailError}</div>
+              )}
+
+              {emailSent && (
+                <div className="text-green-600 text-sm">Email sent successfully!</div>
+              )}
               
               {/* Professional Market Data Display */}
               {(() => {
@@ -505,6 +734,21 @@ export default function MyMarketForm() {
                           </CardContent>
                         </Card>
                       )}
+
+                      {/* AI Insights Section */}
+                      {formattedData.aiInsights && (
+                        <Card>
+                          <CardContent className="p-4">
+                            <h4 className="font-semibold mb-2 flex items-center gap-2">
+                              <BarChart3 className="h-4 w-4 text-blue-600" />
+                              AI Market Analysis
+                            </h4>
+                            <div className="prose prose-sm max-w-none">
+                              <p className="text-gray-700 whitespace-pre-line">{formattedData.aiInsights}</p>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )}
                     </div>
                   )
                 }
@@ -555,6 +799,21 @@ export default function MyMarketForm() {
                           <CardContent className="p-4">
                             <h4 className="font-semibold mb-2">Market Overview</h4>
                             <p className="text-gray-700">{formattedData.description}</p>
+                          </CardContent>
+                        </Card>
+                      )}
+
+                      {/* AI Insights Section */}
+                      {formattedData.aiInsights && (
+                        <Card>
+                          <CardContent className="p-4">
+                            <h4 className="font-semibold mb-2 flex items-center gap-2">
+                              <BarChart3 className="h-4 w-4 text-blue-600" />
+                              AI Market Analysis
+                            </h4>
+                            <div className="prose prose-sm max-w-none">
+                              <p className="text-gray-700 whitespace-pre-line">{formattedData.aiInsights}</p>
+                            </div>
                           </CardContent>
                         </Card>
                       )}

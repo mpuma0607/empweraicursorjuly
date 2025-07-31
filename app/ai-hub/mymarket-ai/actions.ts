@@ -1,6 +1,7 @@
 "use server"
 
 import { getTenantConfig } from "@/lib/tenant-config"
+import { OpenAI } from "openai"
 
 export interface MarketData {
   agentName: string
@@ -25,74 +26,165 @@ export async function getAgentInfo() {
 export async function analyzeMarket(
   agentName: string,
   agentEmail: string,
-  marketType: 'rental' | 'housing',
+  marketType: 'housing' | 'rental',
   searchQuery: string,
   homeType?: string,
   rentalType?: string,
   bedroomType?: string
 ): Promise<MarketData> {
   try {
-    const apiKey = process.env.RAPIDAPI_ZILLOW_KEY
-    if (!apiKey) {
-      throw new Error("API key not configured")
+    console.log("MyMarket AI: Starting market analysis...")
+    console.log("Market Type:", marketType)
+    console.log("Search Query:", searchQuery)
+    console.log("Agent:", agentName)
+
+    // Get market data from API
+    const marketData = await fetchMarketData(searchQuery, marketType, homeType, rentalType, bedroomType)
+    
+    // Generate AI insights for deeper analysis
+    const aiInsights = await generateAIInsights(searchQuery, marketType, marketData)
+    
+    // Combine market data with AI insights
+    const enhancedData = {
+      ...marketData,
+      ai_insights: aiInsights,
+      search_query: searchQuery,
+      market_type: marketType
     }
 
-    let endpoint = ""
-    let params: Record<string, string> = {}
-
-    if (marketType === 'rental') {
-      endpoint = "/rental_market"
-      params = {
-        search_query: searchQuery,
-        bedrooom_type: bedroomType || "All_Bedrooms",
-        home_type: rentalType || "All_Property_Types"
-      }
-    } else {
-      endpoint = "/housing_market"
-      params = {
-        search_query: searchQuery,
-        home_type: homeType || "All_Homes",
-        exclude_rentalMarketTrends: "true",
-        exclude_neighborhoods_zhvi: "true"
-      }
-    }
-
-    // Build query string
-    const queryString = new URLSearchParams(params).toString()
-    const url = `https://zillow-working-api.p.rapidapi.com${endpoint}?${queryString}`
-
-    console.log(`MyMarket AI: Calling API for ${marketType} market`)
-    console.log(`MyMarket AI: URL: ${url}`)
-
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'x-rapidapi-key': apiKey,
-        'x-rapidapi-host': 'zillow-working-api.p.rapidapi.com'
-      }
-    })
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error(`MyMarket AI: API call failed with status ${response.status}:`, errorText)
-      throw new Error(`Market API failed: ${response.status} - ${errorText}`)
-    }
-
-    const data = await response.json()
-
-    return {
+    const result: MarketData = {
       agentName,
       agentEmail,
       marketType,
       searchQuery,
-      homeType,
-      rentalType,
-      bedroomType,
-      data,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      data: enhancedData
     }
+
+    console.log("MyMarket AI: Analysis completed successfully")
+    return result
+
   } catch (error) {
     console.error("MyMarket AI Error:", error)
     throw error
   }
+}
+
+async function generateAIInsights(location: string, marketType: 'housing' | 'rental', marketData: any): Promise<string> {
+  try {
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    })
+
+    let marketContext = ""
+    if (marketType === 'housing') {
+      marketContext = `
+        Location: ${location}
+        Typical Home Value: $${marketData.market_overview?.typical_home_values?.toLocaleString() || 'N/A'}
+        For Sale Inventory: ${marketData.market_overview?.for_sale_inventory?.toLocaleString() || 'N/A'}
+        New Listings: ${marketData.market_overview?.new_listings?.toLocaleString() || 'N/A'}
+        Sale/List Ratio: ${marketData.market_overview?.["market saletolist ratio"] || 'N/A'}
+      `
+    } else {
+      marketContext = `
+        Location: ${location}
+        Average Rent: $${marketData.rental_data?.average_rent?.toLocaleString() || 'N/A'}
+        Rental Inventory: ${marketData.rental_data?.rental_inventory?.toLocaleString() || 'N/A'}
+        Rent Trend: ${marketData.rental_data?.rent_trend || 'N/A'}
+      `
+    }
+
+    const prompt = `As a real estate market analyst, provide deep insights about the ${marketType} market in ${location}. 
+
+Market Data:
+${marketContext}
+
+Please provide:
+1. Market trends and what they indicate
+2. Opportunities for buyers/sellers/renters
+3. Potential challenges in this market
+4. Seasonal factors that might affect this market
+5. Economic indicators that could impact this area
+6. Recommendations for different types of clients
+
+Keep the analysis professional, data-driven, and actionable. Focus on real insights that would help real estate agents and their clients make informed decisions.`
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [
+        {
+          role: "system",
+          content: "You are an expert real estate market analyst with deep knowledge of local markets, economic trends, and real estate dynamics. Provide insightful, professional analysis that helps real estate professionals and their clients understand market conditions."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      max_tokens: 800,
+      temperature: 0.7
+    })
+
+    return completion.choices[0]?.message?.content || "Unable to generate AI insights at this time."
+  } catch (error) {
+    console.error("Error generating AI insights:", error)
+    return "AI insights temporarily unavailable."
+  }
+}
+
+async function fetchMarketData(
+  searchQuery: string,
+  marketType: 'housing' | 'rental',
+  homeType?: string,
+  rentalType?: string,
+  bedroomType?: string
+): Promise<any> {
+  const apiKey = process.env.RAPIDAPI_ZILLOW_KEY
+  if (!apiKey) {
+    throw new Error("API key not configured")
+  }
+
+  let endpoint = ""
+  let params: Record<string, string> = {}
+
+  if (marketType === 'rental') {
+    endpoint = "/rental_market"
+    params = {
+      search_query: searchQuery,
+      bedrooom_type: bedroomType || "All_Bedrooms",
+      home_type: rentalType || "All_Property_Types"
+    }
+  } else {
+    endpoint = "/housing_market"
+    params = {
+      search_query: searchQuery,
+      home_type: homeType || "All_Homes",
+      exclude_rentalMarketTrends: "true",
+      exclude_neighborhoods_zhvi: "true"
+    }
+  }
+
+  // Build query string
+  const queryString = new URLSearchParams(params).toString()
+  const url = `https://zillow-working-api.p.rapidapi.com${endpoint}?${queryString}`
+
+  console.log(`MyMarket AI: Calling API for ${marketType} market`)
+  console.log(`MyMarket AI: URL: ${url}`)
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'x-rapidapi-key': apiKey,
+      'x-rapidapi-host': 'zillow-working-api.p.rapidapi.com'
+    }
+  })
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    console.error(`MyMarket AI: API call failed with status ${response.status}:`, errorText)
+    throw new Error(`Market API failed: ${response.status} - ${errorText}`)
+  }
+
+  const data = await response.json()
+  return data
 } 
