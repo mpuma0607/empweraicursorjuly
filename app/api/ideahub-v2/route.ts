@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
       `
 
       const result = await resend.emails.send({
-        from: "IdeaHub V2 <noreply@yourdomain.com>",
+        from: "IdeaHub V2 <noreply@marketing.getempowerai.com>",
         to: [to],
         subject: "Your IdeaHub V2 Content is Ready!",
         html: emailHtml,

@@ -317,7 +317,7 @@ export default function IdeaHubBegginsForm() {
     if (result?.text && result?.imageUrl) {
       setIsSendingEmail(true)
       try {
-        const response = await fetch("/api/ideahub-v2", {
+        const response = await fetch("/api/ideahub-email", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
