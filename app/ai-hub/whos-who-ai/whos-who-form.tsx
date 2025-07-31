@@ -196,18 +196,15 @@ export function WhosWhoForm() {
       } else if (title.includes("CONTACT DETAILS")) {
         // Only keep public record links for primary owners
         const primaryOwners = extractOwnerNames(summary)
-        const urlMatches = content.match(/https?:\/\/[^\s)]+/g) || []
         
         // Filter content to only show public record links for primary owners
         const lines = content.split('\n')
         const filteredLines = lines.filter(line => {
           // Check if this line contains a URL (public record link)
-          const hasUrl = urlMatches.some(url => line.includes(url))
+          const hasUrl = /https?:\/\/[^\s)]+/.test(line)
           
           // Check if this line mentions one of the primary owners
-          const mentionsPrimaryOwner = primaryOwners.some(owner => 
-            line.toLowerCase().includes(owner.toLowerCase())
-          )
+          const mentionsPrimaryOwner = isPrimaryOwnerLine(line, primaryOwners)
           
           // Remove lines with phone numbers, email addresses, social media
           const hasPhone = /\b\d{3}[-.]?\d{3}[-.]?\d{4}\b/.test(line)
@@ -304,8 +301,27 @@ export function WhosWhoForm() {
           .filter(name => name && name.length > 0)
           .slice(0, 2) // Only take first 2 owners as requested
       }
+      
+      // Additional fallback: Look for names in the demographics section
+      const demographicsSection = ownerSection[0].match(/Owner Demographics and Background Information:[\s\S]*?(?=\n\n|$)/i)
+      if (demographicsSection) {
+        const nameMatches = demographicsSection[0].match(/- ([^:]+):/g)
+        if (nameMatches) {
+          return nameMatches
+            .map(name => name.replace(/^- /, '').replace(/:/, '').trim())
+            .filter(name => name && name.length > 0)
+            .slice(0, 2) // Only take first 2 owners as requested
+        }
+      }
     }
     return []
+  }
+
+  // Helper function to check if a line contains a primary owner name
+  const isPrimaryOwnerLine = (line: string, primaryOwners: string[]): boolean => {
+    return primaryOwners.some(owner => 
+      line.toLowerCase().includes(owner.toLowerCase())
+    )
   }
 
   const extractPropertyType = (summary: string): string | undefined => {
