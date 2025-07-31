@@ -234,9 +234,13 @@ export function WhosWhoForm() {
   const extractOwnerNames = (summary: string): string[] => {
     const ownerSection = summary.match(/## OWNER INFORMATION[\s\S]*?(?=##|$)/i)
     if (ownerSection) {
-      const names = ownerSection[0].match(/(?:Primary owner|Owner|Name[s]?):\s*([^\n]+)/gi)
-      if (names) {
-        return names.map(name => name.replace(/(?:Primary owner|Owner|Name[s]?):\s*/i, '').trim())
+      // Look for primary owners first, then any owner names
+      const primaryOwners = ownerSection[0].match(/(?:Primary owner|Primary owners|Owner|Name[s]?):\s*([^\n]+)/gi)
+      if (primaryOwners) {
+        return primaryOwners
+          .map(name => name.replace(/(?:Primary owner|Primary owners|Owner|Name[s]?):\s*/i, '').trim())
+          .filter(name => name && name.length > 0)
+          .slice(0, 2) // Only take first 2 owners as requested
       }
     }
     return []
@@ -254,8 +258,16 @@ export function WhosWhoForm() {
   const extractEstimatedValue = (summary: string): string | undefined => {
     const propertySection = summary.match(/## PROPERTY CHARACTERISTICS[\s\S]*?(?=##|$)/i)
     if (propertySection) {
-      const valueMatch = propertySection[0].match(/(?:Estimated value|Value|Price):\s*([^\n]+)/i)
-      return valueMatch ? valueMatch[1].trim() : undefined
+      // Look for various value formats
+      const valueMatch = propertySection[0].match(/(?:Estimated value|Value|Price|Estimated price):\s*([^\n]+)/i)
+      if (valueMatch) {
+        return valueMatch[1].trim()
+      }
+      // Also check for any dollar amounts in the property section
+      const dollarMatch = propertySection[0].match(/\$[\d,]+(?:\.\d{2})?/g)
+      if (dollarMatch && dollarMatch.length > 0) {
+        return dollarMatch[0] // Return the first dollar amount found
+      }
     }
     return undefined
   }
@@ -435,7 +447,16 @@ export function WhosWhoForm() {
                 </Button>
                 
                 <Button
-                  onClick={() => setShowScriptGenerator(true)}
+                  onClick={() => {
+                    setShowScriptGenerator(true)
+                    // Auto-scroll to script section after a brief delay
+                    setTimeout(() => {
+                      const scriptSection = document.getElementById('script-generator-section')
+                      if (scriptSection) {
+                        scriptSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                      }
+                    }, 100)
+                  }}
                   className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700"
                 >
                   <Target className="h-4 w-4" />
@@ -566,25 +587,25 @@ export function WhosWhoForm() {
         </div>
       )}
 
-                {/* Script Generator Section */}
-          {showScriptGenerator && result && (
-            <div className="border-t-4 border-purple-500 pt-6">
-              <h2 className="text-2xl font-bold text-purple-800 mb-4 flex items-center gap-2">
-                <Target className="h-6 w-6" />
-                Personalized Outreach Script
-              </h2>
-              <PropertyScriptGenerator
-                propertyAddress={result.address}
-                ownerNames={extractOwnerNames(result.summary)}
-                propertyType={extractPropertyType(result.summary)}
-                estimatedValue={extractEstimatedValue(result.summary)}
-                propertyDetails={extractPropertyDetails(result.summary)}
-                onScriptGenerated={(script) => {
-                  console.log("Script generated:", script)
-                }}
-              />
-            </div>
-          )}
+                      {/* Script Generator Section */}
+      {showScriptGenerator && result && (
+        <div id="script-generator-section" className="border-t-4 border-purple-500 pt-6">
+          <h2 className="text-2xl font-bold text-purple-800 mb-4 flex items-center gap-2">
+            <Target className="h-6 w-6" />
+            Personalized Outreach Script
+          </h2>
+          <PropertyScriptGenerator
+            propertyAddress={result.address}
+            ownerNames={extractOwnerNames(result.summary)}
+            propertyType={extractPropertyType(result.summary)}
+            estimatedValue={extractEstimatedValue(result.summary)}
+            propertyDetails={extractPropertyDetails(result.summary)}
+            onScriptGenerated={(script) => {
+              console.log("Script generated:", script)
+            }}
+          />
+        </div>
+      )}
     </div>
   )
 }

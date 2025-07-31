@@ -191,12 +191,31 @@ export default function QuickCMAForm({ onAnalysisComplete }: QuickCMAFormProps) 
     if (data.comparableData?.comparables?.[0]?.propertyType) {
       return data.comparableData.comparables[0].propertyType
     }
+    // Also check the analysis text for property type
+    if (data.analysisText) {
+      const typeMatch = data.analysisText.match(/(?:property type|type):\s*([^\n]+)/i)
+      if (typeMatch) {
+        return typeMatch[1].trim()
+      }
+    }
     return undefined
   }
 
   const extractEstimatedValue = (data: any): string | undefined => {
     if (data.comparableData?.summary?.averagePrice) {
       return `$${data.comparableData.summary.averagePrice.toLocaleString()}`
+    }
+    // Also check the analysis text for estimated value
+    if (data.analysisText) {
+      const valueMatch = data.analysisText.match(/(?:estimated value|value|price):\s*\$?([\d,]+(?:\.\d{2})?)/i)
+      if (valueMatch) {
+        return `$${valueMatch[1]}`
+      }
+      // Look for any dollar amounts
+      const dollarMatch = data.analysisText.match(/\$[\d,]+(?:\.\d{2})?/g)
+      if (dollarMatch && dollarMatch.length > 0) {
+        return dollarMatch[0]
+      }
     }
     return undefined
   }
@@ -496,7 +515,16 @@ Generated on ${new Date().toLocaleDateString()}`
               </h2>
               {!showScriptGenerator && (
                 <Button
-                  onClick={() => setShowScriptGenerator(true)}
+                  onClick={() => {
+                    setShowScriptGenerator(true)
+                    // Auto-scroll to script section after a brief delay
+                    setTimeout(() => {
+                      const scriptSection = document.getElementById('script-generator-section')
+                      if (scriptSection) {
+                        scriptSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                      }
+                    }, 100)
+                  }}
                   className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700"
                 >
                   <Target className="h-4 w-4" />
@@ -506,15 +534,17 @@ Generated on ${new Date().toLocaleDateString()}`
             </div>
             
             {showScriptGenerator && (
-              <PropertyScriptGenerator
-                propertyAddress={analysisData.address}
-                propertyType={extractPropertyType(analysisData)}
-                estimatedValue={extractEstimatedValue(analysisData)}
-                propertyDetails={extractPropertyDetails(analysisData)}
-                onScriptGenerated={(script) => {
-                  console.log("Script generated:", script)
-                }}
-              />
+              <div id="script-generator-section">
+                <PropertyScriptGenerator
+                  propertyAddress={analysisData.address}
+                  propertyType={extractPropertyType(analysisData)}
+                  estimatedValue={extractEstimatedValue(analysisData)}
+                  propertyDetails={extractPropertyDetails(analysisData)}
+                  onScriptGenerated={(script) => {
+                    console.log("Script generated:", script)
+                  }}
+                />
+              </div>
             )}
           </div>
         </div>

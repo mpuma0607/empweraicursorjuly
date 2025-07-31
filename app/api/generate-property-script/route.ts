@@ -74,8 +74,8 @@ export async function POST(request: NextRequest) {
       ? `Focus on ${body.customProspectType} and provide value based on their specific situation.`
       : prospectTypeContexts[body.prospectType]
 
-    // Build property context
-    const propertyContext = `
+                    // Build property context
+                const propertyContext = `
 Property Address: ${body.propertyAddress}
 ${body.ownerNames && body.ownerNames.length > 0 ? `Owner Names: ${body.ownerNames.join(", ")}` : ""}
 ${body.propertyType ? `Property Type: ${body.propertyType}` : ""}
@@ -83,12 +83,25 @@ ${body.estimatedValue ? `Estimated Value: ${body.estimatedValue}` : ""}
 ${body.propertyDetails ? `Property Details: ${body.propertyDetails}` : ""}
 `.trim()
 
+                // Enhanced personalization context
+                const personalizationContext = body.ownerNames && body.ownerNames.length > 0 
+                  ? `PERSONALIZATION: Use the owner names "${body.ownerNames.join(", ")}" naturally throughout the script. Address them directly by name when appropriate.`
+                  : "PERSONALIZATION: Make the script feel personal and specific to this property and situation."
+
+                const valueContext = body.estimatedValue 
+                  ? `VALUE CONTEXT: The property has an estimated value of ${body.estimatedValue}. Use this information strategically in the script to show market knowledge and create urgency or opportunity.`
+                  : "VALUE CONTEXT: Focus on the property's market potential and opportunities."
+
     const prompt = `You are an expert real estate script writer. Create ONE professional ${body.deliveryMethod} script for ${body.agentName} from ${body.brokerageName}.
 
-PROPERTY CONTEXT:
-${propertyContext}
-
-SCRIPT PURPOSE: This is a prospecting script targeting ${body.prospectType === "other" ? body.customProspectType : body.prospectType} prospects for the property at ${body.propertyAddress}.
+            PROPERTY CONTEXT:
+            ${propertyContext}
+            
+            ${personalizationContext}
+            
+            ${valueContext}
+            
+            SCRIPT PURPOSE: This is a prospecting script targeting ${body.prospectType === "other" ? body.customProspectType : body.prospectType} prospects for the property at ${body.propertyAddress}.
 
 ${deliveryDetails.requirements}
 
@@ -119,7 +132,7 @@ ${deliveryDetails.lengthGuidance}
 
 Write this as ONE complete, flowing script that naturally weaves in visual, auditory, and kinesthetic language throughout while maintaining the ${body.tonality} tonality. Make it sound conversational and natural. Do NOT create separate sections or versions. Just write one professional script.
 
-IMPORTANT: Personalize the script using the specific property address and any available owner information. Make it clear this is about their specific property.`
+            IMPORTANT: Personalize the script using the specific property address, owner names, and property value. Make it clear this is about their specific property. Use owner names naturally in the conversation flow.`
 
     const { text: generatedScript } = await generateText({
       model: openai("gpt-4o"),
