@@ -1,11 +1,12 @@
 "use server"
 
 import { getTenantConfig } from "@/lib/tenant-config"
-import { useMemberSpaceUser } from "@/hooks/useMemberSpaceUser"
 
 export interface MarketData {
-  location: string
+  agentName: string
+  agentEmail: string
   marketType: 'rental' | 'housing'
+  searchQuery: string
   homeType?: string
   rentalType?: string
   bedroomType?: string
@@ -13,9 +14,19 @@ export interface MarketData {
   timestamp: string
 }
 
+export async function getAgentInfo() {
+  const config = getTenantConfig()
+  return {
+    name: config.branding.name || "Your Name",
+    email: "your.email@example.com" // This will be populated from MemberSpace user
+  }
+}
+
 export async function analyzeMarket(
-  location: string,
+  agentName: string,
+  agentEmail: string,
   marketType: 'rental' | 'housing',
+  searchQuery: string,
   homeType?: string,
   rentalType?: string,
   bedroomType?: string
@@ -30,28 +41,34 @@ export async function analyzeMarket(
     let params: Record<string, string> = {}
 
     if (marketType === 'rental') {
-      endpoint = "/rental_market_trends"
-      if (rentalType) params.rental_type = rentalType
-      if (bedroomType) params.bedroom_type = bedroomType
+      endpoint = "/rental_market"
+      params = {
+        search_query: searchQuery,
+        bedrooom_type: bedroomType || "All_Bedrooms",
+        home_type: rentalType || "All_Property_Types"
+      }
     } else {
       endpoint = "/housing_market"
-      if (homeType) params.home_type = homeType
+      params = {
+        search_query: searchQuery,
+        home_type: homeType || "All_Homes",
+        exclude_rentalMarketTrends: "true",
+        exclude_neighborhoods_zhvi: "true"
+      }
     }
 
-    // Add location parameter
-    params.location = location
-
+    // Build query string
     const queryString = new URLSearchParams(params).toString()
     const url = `https://zillow-working-api.p.rapidapi.com${endpoint}?${queryString}`
 
-    console.log(`MyMarket AI: Calling ${marketType} market API for ${location}`)
-    console.log(`MyMarket AI: API URL: ${url}`)
+    console.log(`MyMarket AI: Calling API for ${marketType} market`)
+    console.log(`MyMarket AI: URL: ${url}`)
 
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'X-RapidAPI-Key': apiKey,
-        'X-RapidAPI-Host': 'zillow-working-api.p.rapidapi.com'
+        'x-rapidapi-key': apiKey,
+        'x-rapidapi-host': 'zillow-working-api.p.rapidapi.com'
       }
     })
 
@@ -62,10 +79,12 @@ export async function analyzeMarket(
     }
 
     const data = await response.json()
-    
+
     return {
-      location,
+      agentName,
+      agentEmail,
       marketType,
+      searchQuery,
       homeType,
       rentalType,
       bedroomType,
@@ -75,25 +94,5 @@ export async function analyzeMarket(
   } catch (error) {
     console.error("MyMarket AI Error:", error)
     throw error
-  }
-}
-
-export async function getAgentInfo() {
-  try {
-    const config = getTenantConfig()
-    return {
-      name: config.agentName || "Real Estate Agent",
-      company: config.companyName || "Real Estate Company",
-      phone: config.phone || "",
-      email: config.email || ""
-    }
-  } catch (error) {
-    console.error("Error getting agent info:", error)
-    return {
-      name: "Real Estate Agent",
-      company: "Real Estate Company",
-      phone: "",
-      email: ""
-    }
   }
 } 
