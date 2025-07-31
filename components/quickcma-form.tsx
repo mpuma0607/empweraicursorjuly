@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Loader2, Calculator, MapPin, Clock, Save, CheckCircle } from "lucide-react"
+import { Loader2, Calculator, MapPin, Clock, Save, CheckCircle, Target } from "lucide-react"
 import { analyzeComparables } from "./actions"
 import Image from "next/image"
 import { useMemberSpaceUser } from "@/hooks/use-memberspace-user"
@@ -15,6 +15,7 @@ import { toast } from "@/hooks/use-toast"
 import { getUserBrandingProfile } from "@/app/profile/branding/actions"
 import { useTenantConfig } from "@/hooks/useTenantConfig"
 import { QuickCMAResults } from "./quickcma-results"
+import { PropertyScriptGenerator } from "./property-script-generator"
 
 interface QuickCMAFormProps {
   onAnalysisComplete?: (data: any) => void
@@ -37,6 +38,7 @@ export default function QuickCMAForm({ onAnalysisComplete }: QuickCMAFormProps) 
   const [loadingMessage, setLoadingMessage] = useState("")
   const [isSaving, setIsSaving] = useState(false)
   const [userBranding, setUserBranding] = useState<UserBrandingData | null>(null)
+  const [showScriptGenerator, setShowScriptGenerator] = useState(false)
   const resultsRef = useRef<HTMLDivElement>(null)
   const { user } = useMemberSpaceUser()
   const tenantConfig = useTenantConfig()
@@ -182,6 +184,35 @@ export default function QuickCMAForm({ onAnalysisComplete }: QuickCMAFormProps) 
       setLoadingMessage("")
       console.log("=== LOADING STATE CLEARED ===")
     }
+  }
+
+  // Helper functions to extract property information from CMA data
+  const extractPropertyType = (data: any): string | undefined => {
+    if (data.comparableData?.comparables?.[0]?.propertyType) {
+      return data.comparableData.comparables[0].propertyType
+    }
+    return undefined
+  }
+
+  const extractEstimatedValue = (data: any): string | undefined => {
+    if (data.comparableData?.summary?.averagePrice) {
+      return `$${data.comparableData.summary.averagePrice.toLocaleString()}`
+    }
+    return undefined
+  }
+
+  const extractPropertyDetails = (data: any): string | undefined => {
+    const details = []
+    if (data.comparableData?.summary?.averageSqft) {
+      details.push(`Average Size: ${data.comparableData.summary.averageSqft.toLocaleString()} sq ft`)
+    }
+    if (data.comparableData?.totalComparables) {
+      details.push(`Total Comparables: ${data.comparableData.totalComparables}`)
+    }
+    if (data.comparableData?.summary?.priceRange) {
+      details.push(`Price Range: $${data.comparableData.summary.priceRange.min.toLocaleString()} - $${data.comparableData.summary.priceRange.max.toLocaleString()}`)
+    }
+    return details.length > 0 ? details.join(", ") : undefined
   }
 
   const handleSave = async () => {
@@ -455,6 +486,37 @@ Generated on ${new Date().toLocaleDateString()}`
       {analysisData && !analysisData.error && (
         <div ref={resultsRef}>
           <QuickCMAResults data={analysisData} />
+          
+          {/* Script Generator Section */}
+          <div className="mt-8 border-t-4 border-purple-500 pt-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold text-purple-800 flex items-center gap-2">
+                <Target className="h-6 w-6" />
+                Personalized Outreach Script
+              </h2>
+              {!showScriptGenerator && (
+                <Button
+                  onClick={() => setShowScriptGenerator(true)}
+                  className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700"
+                >
+                  <Target className="h-4 w-4" />
+                  Generate Script for This Property
+                </Button>
+              )}
+            </div>
+            
+            {showScriptGenerator && (
+              <PropertyScriptGenerator
+                propertyAddress={analysisData.address}
+                propertyType={extractPropertyType(analysisData)}
+                estimatedValue={extractEstimatedValue(analysisData)}
+                propertyDetails={extractPropertyDetails(analysisData)}
+                onScriptGenerated={(script) => {
+                  console.log("Script generated:", script)
+                }}
+              />
+            )}
+          </div>
         </div>
       )}
     </div>

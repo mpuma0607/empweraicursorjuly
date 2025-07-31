@@ -31,6 +31,7 @@ import {
 import { skipTraceProperty } from "./actions"
 import { analyzeComparables } from "@/components/actions"
 import { QuickCMAResults } from "@/components/quickcma-results"
+import { PropertyScriptGenerator } from "@/components/property-script-generator"
 
 interface SkipTraceResult {
   summary: string
@@ -75,6 +76,9 @@ export function WhosWhoForm() {
   const [cmaResult, setCmaResult] = useState<CMAResult | null>(null)
   const [isCmaLoading, setIsCmaLoading] = useState(false)
   const [cmaError, setCmaError] = useState<string | null>(null)
+
+  // Script generation state
+  const [showScriptGenerator, setShowScriptGenerator] = useState(false)
 
   const { user, isLoggedIn } = useMemberSpaceUser()
 
@@ -150,10 +154,10 @@ export function WhosWhoForm() {
 
       const cmaResponse = await analyzeComparables(fullAddress)
 
-      if (cmaResponse.error) {
-        setCmaError(cmaResponse.message || "Failed to generate CMA")
+      if ('error' in cmaResponse && cmaResponse.error) {
+        setCmaError(('message' in cmaResponse ? cmaResponse.message : "Failed to generate CMA") || "Failed to generate CMA")
       } else {
-        setCmaResult(cmaResponse)
+        setCmaResult(cmaResponse as CMAResult)
       }
     } catch (err) {
       console.error("CMA generation error:", err)
@@ -224,6 +228,44 @@ export function WhosWhoForm() {
       }
       return part
     })
+  }
+
+  // Helper functions to extract property information from summary
+  const extractOwnerNames = (summary: string): string[] => {
+    const ownerSection = summary.match(/## OWNER INFORMATION[\s\S]*?(?=##|$)/i)
+    if (ownerSection) {
+      const names = ownerSection[0].match(/(?:Primary owner|Owner|Name[s]?):\s*([^\n]+)/gi)
+      if (names) {
+        return names.map(name => name.replace(/(?:Primary owner|Owner|Name[s]?):\s*/i, '').trim())
+      }
+    }
+    return []
+  }
+
+  const extractPropertyType = (summary: string): string | undefined => {
+    const propertySection = summary.match(/## PROPERTY CHARACTERISTICS[\s\S]*?(?=##|$)/i)
+    if (propertySection) {
+      const typeMatch = propertySection[0].match(/(?:Property type|Type):\s*([^\n]+)/i)
+      return typeMatch ? typeMatch[1].trim() : undefined
+    }
+    return undefined
+  }
+
+  const extractEstimatedValue = (summary: string): string | undefined => {
+    const propertySection = summary.match(/## PROPERTY CHARACTERISTICS[\s\S]*?(?=##|$)/i)
+    if (propertySection) {
+      const valueMatch = propertySection[0].match(/(?:Estimated value|Value|Price):\s*([^\n]+)/i)
+      return valueMatch ? valueMatch[1].trim() : undefined
+    }
+    return undefined
+  }
+
+  const extractPropertyDetails = (summary: string): string | undefined => {
+    const propertySection = summary.match(/## PROPERTY CHARACTERISTICS[\s\S]*?(?=##|$)/i)
+    if (propertySection) {
+      return propertySection[0].replace(/## PROPERTY CHARACTERISTICS/i, '').trim()
+    }
+    return undefined
   }
 
   return (
@@ -391,6 +433,14 @@ export function WhosWhoForm() {
                     </>
                   )}
                 </Button>
+                
+                <Button
+                  onClick={() => setShowScriptGenerator(true)}
+                  className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700"
+                >
+                  <Target className="h-4 w-4" />
+                  Generate Personalized Script
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -515,6 +565,26 @@ export function WhosWhoForm() {
           </div>
         </div>
       )}
+
+                {/* Script Generator Section */}
+          {showScriptGenerator && result && (
+            <div className="border-t-4 border-purple-500 pt-6">
+              <h2 className="text-2xl font-bold text-purple-800 mb-4 flex items-center gap-2">
+                <Target className="h-6 w-6" />
+                Personalized Outreach Script
+              </h2>
+              <PropertyScriptGenerator
+                propertyAddress={result.address}
+                ownerNames={extractOwnerNames(result.summary)}
+                propertyType={extractPropertyType(result.summary)}
+                estimatedValue={extractEstimatedValue(result.summary)}
+                propertyDetails={extractPropertyDetails(result.summary)}
+                onScriptGenerated={(script) => {
+                  console.log("Script generated:", script)
+                }}
+              />
+            </div>
+          )}
     </div>
   )
 }
