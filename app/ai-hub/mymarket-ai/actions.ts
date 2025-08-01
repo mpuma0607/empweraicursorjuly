@@ -154,7 +154,7 @@ async function fetchMarketData(
     endpoint = "/rental_market_trends"
     params = {
       search_query: searchQuery,
-      bedrooom_type: bedroomType || "All_Bedrooms",
+      bedroom_type: bedroomType || "All_Bedrooms",
       home_type: rentalType || "All_Property_Types"
     }
   } else {
