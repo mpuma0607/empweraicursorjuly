@@ -27,6 +27,7 @@ const navigationItems = [
       { title: "ListIT", href: "/ai-hub/listit-ai", description: "Property Listing Descriptions" },
       { title: "ScriptIT", href: "/ai-hub/scriptit-ai", description: "Custom Real Estate Scripts" },
       { title: "QuickCMA AI", href: "/ai-hub/quickcma-ai", description: "Comparative Market Analysis Tool" },
+      { title: "MyMarket AI", href: "/ai-hub/mymarket-ai", description: "Housing & Rental Market Analysis" },
       { title: "RolePlay AI", href: "/ai-hub/roleplay-ai", description: "Voice Conversation Practice" },
       { title: "PropBot AI", href: "/ai-hub/propbot-ai", description: "Intelligent Property Search & Analysis" },
       { title: "Who's Who AI", href: "/ai-hub/whos-who-ai", description: "Property Owner Skip Tracing" },

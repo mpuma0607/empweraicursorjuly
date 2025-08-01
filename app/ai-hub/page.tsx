@@ -286,6 +286,44 @@ const aiTools = {
       ],
     },
     {
+      title: "MyMarket AI",
+      href: "/ai-hub/mymarket-ai",
+      description: "Housing & Rental Market Analysis",
+      icon: TrendingUp,
+      color: "emerald",
+      toolId: "mymarket-ai",
+      keywords: [
+        "market analysis",
+        "housing market",
+        "rental market",
+        "market trends",
+        "market data",
+        "housing trends",
+        "rental trends",
+        "market research",
+        "housing analysis",
+        "rental analysis",
+        "market insights",
+        "housing insights",
+        "rental insights",
+        "market report",
+        "housing report",
+        "rental report",
+        "market statistics",
+        "housing statistics",
+        "rental statistics",
+        "market overview",
+        "housing overview",
+        "rental overview",
+        "market conditions",
+        "housing conditions",
+        "rental conditions",
+        "market analysis tool",
+        "housing market tool",
+        "rental market tool",
+      ],
+    },
+    {
       title: "RolePlay AI",
       href: "/ai-hub/roleplay-ai",
       description: "Voice Conversation Practice",
@@ -691,6 +729,8 @@ export default function AIHubPage() {
               "Create a personalized 90-day business plan with specific daily targets, prospecting strategies, and actionable steps to reach your financial goals."}
             {tool.title === "QuickCMA AI" &&
               "Generate comprehensive comparative market analysis reports with comparable homes data, pricing insights, and professional AI-powered market summaries."}
+            {tool.title === "MyMarket AI" &&
+              "Analyze current housing and rental market trends, identify key indicators, and receive insights on market conditions to inform your real estate strategies."}
             {tool.title === "Who's Who AI" &&
               "Discover property owner information and contact details using advanced skip tracing technology with AI-powered professional summaries."}
             {tool.title === "PropBot AI" &&
