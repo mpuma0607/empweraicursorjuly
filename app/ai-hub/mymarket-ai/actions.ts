@@ -151,19 +151,17 @@ async function fetchMarketData(
   let params: Record<string, string> = {}
 
   if (marketType === 'rental') {
-    endpoint = "/rental_market_trends"
+    endpoint = "/rental_market"
     params = {
       search_query: searchQuery,
-      bedroom_type: bedroomType || "All_Bedrooms",
+      bedrooom_type: bedroomType || "All_Bedrooms",
       home_type: rentalType || "All_Property_Types"
     }
   } else {
     endpoint = "/housing_market"
     params = {
       search_query: searchQuery,
-      home_type: homeType || "All_Homes",
-      exclude_rentalMarketTrends: "true",
-      exclude_neighborhoods_zhvi: "true"
+      home_type: homeType || "All_Homes"
     }
   }
 
