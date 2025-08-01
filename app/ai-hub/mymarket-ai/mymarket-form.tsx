@@ -353,12 +353,18 @@ export default function MyMarketForm() {
         const rentalData = data.rental_market_trends || data.rental_data || data.rental_market || {}
         console.log("MyMarket AI: Found rental data structure:", rentalData)
         
+        // Extract values from the correct structure
+        const averageRent = rentalData.summary?.medianRent || rentalData.average_rent || rentalData.avgRent || rentalData.averageRent || 'N/A'
+        const rentalInventory = rentalData.summary?.availableRentals || rentalData.rental_inventory || rentalData.inventory || rentalData.rentalInventory || 'N/A'
+        const monthlyChange = rentalData.summary?.monthlyChange || 0
+        const rentTrend = monthlyChange > 0 ? `+$${monthlyChange}` : monthlyChange < 0 ? `-$${Math.abs(monthlyChange)}` : 'No change'
+        
         return {
           type: 'rental',
           location: data.search_query || rentalData.areaName || rentalData.location || "Unknown Location",
-          averageRent: rentalData.average_rent || rentalData.avgRent || rentalData.averageRent || 'N/A',
-          rentTrend: rentalData.rent_trend || rentalData.rentTrend || rentalData.trend || 'N/A',
-          rentalInventory: rentalData.rental_inventory || rentalData.inventory || rentalData.rentalInventory || 'N/A',
+          averageRent: averageRent,
+          rentTrend: rentTrend,
+          rentalInventory: rentalInventory,
           description: rentalData.description || `Rental market data for ${rentalData.areaName || rentalData.location || 'this area'}`,
           aiInsights: data.ai_insights || null
         }
