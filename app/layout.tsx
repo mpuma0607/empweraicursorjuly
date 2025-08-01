@@ -105,6 +105,38 @@ export default function RootLayout({
                         `,
                       }}
                     />
+
+                    {/* Beggins University Chatbot Script */}
+                    <Script
+                      id="beggins-chatbot"
+                      strategy="beforeInteractive"
+                      dangerouslySetInnerHTML={{
+                        __html: `
+                          (function() {
+                            if (typeof window === 'undefined') return;
+                            
+                            var hostname = window.location.hostname;
+                            
+                            // Only load Beggins University chatbot for Beggins domains
+                            if (hostname === 'begginsagents.com' ||
+                                 hostname === 'www.begginsagents.com' ||
+                                 hostname === 'beggins.thenextlevelu.com' ||
+                                 hostname === 'begginsuniversity.com' ||
+                                 hostname === 'www.begginsuniversity.com') {
+                              
+                              // Add the Beggins University Fastbots script
+                              var script = document.createElement('script');
+                              script.defer = true;
+                              script.src = 'https://app.fastbots.ai/embed.js';
+                              script.setAttribute('data-bot-id', 'clxdizpfe0089ohbd0rq1xroi');
+                              document.head.appendChild(script);
+                              
+                              console.log('Beggins University chatbot loaded for domain:', hostname);
+                            }
+                          })();
+                        `,
+                      }}
+                    />
       </head>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
