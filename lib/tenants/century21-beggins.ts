@@ -35,6 +35,7 @@ export const century21BegginsConfig: TenantConfig = {
       "bizplan-ai",
       "realdeal-ai",
       "quickcma-ai",
+      "mymarket-ai",
       "whos-who-ai",
       "goalscreen-ai",
       "propbot-ai",

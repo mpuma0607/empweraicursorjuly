@@ -30,6 +30,7 @@ export const internationalConfig: TenantConfig = {
       "listit",
       "scriptit",
       "quickcma-ai",
+      "mymarket-ai",
       "roleplay-ai",
       "propbot-ai",
       "whos-who-ai",
