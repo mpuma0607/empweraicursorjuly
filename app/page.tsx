@@ -7,8 +7,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import Image from "next/image"
-import { Brain, Users, TrendingUp, FileText, Zap, Target, Star, CheckCircle, ArrowRight, Play, X } from "lucide-react"
+import { Brain, Users, TrendingUp, FileText, Zap, Target, Star, CheckCircle, ArrowRight, Play, X, Building2 } from "lucide-react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -17,6 +20,15 @@ import TenantSwitcher from "@/components/tenant-switcher"
 export default function HomePage() {
   const [showVideoModal, setShowVideoModal] = useState(false)
   const [selectedDemo, setSelectedDemo] = useState<string | null>(null)
+  const [showContactModal, setShowContactModal] = useState(false)
+  const [contactForm, setContactForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    agentCount: '',
+    message: ''
+  })
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const tenantConfig = useTenantConfig()
   const router = useRouter()
   const { trackEvent } = useTracking()
@@ -58,6 +70,54 @@ export default function HomePage() {
     console.log("Annual pricing clicked - redirecting to annual plan")
     // Use the correct MemberSpace URL format with annual plan ID
     window.location.href = "https://getempowerai.com?msopen=/member/plans/dkophgnbcp"
+  }
+
+  const handleBrokerageContact = () => {
+    trackEvent("button_click", { button: "brokerage_contact", location: "pricing_section" })
+    setShowContactModal(true)
+  }
+
+  const handleContactFormChange = (field: string, value: string) => {
+    setContactForm(prev => ({
+      ...prev,
+      [field]: value
+    }))
+  }
+
+  const handleContactFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+
+    try {
+      const response = await fetch('/api/brokerage-contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(contactForm),
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        alert('Thank you! Your inquiry has been sent. We\'ll contact you soon.')
+        setShowContactModal(false)
+        setContactForm({
+          name: '',
+          email: '',
+          phone: '',
+          agentCount: '',
+          message: ''
+        })
+      } else {
+        alert('There was an error sending your inquiry. Please try again.')
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error)
+      alert('There was an error sending your inquiry. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleWatchDemo = (toolName: string) => {
@@ -238,6 +298,96 @@ export default function HomePage() {
               className="rounded-b-lg"
             ></iframe>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Contact Form Modal */}
+      <Dialog open={showContactModal} onOpenChange={setShowContactModal}>
+        <DialogContent className="max-w-md w-full p-6 bg-gray-900 border-gray-700">
+          <DialogHeader>
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-white text-xl flex items-center gap-2">
+                <Building2 className="h-5 w-5 text-[#b6a888]" />
+                Brokerage/Team Plan Inquiry
+              </DialogTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowContactModal(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </DialogHeader>
+          <form onSubmit={handleContactFormSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="name" className="text-white">Name *</Label>
+              <Input
+                id="name"
+                type="text"
+                value={contactForm.name}
+                onChange={(e) => handleContactFormChange('name', e.target.value)}
+                required
+                className="bg-gray-800 border-gray-600 text-white"
+                placeholder="Your full name"
+              />
+            </div>
+            <div>
+              <Label htmlFor="email" className="text-white">Email *</Label>
+              <Input
+                id="email"
+                type="email"
+                value={contactForm.email}
+                onChange={(e) => handleContactFormChange('email', e.target.value)}
+                required
+                className="bg-gray-800 border-gray-600 text-white"
+                placeholder="your.email@example.com"
+              />
+            </div>
+            <div>
+              <Label htmlFor="phone" className="text-white">Phone Number *</Label>
+              <Input
+                id="phone"
+                type="tel"
+                value={contactForm.phone}
+                onChange={(e) => handleContactFormChange('phone', e.target.value)}
+                required
+                className="bg-gray-800 border-gray-600 text-white"
+                placeholder="(555) 123-4567"
+              />
+            </div>
+            <div>
+              <Label htmlFor="agentCount" className="text-white">Number of Agents *</Label>
+              <Input
+                id="agentCount"
+                type="number"
+                value={contactForm.agentCount}
+                onChange={(e) => handleContactFormChange('agentCount', e.target.value)}
+                required
+                min="1"
+                className="bg-gray-800 border-gray-600 text-white"
+                placeholder="5"
+              />
+            </div>
+            <div>
+              <Label htmlFor="message" className="text-white">Message (Optional)</Label>
+              <Textarea
+                id="message"
+                value={contactForm.message}
+                onChange={(e) => handleContactFormChange('message', e.target.value)}
+                className="bg-gray-800 border-gray-600 text-white min-h-[100px]"
+                placeholder="Tell us about your brokerage and any specific needs..."
+              />
+            </div>
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full bg-[#b6a888] hover:bg-[#a39577] text-black font-semibold py-3 px-6 rounded-md transition-colors disabled:opacity-50"
+            >
+              {isSubmitting ? 'Sending...' : 'Send Inquiry'}
+            </Button>
+          </form>
         </DialogContent>
       </Dialog>
 
@@ -590,7 +740,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {/* Monthly Plan */}
             <Card className="bg-gray-900/50 border-gray-700 hover:border-[#b6a888]/50 transition-all duration-300">
               <CardHeader className="text-center">
@@ -681,6 +831,56 @@ export default function HomePage() {
                   className="w-full bg-[#b6a888] hover:bg-[#a39577] text-black font-semibold py-3 px-6 rounded-md transition-colors"
                 >
                   Get Started Annual
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Brokerage/Team Plan */}
+            <Card className="bg-gray-900/50 border-gray-700 hover:border-[#b6a888]/50 transition-all duration-300">
+              <CardHeader className="text-center">
+                <CardTitle className="text-2xl text-white flex items-center justify-center gap-2">
+                  <Building2 className="h-6 w-6 text-[#b6a888]" />
+                  Brokerage/Team
+                </CardTitle>
+                <div className="text-4xl font-bold text-[#b6a888] mt-4">
+                  Contact Us
+                  <span className="text-lg text-gray-400 font-normal">for Pricing</span>
+                </div>
+                <CardDescription className="text-gray-300">Perfect for brokerages and teams</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <ul className="space-y-3">
+                  <li className="flex items-center gap-2 text-gray-300">
+                    <CheckCircle className="h-5 w-5 text-green-500" />
+                    All individual plan features
+                  </li>
+                  <li className="flex items-center gap-2 text-gray-300">
+                    <CheckCircle className="h-5 w-5 text-green-500" />
+                    Bulk licensing options
+                  </li>
+                  <li className="flex items-center gap-2 text-gray-300">
+                    <CheckCircle className="h-5 w-5 text-green-500" />
+                    Team management tools
+                  </li>
+                  <li className="flex items-center gap-2 text-gray-300">
+                    <CheckCircle className="h-5 w-5 text-green-500" />
+                    Custom branding options
+                  </li>
+                  <li className="flex items-center gap-2 text-gray-300">
+                    <CheckCircle className="h-5 w-5 text-green-500" />
+                    Dedicated support
+                  </li>
+                  <li className="flex items-center gap-2 text-green-400">
+                    <Star className="h-5 w-5 text-green-500" />
+                    Volume discounts available
+                  </li>
+                </ul>
+
+                <Button
+                  onClick={handleBrokerageContact}
+                  className="w-full bg-[#b6a888] hover:bg-[#a39577] text-black font-semibold py-3 px-6 rounded-md transition-colors"
+                >
+                  Contact Us for Price
                 </Button>
               </CardContent>
             </Card>
