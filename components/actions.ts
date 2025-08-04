@@ -36,6 +36,12 @@ ${formData.specificGoals ? `Additional context: ${formData.specificGoals}` : ""}
 
 IMPORTANT: Generate this entire action plan in ${formData.language}. All text, scripts, and instructions should be written in ${formData.language}.
 
+CRITICAL FORMAT REQUIREMENTS:
+- You MUST include the exact emojis: 🔍, 📱, 📞, 📧, 📊 in your response
+- Each section MUST start with the emoji followed by the section title
+- Do NOT use hashtags or other formatting
+- Provide detailed, actionable content for each section
+
 Instructions:
 This plan should be for today only — do not spread tasks across multiple days.
 
@@ -45,56 +51,49 @@ Include professionally written scripts for each outreach method: Text, Email, an
 
 Scripts must be crafted using VAK language principles to appeal to visual, auditory, and kinesthetic personality types.
 
-The output should be formatted cleanly and professionally, with each action step starting with a bolded heading in font color #b6a888.
-
-Add a relevant emoji/icon next to each section heading for visual engagement (avoid hashtags).
-
 Ensure the tone is empowering, confident, and focused on helping the agent take effective, immediate action.
 
-Content to Include in Each Daily Plan:
-🔍 Prospecting Focus (#b6a888 header)
+REQUIRED SECTIONS (include ALL of these with the exact emojis):
 
+🔍 Prospecting Focus
 Brief summary of who they're targeting today (based on input)
-
 Why this audience is important today
-
 Emotional or strategic angle to approach them with
 
-📱 Text Outreach Plan (#b6a888 header)
-
+📱 Text Outreach Plan
 Specific number of texts to send today
-
 Custom text message script using VAK language
-
 Tip on how to follow up or track replies
 
-📞 Phone Call Plan (#b6a888 header)
-
+📞 Phone Call Plan
 Number of calls to make today
-
 Prescriptive call structure: Opener, Questions, Close
-
 Full phone script with sensory-rich wording
 
-📧 Email Outreach Plan (#b6a888 header)
-
+📧 Email Outreach Plan
 Number of emails to send today
-
 Email subject line idea
-
 Full email script that includes a visually descriptive layout and emotionally resonant CTA
 
-📊 Bonus Task or Follow-Up Assignment (#b6a888 header)
+📊 Bonus Task or Follow-Up Assignment
+Optional bonus action that helps close the loop
+Short motivational note tied to the agent's bigger goals
 
-Optional bonus action that helps close the loop:
-
-Example: "DM 5 new people in your farm area" or "Follow up with yesterday's warm leads"
-
-Short motivational note tied to the agent's bigger goals (keep it focused and intentional)`
+Generate a complete, detailed action plan with all 5 sections. Each section should contain substantial, actionable content.`
 
     const { text: generatedPlan } = await generateText({
       model: openai("gpt-4o"),
       prompt,
+    })
+
+    console.log("Generated Action Plan:", generatedPlan)
+    console.log("Plan length:", generatedPlan.length)
+    console.log("Contains emojis:", {
+      '🔍': generatedPlan.includes('🔍'),
+      '📱': generatedPlan.includes('📱'),
+      '📞': generatedPlan.includes('📞'),
+      '📧': generatedPlan.includes('📧'),
+      '📊': generatedPlan.includes('📊')
     })
 
     // Convert the plain text to HTML with proper formatting
