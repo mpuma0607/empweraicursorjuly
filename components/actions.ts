@@ -111,40 +111,55 @@ Short motivational note tied to the agent's bigger goals (keep it focused and in
 }
 
 function convertPlanToHTML(plan: string, agentName: string): string {
-  // Split the plan into sections
-  const sections = plan.split(/(?=🔍|📱|📞|📧|📊)/)
-  
   let html = ''
   
-  // Process each section
-  sections.forEach((section, index) => {
-    if (!section.trim()) return
+  // If no sections found with emojis, treat the entire plan as content
+  if (!plan.includes('🔍') && !plan.includes('📱') && !plan.includes('📞') && !plan.includes('📧') && !plan.includes('📊')) {
+    // Create a simple formatted version of the plan
+    const formattedContent = plan.split('\n\n').map(paragraph => {
+      if (!paragraph.trim()) return ''
+      return `<p style="margin: 0 0 16px 0; line-height: 1.6; color: #374151;">${paragraph.replace(/\n/g, '<br>')}</p>`
+    }).join('')
     
-    // Extract the header and content
-    const headerMatch = section.match(/^([🔍📱📞📧📊]\s+[^:]+)/)
-    if (headerMatch) {
-      const header = headerMatch[1]
-      const content = section.replace(/^[🔍📱📞📧📊]\s+[^:]+/, '').trim()
+    html = `
+      <div style="background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden; padding: 20px;">
+        ${formattedContent}
+      </div>
+    `
+  } else {
+    // Split the plan into sections using emojis
+    const sections = plan.split(/(?=🔍|📱|📞|📧|📊)/)
+    
+    // Process each section
+    sections.forEach((section, index) => {
+      if (!section.trim()) return
       
-      // Create a styled section
-      const sectionHtml = `
-        <div style="margin-bottom: 30px; background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden;">
-          <div style="background: linear-gradient(135deg, #b6a888, #d4c4a8); padding: 16px 20px; border-bottom: 1px solid #e5e7eb;">
-            <h2 style="margin: 0; color: white; font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
-              ${header}
-            </h2>
+      // Extract the header and content
+      const headerMatch = section.match(/^([🔍📱📞📧📊]\s+[^:]+)/)
+      if (headerMatch) {
+        const header = headerMatch[1]
+        const content = section.replace(/^[🔍📱📞📧📊]\s+[^:]+/, '').trim()
+        
+        // Create a styled section
+        const sectionHtml = `
+          <div style="margin-bottom: 30px; background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden;">
+            <div style="background: linear-gradient(135deg, #b6a888, #d4c4a8); padding: 16px 20px; border-bottom: 1px solid #e5e7eb;">
+              <h2 style="margin: 0; color: white; font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                ${header}
+              </h2>
+            </div>
+            <div style="padding: 20px;">
+              ${content.split('\n\n').map(paragraph => {
+                if (!paragraph.trim()) return ''
+                return `<p style="margin: 0 0 16px 0; line-height: 1.6; color: #374151;">${paragraph.replace(/\n/g, '<br>')}</p>`
+              }).join('')}
+            </div>
           </div>
-          <div style="padding: 20px;">
-            ${content.split('\n\n').map(paragraph => {
-              if (!paragraph.trim()) return ''
-              return `<p style="margin: 0 0 16px 0; line-height: 1.6; color: #374151;">${paragraph.replace(/\n/g, '<br>')}</p>`
-            }).join('')}
-          </div>
-        </div>
-      `
-      html += sectionHtml
-    }
-  })
+        `
+        html += sectionHtml
+      }
+    })
+  }
 
   // Add a professional header and wrapper
   html = `
