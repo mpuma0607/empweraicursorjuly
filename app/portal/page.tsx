@@ -6,9 +6,37 @@ import { Brain, Megaphone, Target, GraduationCap, Briefcase, Users, ShoppingBag,
 import Link from "next/link"
 import { useTenantConfig } from "@/contexts/tenant-context"
 import { isFeatureHidden } from "@/lib/tenant-config"
+import { useEffect } from "react"
+import { useMemberSpaceUser } from "@/hooks/use-memberspace-user"
 
 export default function PortalPage() {
   const tenantConfig = useTenantConfig()
+  const { user, loading, isLoggedIn } = useMemberSpaceUser()
+
+  // Check authentication and redirect if not logged in
+  useEffect(() => {
+    if (!loading && !isLoggedIn) {
+      console.log("User not authenticated, redirecting to MemberSpace sign-in")
+      window.location.href = "https://getempowerai.com?msopen=/member/sign_in"
+    }
+  }, [loading, isLoggedIn])
+
+  // Show loading while checking authentication
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#b6a888] mx-auto mb-4"></div>
+          <p className="text-gray-600">Checking authentication...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // If not logged in, don't render anything (will redirect)
+  if (!isLoggedIn) {
+    return null
+  }
 
   const hubs = [
     {

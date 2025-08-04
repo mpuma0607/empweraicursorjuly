@@ -47,8 +47,8 @@ export default function HomePage() {
 
   const handleLogin = () => {
     trackEvent("button_click", { button: "sign_in", location: "header" })
-    console.log("Sign In clicked - redirecting to portal")
-    window.location.href = "/portal"
+    console.log("Sign In clicked - redirecting to MemberSpace sign in")
+    window.location.href = "https://getempowerai.com?msopen=/member/sign_in"
   }
 
   const handleSignup = () => {
