@@ -36,12 +36,6 @@ ${formData.specificGoals ? `Additional context: ${formData.specificGoals}` : ""}
 
 IMPORTANT: Generate this entire action plan in ${formData.language}. All text, scripts, and instructions should be written in ${formData.language}.
 
-CRITICAL FORMAT REQUIREMENTS:
-- You MUST include the exact emojis: 🔍, 📱, 📞, 📧, 📊 in your response
-- Each section MUST start with the emoji followed by the section title
-- Do NOT use hashtags or other formatting
-- Provide detailed, actionable content for each section
-
 Instructions:
 This plan should be for today only — do not spread tasks across multiple days.
 
@@ -86,22 +80,9 @@ Generate a complete, detailed action plan with all 5 sections. Each section shou
       prompt,
     })
 
-    console.log("Generated Action Plan:", generatedPlan)
-    console.log("Plan length:", generatedPlan.length)
-    console.log("Contains emojis:", {
-      '🔍': generatedPlan.includes('🔍'),
-      '📱': generatedPlan.includes('📱'),
-      '📞': generatedPlan.includes('📞'),
-      '📧': generatedPlan.includes('📧'),
-      '📊': generatedPlan.includes('📊')
-    })
-
-    // Convert the plain text to HTML with proper formatting
-    const html = convertPlanToHTML(generatedPlan, formData.name)
-
     return {
       plan: generatedPlan,
-      html,
+      html: generatedPlan,
     }
   } catch (error) {
     console.error("Error generating action plan:", error)
@@ -109,104 +90,7 @@ Generate a complete, detailed action plan with all 5 sections. Each section shou
   }
 }
 
-function convertPlanToHTML(plan: string, agentName: string): string {
-  let html = ''
-  
-  // If no sections found with emojis, treat the entire plan as content
-  if (!plan.includes('🔍') && !plan.includes('📱') && !plan.includes('📞') && !plan.includes('📧') && !plan.includes('📊')) {
-    // Create a simple formatted version of the plan
-    const formattedContent = plan.split('\n\n').map(paragraph => {
-      if (!paragraph.trim()) return ''
-      return `<p style="margin: 0 0 16px 0; line-height: 1.6; color: #374151;">${paragraph.replace(/\n/g, '<br>')}</p>`
-    }).join('')
-    
-    html = `
-      <div style="background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden; padding: 20px;">
-        ${formattedContent}
-      </div>
-    `
-  } else {
-    // Split the plan into sections using emojis
-    const sections = plan.split(/(?=🔍|📱|📞|📧|📊)/)
-    
-    // Process each section
-    sections.forEach((section, index) => {
-      if (!section.trim()) return
-      
-      // Extract the header and content
-      const headerMatch = section.match(/^([🔍📱📞📧📊]\s+[^:]+)/)
-      if (headerMatch) {
-        const header = headerMatch[1]
-        const content = section.replace(/^[🔍📱📞📧📊]\s+[^:]+/, '').trim()
-        
-        // Create a styled section
-        const sectionHtml = `
-          <div style="margin-bottom: 30px; background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden;">
-            <div style="background: linear-gradient(135deg, #b6a888, #d4c4a8); padding: 16px 20px; border-bottom: 1px solid #e5e7eb;">
-              <h2 style="margin: 0; color: white; font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
-                ${header}
-              </h2>
-            </div>
-            <div style="padding: 20px;">
-              ${content.split('\n\n').map(paragraph => {
-                if (!paragraph.trim()) return ''
-                return `<p style="margin: 0 0 16px 0; line-height: 1.6; color: #374151;">${paragraph.replace(/\n/g, '<br>')}</p>`
-              }).join('')}
-            </div>
-          </div>
-        `
-        html += sectionHtml
-      }
-    })
-  }
 
-  // Add a professional header and wrapper
-  html = `
-    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto;">
-      <div style="background: linear-gradient(135deg, #4338ca, #3b82f6); color: white; padding: 24px; text-align: center; border-radius: 12px; margin-bottom: 24px; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);">
-        <h1 style="margin: 0; font-size: 28px; font-weight: 700;">Daily Action Plan</h1>
-        <p style="margin: 8px 0 0 0; font-size: 16px; opacity: 0.9;">Generated for ${agentName}</p>
-        <p style="margin: 4px 0 0 0; font-size: 14px; opacity: 0.8;">${new Date().toLocaleDateString('en-US', { 
-          weekday: 'long', 
-          year: 'numeric', 
-          month: 'long', 
-          day: 'numeric' 
-        })}</p>
-      </div>
-      
-      <div style="background: #f8fafc; padding: 24px; border-radius: 12px; margin-bottom: 24px;">
-        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
-          <div style="width: 8px; height: 8px; background: #10b981; border-radius: 50%;"></div>
-          <h3 style="margin: 0; color: #1f2937; font-size: 16px; font-weight: 600;">Plan Overview</h3>
-        </div>
-        <p style="margin: 0; color: #6b7280; font-size: 14px;">
-          This structured action plan is designed to maximize your prospecting effectiveness today. 
-          Each section provides specific tasks, scripts, and strategies to help you achieve your goals.
-        </p>
-      </div>
-      
-      ${html}
-      
-      <div style="background: linear-gradient(135deg, #f0f9ff, #e0f2fe); padding: 20px; border-radius: 12px; margin-top: 24px; border-left: 4px solid #b6a888;">
-        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-          <div style="width: 20px; height: 20px; background: #b6a888; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-            <span style="color: white; font-size: 12px; font-weight: bold;">💡</span>
-          </div>
-          <h4 style="margin: 0; color: #1e3a8a; font-size: 16px; font-weight: 600;">Success Tips</h4>
-        </div>
-        <ul style="margin: 0; padding-left: 20px; color: #1e40af; font-size: 14px;">
-          <li style="margin-bottom: 4px;">Execute this plan fully today to build momentum</li>
-          <li style="margin-bottom: 4px;">Track your results to refine your approach</li>
-          <li style="margin-bottom: 4px;">Personalize scripts for each prospect</li>
-          <li style="margin-bottom: 4px;">Follow up consistently with interested leads</li>
-          <li style="margin-bottom: 0px;">Create a new plan tomorrow to maintain consistency</li>
-        </ul>
-      </div>
-    </div>
-  `
-
-  return html
-}
 
 export async function analyzeComparables(address: string) {
   try {

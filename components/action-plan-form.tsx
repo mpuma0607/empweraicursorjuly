@@ -414,11 +414,9 @@ export default function ActionPlanForm() {
         <TabsContent value="preview" className="space-y-4">
           <Card className="border-0 shadow-md">
             <CardContent className="p-6">
-              {result?.html ? (
-                <div className="max-w-none" dangerouslySetInnerHTML={{ __html: result.html }}></div>
-              ) : (
-                <div className="whitespace-pre-wrap text-gray-800">{result?.plan}</div>
-              )}
+              <div className="prose max-w-none">
+                <div dangerouslySetInnerHTML={{ __html: result?.plan?.replace(/\n/g, "<br>") || "" }} />
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
