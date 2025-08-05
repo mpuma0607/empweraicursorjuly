@@ -47,8 +47,8 @@ export default function HomePage() {
 
   const handleLogin = () => {
     trackEvent("button_click", { button: "sign_in", location: "header" })
-    console.log("Sign In clicked - redirecting to MemberSpace sign in")
-    window.location.href = "https://getempowerai.com?msopen=/member/sign_in"
+    console.log("Sign In clicked - redirecting to portal")
+    window.location.href = "https://getempowerai.com/portal"
   }
 
   const handleSignup = () => {
@@ -134,18 +134,20 @@ export default function HomePage() {
   // Add this function to get the YouTube embed URL for each tool
   const getVideoUrl = (toolName: string) => {
     const videoMap: { [key: string]: string } = {
-      "Who's Who AI": "https://www.youtube.com/embed/aWj4jl0rwpY?autoplay=0&rel=0&modestbranding=1",
-      "RealDeal AI": "https://www.youtube.com/embed/U6CeHo40zDY?autoplay=0&rel=0&modestbranding=1",
-      "ScriptIT AI": "https://www.youtube.com/embed/pU2MdC4lI6w?autoplay=0&rel=0&modestbranding=1",
-      "RolePlay AI": "https://www.youtube.com/embed/1OqmAzDiJPg?autoplay=0&rel=0&modestbranding=1",
-      "Action AI": "https://www.youtube.com/embed/QXbBI0ljLKo?autoplay=0&rel=0&modestbranding=1",
-      "RealBio AI": "https://www.youtube.com/embed/zyzeLTQieuA?autoplay=0&rel=0&modestbranding=1",
-      "BizPlan AI": "https://www.youtube.com/embed/XP8w9Qq-vgI?autoplay=0&rel=0&modestbranding=1",
-      "QuickCMA AI": "https://www.youtube.com/embed/TB0id4hQem8?autoplay=0&rel=0&modestbranding=1",
-      "ListIT AI": "https://www.youtube.com/embed/ELgYo_ErzCs?autoplay=0&rel=0&modestbranding=1",
-      "RealCoach AI": "https://www.youtube.com/embed/fPZKFTuQg98?autoplay=0&rel=0&modestbranding=1",
-      "IdeaHub AI": "https://www.youtube.com/embed/fKoYPHRyfK8?autoplay=0&rel=0&modestbranding=1",
-      "PropBot AI": "https://www.youtube.com/embed/m7RZC9TAe3g?autoplay=0&rel=0&modestbranding=1",
+      "Who's Who AI": "https://www.youtube.com/embed/nw-EiAXFxAw?autoplay=0&rel=0&modestbranding=1",
+      "ScriptIt AI": "https://www.youtube.com/embed/GDqP7eQAsPk?autoplay=0&rel=0&modestbranding=1",
+      "RolePlay AI": "https://www.youtube.com/embed/UHMl9DWcB-U?autoplay=0&rel=0&modestbranding=1",
+      "RealDeal AI": "https://www.youtube.com/embed/QKsQz_EfBpc?autoplay=0&rel=0&modestbranding=1",
+      "RealCoach AI": "https://www.youtube.com/embed/Kc51M_x5g1M?autoplay=0&rel=0&modestbranding=1",
+      "RealBio AI": "https://www.youtube.com/embed/Fodk2XZ7vPs?autoplay=0&rel=0&modestbranding=1",
+      "QuickCMA AI": "https://www.youtube.com/embed/R0aHu3p8hgs?autoplay=0&rel=0&modestbranding=1",
+      "PropBot AI": "https://www.youtube.com/embed/jn1zDrKUpDk?autoplay=0&rel=0&modestbranding=1",
+      "ListIT AI": "https://www.youtube.com/embed/vexraBWRtpk?autoplay=0&rel=0&modestbranding=1",
+      "GoalScreen AI": "https://www.youtube.com/embed/cLSgyoFffUs?autoplay=0&rel=0&modestbranding=1",
+      "BizPlan AI": "https://www.youtube.com/embed/xL5lKqLB7KM?autoplay=0&rel=0&modestbranding=1",
+      "Action AI": "https://www.youtube.com/embed/Uv57em2H8Jc?autoplay=0&rel=0&modestbranding=1",
+      "MyMarket AI": "https://www.youtube.com/embed/OOZSFrk3jJo?autoplay=0&rel=0&modestbranding=1",
+      "DynamicBrand AI": "https://www.youtube.com/embed/lOcBX_AgBAQ?autoplay=0&rel=0&modestbranding=1",
     }
 
     return videoMap[toolName] || "https://www.youtube.com/embed/qF050toaVYU?autoplay=0&rel=0&modestbranding=1"
