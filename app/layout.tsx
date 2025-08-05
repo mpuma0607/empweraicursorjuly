@@ -10,7 +10,7 @@ const inter = Inter({ subsets: ["latin"] })
 
 // Dynamic title based on domain - will be set client-side
 export const metadata: Metadata = {
-  title: "The Next Level U - Real Estate Platform", // Default fallback
+  title: "Empower AI - Real Estate Platform", // Default fallback
   description: "AI-powered tools and training for real estate professionals",
   icons: {
     icon: "/favicon.ico",
@@ -83,7 +83,7 @@ export default function RootLayout({
                             if (typeof window === 'undefined') return;
                             
                             var hostname = window.location.hostname;
-                            var title = 'The Next Level U - Real Estate Platform'; // Default
+                            var title = 'Empower AI - Real Estate Platform'; // Default
                             
                             // Set title based on domain
                             if (hostname === 'begginsagents.com' ||
@@ -97,8 +97,15 @@ export default function RootLayout({
                               title = 'Empower AI - Real Estate Platform';
                             }
                             
-                            // Update document title
+                            // Update document title immediately and also on DOMContentLoaded
                             document.title = title;
+                            
+                            // Also set it when DOM is ready to ensure it sticks
+                            if (document.readyState === 'loading') {
+                              document.addEventListener('DOMContentLoaded', function() {
+                                document.title = title;
+                              });
+                            }
                             
                             console.log('Dynamic title set for domain:', hostname, 'title:', title);
                           })();
