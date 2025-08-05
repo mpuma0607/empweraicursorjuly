@@ -455,6 +455,12 @@ export default function HomePage() {
                     >
                       Action AI Demo
                     </button>
+                    <button
+                      onClick={() => handleWatchDemo("BizPlan AI")}
+                      className="text-[#b6a888] hover:text-[#a39577] text-left block"
+                    >
+                      BizPlan AI Demo
+                    </button>
                   </div>
                   <div className="space-y-1">
                     <button
@@ -462,12 +468,6 @@ export default function HomePage() {
                       className="text-[#b6a888] hover:text-[#a39577] text-left block"
                     >
                       RealCoach AI Demo
-                    </button>
-                    <button
-                      onClick={() => handleWatchDemo("BizPlan AI")}
-                      className="text-[#b6a888] hover:text-[#a39577] text-left block"
-                    >
-                      BizPlan AI Demo
                     </button>
                     <button
                       onClick={() => handleWatchDemo("RealDeal AI")}
