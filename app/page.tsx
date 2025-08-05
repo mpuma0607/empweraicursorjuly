@@ -136,6 +136,7 @@ export default function HomePage() {
     const videoMap: { [key: string]: string } = {
       "Who's Who AI": "https://www.youtube.com/embed/nw-EiAXFxAw?autoplay=0&rel=0&modestbranding=1",
       "ScriptIt AI": "https://www.youtube.com/embed/GDqP7eQAsPk?autoplay=0&rel=0&modestbranding=1",
+      "IdeaHub AI": "https://www.youtube.com/embed/silQHa755P8?autoplay=0&rel=0&modestbranding=1",
       "RolePlay AI": "https://www.youtube.com/embed/UHMl9DWcB-U?autoplay=0&rel=0&modestbranding=1",
       "RealDeal AI": "https://www.youtube.com/embed/QKsQz_EfBpc?autoplay=0&rel=0&modestbranding=1",
       "RealCoach AI": "https://www.youtube.com/embed/Kc51M_x5g1M?autoplay=0&rel=0&modestbranding=1",
@@ -411,7 +412,7 @@ export default function HomePage() {
                 <Brain className="h-12 w-12 text-[#b6a888] mb-4" />
                 <CardTitle className="text-white">AI Hub</CardTitle>
                 <CardDescription className="text-gray-300">
-                  12 powerful AI tools including ListIt, ScriptIt, RealBio, ActionAI, and more
+                  AI tools including ListIt, ScriptIt, RealBio, ActionAI, and more
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -492,6 +493,18 @@ export default function HomePage() {
                     >
                       PropBot AI Demo
                     </button>
+                    <button
+                      onClick={() => handleWatchDemo("GoalScreen AI")}
+                      className="text-[#b6a888] hover:text-[#a39577] text-left block"
+                    >
+                      GoalScreen AI Demo
+                    </button>
+                    <button
+                      onClick={() => handleWatchDemo("MyMarket AI")}
+                      className="text-[#b6a888] hover:text-[#a39577] text-left block"
+                    >
+                      MyMarket AI Demo
+                    </button>
                   </div>
                 </div>
               </CardContent>
@@ -556,7 +569,19 @@ export default function HomePage() {
                     <CheckCircle className="h-4 w-4 text-green-500" />
                     Campaign strategies
                   </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    Branding on demand
+                  </li>
                 </ul>
+                <div className="mt-4">
+                  <button
+                    onClick={() => handleWatchDemo("DynamicBrand AI")}
+                    className="text-[#b6a888] hover:text-[#a39577] text-sm font-medium"
+                  >
+                    DynamicBrand AI Demo
+                  </button>
+                </div>
               </CardContent>
             </Card>
 
