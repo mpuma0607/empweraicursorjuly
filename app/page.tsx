@@ -289,7 +289,7 @@ export default function HomePage() {
               src={
                 selectedDemo
                   ? getVideoUrl(selectedDemo)
-                  : "https://www.youtube.com/embed/qF050toaVYU?autoplay=0&rel=0&modestbranding=1"
+                  : "https://www.youtube.com/embed/cZRDOpKickM?autoplay=0&rel=0&modestbranding=1"
               }
               title={selectedDemo ? `${selectedDemo} Demo` : "NLU Full Platform Demo"}
               frameBorder="0"
