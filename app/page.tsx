@@ -135,7 +135,7 @@ export default function HomePage() {
   const getVideoUrl = (toolName: string) => {
     const videoMap: { [key: string]: string } = {
       "Who's Who AI": "https://www.youtube.com/embed/nw-EiAXFxAw?autoplay=0&rel=0&modestbranding=1",
-      "ScriptIt AI": "https://www.youtube.com/embed/GDqP7eQAsPk?autoplay=0&rel=0&modestbranding=1",
+      "ScriptIT AI": "https://www.youtube.com/embed/GDqP7eQAsPk?autoplay=0&rel=0&modestbranding=1",
       "IdeaHub AI": "https://www.youtube.com/embed/silQHa755P8?autoplay=0&rel=0&modestbranding=1",
       "RolePlay AI": "https://www.youtube.com/embed/UHMl9DWcB-U?autoplay=0&rel=0&modestbranding=1",
       "RealDeal AI": "https://www.youtube.com/embed/QKsQz_EfBpc?autoplay=0&rel=0&modestbranding=1",
