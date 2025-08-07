@@ -48,28 +48,97 @@ export default function HomePage() {
   const handleLogin = () => {
     trackEvent("button_click", { button: "sign_in", location: "header" })
     console.log("Sign In clicked - redirecting to portal")
-    window.location.href = "https://getempowerai.com/portal"
+    
+    // Get current domain and redirect to appropriate portal
+    const hostname = window.location.hostname
+    let portalUrl = "https://getempowerai.com/portal" // Default
+    
+    // Set portal URL based on domain
+    if (hostname === 'begginsagents.com' ||
+        hostname === 'www.begginsagents.com' ||
+        hostname === 'beggins.thenextlevelu.com' ||
+        hostname === 'begginsuniversity.com' ||
+        hostname === 'www.begginsuniversity.com') {
+      portalUrl = "https://begginsuniversity.com/portal"
+    } else if (hostname === 'getempowerai.com' ||
+               hostname === 'www.getempowerai.com') {
+      portalUrl = "https://getempowerai.com/portal"
+    }
+    
+    console.log("Redirecting to portal:", portalUrl)
+    window.location.href = portalUrl
   }
 
   const handleSignup = () => {
     trackEvent("button_click", { button: "get_started", location: "header" })
     console.log("Signup clicked - redirecting to plans page")
-    // Use the correct MemberSpace URL format with specific plan ID
-    window.location.href = "https://getempowerai.com?msopen=/member/plans/aovbmu4gxb"
+    
+    // Get current domain and redirect to appropriate plans page
+    const hostname = window.location.hostname
+    let plansUrl = "https://getempowerai.com?msopen=/member/plans/aovbmu4gxb" // Default
+    
+    // Set plans URL based on domain
+    if (hostname === 'begginsagents.com' ||
+        hostname === 'www.begginsagents.com' ||
+        hostname === 'beggins.thenextlevelu.com' ||
+        hostname === 'begginsuniversity.com' ||
+        hostname === 'www.begginsuniversity.com') {
+      plansUrl = "https://begginsuniversity.com?msopen=/member/plans/aovbmu4gxb"
+    } else if (hostname === 'getempowerai.com' ||
+               hostname === 'www.getempowerai.com') {
+      plansUrl = "https://getempowerai.com?msopen=/member/plans/aovbmu4gxb"
+    }
+    
+    console.log("Redirecting to plans:", plansUrl)
+    window.location.href = plansUrl
   }
 
   const handlePricing = () => {
     trackEvent("button_click", { button: "pricing", location: "pricing_section" })
     console.log("Pricing clicked - redirecting to plans page")
-    // Use the correct MemberSpace URL format with specific plan ID
-    window.location.href = "https://getempowerai.com?msopen=/member/plans/aovbmu4gxb"
+    
+    // Get current domain and redirect to appropriate plans page
+    const hostname = window.location.hostname
+    let plansUrl = "https://getempowerai.com?msopen=/member/plans/aovbmu4gxb" // Default
+    
+    // Set plans URL based on domain
+    if (hostname === 'begginsagents.com' ||
+        hostname === 'www.begginsagents.com' ||
+        hostname === 'beggins.thenextlevelu.com' ||
+        hostname === 'begginsuniversity.com' ||
+        hostname === 'www.begginsuniversity.com') {
+      plansUrl = "https://begginsuniversity.com?msopen=/member/plans/aovbmu4gxb"
+    } else if (hostname === 'getempowerai.com' ||
+               hostname === 'www.getempowerai.com') {
+      plansUrl = "https://getempowerai.com?msopen=/member/plans/aovbmu4gxb"
+    }
+    
+    console.log("Redirecting to plans:", plansUrl)
+    window.location.href = plansUrl
   }
 
   const handleAnnualPricing = () => {
     trackEvent("button_click", { button: "annual_pricing", location: "pricing_section" })
     console.log("Annual pricing clicked - redirecting to annual plan")
-    // Use the correct MemberSpace URL format with annual plan ID
-    window.location.href = "https://getempowerai.com?msopen=/member/plans/dkophgnbcp"
+    
+    // Get current domain and redirect to appropriate annual plans page
+    const hostname = window.location.hostname
+    let annualPlansUrl = "https://getempowerai.com?msopen=/member/plans/dkophgnbcp" // Default
+    
+    // Set annual plans URL based on domain
+    if (hostname === 'begginsagents.com' ||
+        hostname === 'www.begginsagents.com' ||
+        hostname === 'beggins.thenextlevelu.com' ||
+        hostname === 'begginsuniversity.com' ||
+        hostname === 'www.begginsuniversity.com') {
+      annualPlansUrl = "https://begginsuniversity.com?msopen=/member/plans/dkophgnbcp"
+    } else if (hostname === 'getempowerai.com' ||
+               hostname === 'www.getempowerai.com') {
+      annualPlansUrl = "https://getempowerai.com?msopen=/member/plans/dkophgnbcp"
+    }
+    
+    console.log("Redirecting to annual plans:", annualPlansUrl)
+    window.location.href = annualPlansUrl
   }
 
   const handleBrokerageContact = () => {

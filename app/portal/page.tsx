@@ -17,7 +17,25 @@ export default function PortalPage() {
   useEffect(() => {
     if (!loading && !isLoggedIn) {
       console.log("User not authenticated, redirecting to MemberSpace sign-in")
-      window.location.href = "https://getempowerai.com?msopen=/member/sign_in"
+      
+      // Get current domain and determine the correct MemberSpace sign-in URL
+      const hostname = window.location.hostname
+      let signInUrl = "https://getempowerai.com?msopen=/member/sign_in" // Default
+      
+      // Set sign-in URL based on domain
+      if (hostname === 'begginsagents.com' ||
+          hostname === 'www.begginsagents.com' ||
+          hostname === 'beggins.thenextlevelu.com' ||
+          hostname === 'begginsuniversity.com' ||
+          hostname === 'www.begginsuniversity.com') {
+        signInUrl = "https://begginsuniversity.com?msopen=/member/sign_in"
+      } else if (hostname === 'getempowerai.com' ||
+                 hostname === 'www.getempowerai.com') {
+        signInUrl = "https://getempowerai.com?msopen=/member/sign_in"
+      }
+      
+      console.log("Redirecting to:", signInUrl)
+      window.location.href = signInUrl
     }
   }, [loading, isLoggedIn])
 
