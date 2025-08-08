@@ -151,6 +151,21 @@ export default function ScriptMasteryPage() {
           </p>
         </div>
 
+        {/* Script Mastery Overview Video */}
+        <div className="mb-16">
+          <div className="max-w-4xl mx-auto">
+            <div className="aspect-video rounded-lg overflow-hidden shadow-lg">
+              <iframe
+                src="https://www.youtube.com/embed/7dmw0gCQB84?autoplay=0&rel=0&modestbranding=1"
+                title="Script Mastery Overview"
+                className="w-full h-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          </div>
+        </div>
+
         {/* Script Categories */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto mb-16">
           {scriptCategories.map((category) => (

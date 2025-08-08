@@ -437,6 +437,19 @@ export default function DISCVAKTrainingPage() {
                               connections with others.
                             </p>
 
+                            {/* Art of Connection Video */}
+                            <div className="mb-6">
+                              <div className="aspect-video rounded-lg overflow-hidden shadow-lg">
+                                <iframe
+                                  src="https://www.youtube.com/embed/cK8BCZroyQI?autoplay=0&rel=0&modestbranding=1"
+                                  title="The Art of Connection"
+                                  className="w-full h-full"
+                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                  allowFullScreen
+                                />
+                              </div>
+                            </div>
+
                             {/* 7-38-55 Rule */}
                             <div className="bg-gradient-to-br from-pink-50 to-rose-50 border border-pink-200 rounded-lg p-6">
                               <h4 className="text-2xl font-bold text-center mb-6 text-pink-800">

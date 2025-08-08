@@ -148,7 +148,7 @@ export default function ExpiredListingsPage() {
                   <h4 className="font-semibold text-black mb-3">🎥 Expert Training Video</h4>
                   <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                     <iframe
-                      src="https://www.youtube.com/embed/2-Hj6uGfyic"
+                      src="https://www.youtube.com/embed/NMu1cXoOV_M"
                       width="100%"
                       height="200"
                       style={{ border: "none" }}

@@ -128,7 +128,7 @@ export default function ListingProcessPage() {
             <div className="space-y-6">
               <div className="aspect-video">
                 <iframe
-                  src="https://www.youtube.com/embed/BDOnxUdsDco"
+                  src="https://www.youtube.com/embed/Bk07tUkPAlA"
                   title="Listing Script Practice Techniques"
                   className="w-full h-full rounded-lg"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

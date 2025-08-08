@@ -154,6 +154,23 @@ export default function PortalPage() {
       {/* Hubs Section */}
       <section className="py-20 bg-gray-50">
         <div className="container mx-auto px-4">
+          {/* Portal Overview Video - Empower AI Only */}
+          {tenantConfig.id === "empower-ai" && (
+            <div className="mb-16">
+              <div className="max-w-4xl mx-auto">
+                <div className="aspect-video rounded-lg overflow-hidden shadow-lg">
+                  <iframe
+                    src="https://www.youtube.com/embed/ayPLCQ_TCU8?autoplay=0&rel=0&modestbranding=1"
+                    title="Portal Overview"
+                    className="w-full h-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+          
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-black mb-4">Choose Your Hub</h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">

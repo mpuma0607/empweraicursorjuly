@@ -60,6 +60,19 @@ export default function SOIPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
+                {/* SOI Step 1 Video */}
+                <div className="mb-6">
+                  <div className="aspect-video rounded-lg overflow-hidden shadow-lg">
+                    <iframe
+                      src="https://www.youtube.com/embed/KrLPc_ax_Ho?autoplay=0&rel=0&modestbranding=1"
+                      title="How to Find Your SOI Contacts"
+                      className="w-full h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </div>
+                </div>
+                
                 <div>
                   <h4 className="font-semibold text-black mb-3">Key Sources for SOI Contacts:</h4>
                   <div className="grid grid-cols-1 gap-y-2 text-sm text-gray-600">

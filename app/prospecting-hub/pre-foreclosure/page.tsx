@@ -62,6 +62,19 @@ export default function PreForeclosurePage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
+                {/* Pre-foreclosure Step 1 Video */}
+                <div className="mb-6">
+                  <div className="aspect-video rounded-lg overflow-hidden shadow-lg">
+                    <iframe
+                      src="https://www.youtube.com/embed/XVuxepAtR6M?autoplay=0&rel=0&modestbranding=1"
+                      title="How to Find Pre-Foreclosure Properties"
+                      className="w-full h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </div>
+                </div>
+                
                 {/* Key Sources */}
                 <div>
                   <h4 className="font-semibold text-black mb-3">Primary Data Sources:</h4>

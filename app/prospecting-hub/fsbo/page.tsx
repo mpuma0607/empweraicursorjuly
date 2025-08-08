@@ -147,7 +147,7 @@ export default function FSBOPage() {
                   <h4 className="font-semibold text-black mb-4">FSBO Prospecting Training Video</h4>
                   <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                     <iframe
-                      src="https://www.youtube.com/embed/Blhdk_5WzbY"
+                      src="https://www.youtube.com/embed/Ohw5rq2hIDk"
                       width="100%"
                       height="315"
                       style={{ border: 0 }}

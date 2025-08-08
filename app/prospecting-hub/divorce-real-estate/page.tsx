@@ -37,6 +37,19 @@ export default function DivorcePage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
+                {/* Divorce Step 1 Video */}
+                <div className="mb-6">
+                  <div className="aspect-video rounded-lg overflow-hidden shadow-lg">
+                    <iframe
+                      src="https://www.youtube.com/embed/F_z3UwL6RoU?autoplay=0&rel=0&modestbranding=1"
+                      title="How to Find Divorce Real Estate Leads"
+                      className="w-full h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </div>
+                </div>
+                
                 <div>
                   <h4 className="font-semibold text-black mb-3">Key Sources for Divorce Real Estate:</h4>
                   <div className="grid grid-cols-1 gap-y-2 text-sm text-gray-600">

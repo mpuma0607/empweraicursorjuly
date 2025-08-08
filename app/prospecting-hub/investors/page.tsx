@@ -62,6 +62,19 @@ export default function InvestorsPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
+                {/* Investors Step 1 Video */}
+                <div className="mb-6">
+                  <div className="aspect-video rounded-lg overflow-hidden shadow-lg">
+                    <iframe
+                      src="https://www.youtube.com/embed/VOlm5MjE-0w?autoplay=0&rel=0&modestbranding=1"
+                      title="How to Find Real Estate Investors"
+                      className="w-full h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </div>
+                </div>
+                
                 <div>
                   <h4 className="font-semibold text-black mb-3">Key Sources for Real Estate Investors:</h4>
                   <div className="grid grid-cols-1 gap-y-2 text-sm text-gray-600">

@@ -176,7 +176,7 @@ export default function BuyerProcessTrainingPage() {
 
                                     <div className="aspect-video rounded-lg overflow-hidden shadow-lg">
                                       <iframe
-                                        src="https://www.youtube.com/embed/-iZP4tThjtI"
+                                        src="https://www.youtube.com/embed/ix0Ndf-QkGY"
                                         title="How to Practice and Master Your Scripts"
                                         className="w-full h-full"
                                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -766,7 +766,7 @@ export default function BuyerProcessTrainingPage() {
                           <div className="space-y-6">
                             <div className="aspect-video rounded-lg overflow-hidden shadow-lg">
                               <iframe
-                                src="https://www.youtube.com/embed/-iZP4tThjtI"
+                                src="https://www.youtube.com/embed/ix0Ndf-QkGY"
                                 title="How to Practice and Master Your Scripts"
                                 className="w-full h-full"
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
