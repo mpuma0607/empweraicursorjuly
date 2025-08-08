@@ -68,7 +68,7 @@ Format:
 The script should be appropriate for ${formData.scriptType} communication and feel natural and conversational while being highly effective.`
 
     const { text: generatedScript } = await generateText({
-      model: openai("gpt-4o"),
+      model: openai("gpt-5"),
       prompt,
     })
 

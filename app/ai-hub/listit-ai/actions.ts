@@ -46,7 +46,7 @@ Avoid robotic or cliché phrases. Keep it unique, story-driven, and emotionally 
 End the description with a strong, inviting call to action that encourages scheduling a private showing or reaching out for more information.`
 
     const { text: generatedDescription } = await generateText({
-      model: openai("gpt-4o"),
+      model: openai("gpt-5"),
       prompt,
     })
 

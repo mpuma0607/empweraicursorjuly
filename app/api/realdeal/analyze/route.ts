@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
         const addressSample = contractText.substring(0, addressSampleSize)
 
         const addressResponse = await openai.chat.completions.create({
-          model: "gpt-4",
+          model: "gpt-5",
           messages: [
             {
               role: "system",
@@ -112,7 +112,7 @@ If you cannot find a property address with high confidence, respond with "PROPER
           console.log("First address extraction attempt failed, trying alternative approach...")
 
           const secondAttemptResponse = await openai.chat.completions.create({
-            model: "gpt-4",
+            model: "gpt-5",
             messages: [
               {
                 role: "system",
@@ -215,7 +215,7 @@ Please make the summary clear, professional, and easy to read—avoid legal jarg
     })
 
     const analysisResponse = await openai.chat.completions.create({
-      model: "gpt-4",
+      model: "gpt-5",
       messages: [
         {
           role: "system",

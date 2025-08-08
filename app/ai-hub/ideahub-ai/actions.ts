@@ -92,7 +92,7 @@ ${formData.contentType === "Blog article" ? "Include a compelling title and stru
 Please write the content in ${formData.language} and ensure it reads naturally and professionally for native speakers.`
 
     const { text: generatedText } = await generateText({
-      model: openai("gpt-4o"),
+      model: openai("gpt-5"),
       prompt: textPrompt,
     })
 

@@ -191,7 +191,7 @@ export async function searchProperties(prevState: any, formData: FormData) {
           `
 
           const aiAnalysis = await generateText({
-            model: openai("gpt-4o"),
+            model: openai("gpt-5"),
             prompt: `
               Analyze this property against the search query: "${searchQuery}"
               

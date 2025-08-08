@@ -111,7 +111,7 @@ export async function skipTraceProperty(formData: SkipTraceFormData) {
     const fullAddress = `${formData.street}, ${formData.city}, ${formData.state} ${formData.zip}`
 
     const { text: summary } = await generateText({
-      model: openai("gpt-4o"),
+      model: openai("gpt-5"),
       prompt: `
 You are a professional real estate assistant. Analyze the following property skip trace data and create a comprehensive, professional summary report.
 
