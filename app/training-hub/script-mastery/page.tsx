@@ -64,11 +64,11 @@ function FSBOAudioSection() {
     <div className="mt-6 space-y-4">
       <h4 className="font-semibold text-lg mb-4">🎵 Audio Training Resources</h4>
 
-      <AudioPlayer src="/audio/advanced-fsbo-follow-up.mp3" title="Advanced FSBO Follow-Up Training" />
+      <AudioPlayer src="/audio/Advanced FSBO follow up (1).mp3" title="Advanced FSBO Follow-Up Training" />
 
-      <AudioPlayer src="/audio/prospecting-fsbo-script.mp3" title="Prospecting FSBO Script Training" />
+      <AudioPlayer src="/audio/3. Prospecting - FSBO Script.mp3" title="Prospecting FSBO Script Training" />
 
-      <AudioPlayer src="/audio/fsbo-follow-up.mp3" title="FSBO Follow-Up Training" />
+      <AudioPlayer src="/audio/FSBO follow up (1).mp3" title="FSBO Follow-Up Training" />
     </div>
   )
 }
@@ -77,47 +77,51 @@ function FSBOAudioSection() {
 function ObjectionsAudioSection() {
   const objectionAudios = [
     {
-      src: "/audio/always-get-the-listing-signed.mp3",
+      src: "/audio/10. Buyer Prequalification Script.mp3",
+      title: "Buyer Prequalification Script",
+    },
+    {
+      src: "/audio/Always get the listing signed.mp3",
       title: "Always Get the Listing Signed",
     },
     {
-      src: "/audio/overcoming-transaction-fee.mp3",
+      src: "/audio/Overcoming transaction fee.mp3",
       title: "Overcoming Transaction Fee Objections",
     },
     {
-      src: "/audio/another-agent-said-they-can-get-me-more-money.mp3",
+      src: "/audio/Another agent said they can get me more money.mp3",
       title: "Another Agent Said They Can Get Me More Money",
     },
     {
-      src: "/audio/other-agents-will-cut-their-commission.mp3",
+      src: "/audio/Other agents will cut their commission.mp3",
       title: "Other Agents Will Cut Their Commission",
     },
     {
-      src: "/audio/what-are-you-going-to-do-differently.mp3",
+      src: "/audio/What are you going to do differently (1).mp3",
       title: "What Are You Going to Do Differently?",
     },
     {
-      src: "/audio/we-want-a-shorter-listing-timeframe.mp3",
+      src: "/audio/We want a shorter listing timeframe.mp3",
       title: "We Want a Shorter Listing Timeframe",
     },
     {
-      src: "/audio/we-want-to-interview-another-agent.mp3",
+      src: "/audio/We want to interview another agent.mp3",
       title: "We Want to Interview Another Agent",
     },
     {
-      src: "/audio/we-want-to-think-it-over.mp3",
+      src: "/audio/We want to think it over.mp3",
       title: "We Want to Think It Over",
     },
     {
-      src: "/audio/we-want-you-to-cut-your-commission.mp3",
+      src: "/audio/We want you to cut your commission.mp3",
       title: "We Want You to Cut Your Commission",
     },
     {
-      src: "/audio/you-dont-handle-homes-in-my-price-range.mp3",
+      src: "/audio/You don't handle homes in my price range.mp3",
       title: "You Don't Handle Homes in My Price Range",
     },
     {
-      src: "/audio/you-dont-have-any-listings-sales-in-my-area.mp3",
+      src: "/audio/You don't have any listings sales in my area.mp3",
       title: "You Don't Have Any Listing Sales in My Area",
     },
   ]
