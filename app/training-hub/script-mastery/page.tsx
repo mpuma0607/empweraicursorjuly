@@ -16,13 +16,41 @@ import { BookOpen, Phone, Play, Home } from "lucide-react"
 
 // Audio Player Component
 function AudioPlayer({ src, title }: { src: string; title: string }) {
+  const [audioError, setAudioError] = useState(false)
+
+  const handleAudioError = () => {
+    setAudioError(true)
+  }
+
+  if (audioError) {
+    return (
+      <div className="bg-white p-4 rounded-md border border-gray-200 mb-4">
+        <div className="flex items-center gap-3 mb-2">
+          <Play className="h-4 w-4 text-gray-400" />
+          <h4 className="font-medium text-sm text-gray-500">{title}</h4>
+        </div>
+        <div className="bg-gray-50 p-3 rounded border border-gray-200">
+          <p className="text-sm text-gray-600">
+            ⚠️ Audio file not available. This training resource is coming soon.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="bg-white p-4 rounded-md border border-gray-200 mb-4">
       <div className="flex items-center gap-3 mb-2">
         <Play className="h-4 w-4 text-blue-600" />
         <h4 className="font-medium text-sm text-gray-700">{title}</h4>
       </div>
-      <audio controls className="w-full h-10" preload="metadata" style={{ maxWidth: "100%" }}>
+      <audio 
+        controls 
+        className="w-full h-10" 
+        preload="metadata" 
+        style={{ maxWidth: "100%" }}
+        onError={handleAudioError}
+      >
         <source src={src} type="audio/mpeg" />
         <p className="text-sm text-gray-500">Your browser does not support the audio element.</p>
       </audio>
