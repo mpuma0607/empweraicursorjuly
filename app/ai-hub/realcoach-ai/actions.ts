@@ -133,7 +133,7 @@ Wrap up with a motivational paragraph that ties into the agent's "why," reinforc
 Format the response with clear headers using the color #b6a888 for section titles, and include relevant emojis for each section. Make it professional and actionable.`
 
     const { text } = await generateText({
-      model: openai("gpt-5"),
+      model: openai("gpt-4o"),
       prompt,
       maxTokens: 4000,
     })

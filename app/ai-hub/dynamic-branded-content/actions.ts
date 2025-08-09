@@ -62,7 +62,7 @@ Generate only the content text, no additional formatting or explanations.`
 
   try {
     const { text } = await generateText({
-      model: openai("gpt-5"),
+      model: openai("gpt-4o"),
       prompt,
       temperature: 0.7,
     })

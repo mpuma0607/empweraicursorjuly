@@ -16,7 +16,7 @@ export async function generateBusinessPlan(formData: {
 }) {
   try {
     const { text } = await generateText({
-      model: openai("gpt-5"),
+      model: openai("gpt-4o"),
       prompt: `Create a comprehensive business plan for a real estate professional with the following details:
       
 Business Type: ${formData.businessType}
@@ -55,7 +55,7 @@ export async function generateDescription(formData: {
 }) {
   try {
     const { text } = await generateText({
-      model: openai("gpt-5"),
+      model: openai("gpt-4o"),
       prompt: `Create a compelling real estate listing description for:
       
 Property Type: ${formData.propertyType}
