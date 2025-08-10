@@ -220,7 +220,7 @@ const aiTools = {
       description: "Custom Real Estate Scripts",
       icon: MessageSquare,
       color: "red",
-      toolId: "scriptit-ai",
+      toolId: "scriptit",
       keywords: [
         "script",
         "calling",
