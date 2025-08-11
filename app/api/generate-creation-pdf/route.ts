@@ -3,10 +3,10 @@ import { jsPDF } from "jspdf"
 
 export async function POST(request: NextRequest) {
   try {
-    const { creation } = await request.json()
+    const { title, content, toolType, createdAt, metadata } = await request.json()
 
-    if (!creation) {
-      return NextResponse.json({ error: "Creation data is required" }, { status: 400 })
+    if (!title || !content) {
+      return NextResponse.json({ error: "Title and content are required" }, { status: 400 })
     }
 
     // Create PDF
@@ -20,11 +20,14 @@ export async function POST(request: NextRequest) {
     doc.setTextColor(255, 255, 255)
     doc.setFont("helvetica", "bold")
     doc.setFontSize(20)
-    doc.text(creation.title, 20, 25)
+    doc.text(title, 20, 25)
 
-    // Add generation date
+    // Add tool type and generation date
     doc.setFontSize(10)
-    doc.text(`Created: ${new Date(creation.created_at).toLocaleDateString()}`, 150, 32)
+    if (toolType) {
+      doc.text(`Tool: ${toolType.replace("-", " ").replace(/\b\w/g, (l) => l.toUpperCase())}`, 20, 32)
+    }
+    doc.text(`Created: ${new Date(createdAt).toLocaleDateString()}`, 150, 32)
 
     // Reset text color for body
     doc.setTextColor(0, 0, 0)
@@ -34,8 +37,29 @@ export async function POST(request: NextRequest) {
 
     // Add content
     doc.setFontSize(12)
-    const splitContent = doc.splitTextToSize(creation.content, 170)
+    const splitContent = doc.splitTextToSize(content, 170)
     doc.text(splitContent, 20, yPosition)
+
+    // Add metadata if available
+    if (metadata && Object.keys(metadata).length > 0) {
+      let metadataY = yPosition + splitContent.length * 7 + 20
+      
+      doc.setFont("helvetica", "bold")
+      doc.setFontSize(14)
+      doc.text("Additional Details:", 20, metadataY)
+      
+      doc.setFont("helvetica", "normal")
+      doc.setFontSize(10)
+      metadataY += 10
+      
+      Object.entries(metadata).forEach(([key, value]) => {
+        if (value && typeof value === 'string') {
+          const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())
+          doc.text(`${label}: ${value}`, 20, metadataY)
+          metadataY += 7
+        }
+      })
+    }
 
     // Add footer
     const pageCount = doc.getNumberOfPages()
@@ -55,7 +79,7 @@ export async function POST(request: NextRequest) {
     return new NextResponse(pdfBuffer, {
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="${creation.title.replace(/\s+/g, "_")}.pdf"`,
+        "Content-Disposition": `attachment; filename="${title.replace(/[^a-z0-9]/gi, "_").toLowerCase()}.pdf"`,
       },
     })
   } catch (error) {

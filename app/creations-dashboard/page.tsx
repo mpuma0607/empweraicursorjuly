@@ -5,7 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Loader2, Download, FileText, Calendar, Palette } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Loader2, Download, FileText, Calendar, Palette, Eye, X } from "lucide-react"
 import { useMemberSpaceUser } from "@/hooks/use-memberspace-user"
 
 interface UserCreation {
@@ -23,6 +24,9 @@ export default function CreationsDashboardPage() {
   const [creations, setCreations] = useState<UserCreation[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [selectedCreation, setSelectedCreation] = useState<UserCreation | null>(null)
+  const [isViewing, setIsViewing] = useState(false)
+  const [isDownloading, setIsDownloading] = useState<string | null>(null)
 
   useEffect(() => {
     if (isLoggedIn && user?.email) {
@@ -53,6 +57,7 @@ export default function CreationsDashboardPage() {
 
   const downloadCreation = async (creation: UserCreation) => {
     try {
+      setIsDownloading(creation.id)
       const response = await fetch("/api/generate-creation-pdf", {
         method: "POST",
         headers: {
@@ -84,7 +89,19 @@ export default function CreationsDashboardPage() {
     } catch (error) {
       console.error("Error downloading creation:", error)
       alert("Failed to download creation. Please try again.")
+    } finally {
+      setIsDownloading(null)
     }
+  }
+
+  const viewCreation = (creation: UserCreation) => {
+    setSelectedCreation(creation)
+    setIsViewing(true)
+  }
+
+  const closeView = () => {
+    setIsViewing(false)
+    setSelectedCreation(null)
   }
 
   const getToolIcon = (toolType: string) => {
@@ -268,14 +285,29 @@ export default function CreationsDashboardPage() {
                                 {getToolIcon(creation.tool_type)}
                                 <Badge variant="outline">{getToolName(creation.tool_type)}</Badge>
                               </div>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => downloadCreation(creation)}
-                                className="shrink-0"
-                              >
-                                <Download className="h-4 w-4" />
-                              </Button>
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => viewCreation(creation)}
+                                  className="shrink-0"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => downloadCreation(creation)}
+                                  className="shrink-0"
+                                  disabled={isDownloading === creation.id}
+                                >
+                                  {isDownloading === creation.id ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <Download className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              </div>
                             </div>
                             <CardTitle className="text-lg line-clamp-2">{creation.title}</CardTitle>
                             <div className="flex items-center gap-4 text-sm text-gray-500">
@@ -308,6 +340,97 @@ export default function CreationsDashboardPage() {
           </div>
         )}
       </div>
+
+      {/* View Creation Modal */}
+      <Dialog open={isViewing} onOpenChange={setIsViewing}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {selectedCreation && getToolIcon(selectedCreation.tool_type)}
+                <div>
+                  <DialogTitle className="text-xl">{selectedCreation?.title}</DialogTitle>
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <Badge variant="outline">{selectedCreation && getToolName(selectedCreation.tool_type)}</Badge>
+                    <span>•</span>
+                    <span>{selectedCreation && formatDate(selectedCreation.created_at)}</span>
+                  </div>
+                </div>
+              </div>
+              <Button variant="ghost" size="sm" onClick={closeView}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </DialogHeader>
+          
+          {selectedCreation && (
+            <div className="space-y-6">
+              {/* Content */}
+              <div>
+                <h3 className="font-semibold text-lg mb-3">Content</h3>
+                <div className="bg-gray-50 p-4 rounded-lg whitespace-pre-wrap">
+                  {selectedCreation.content}
+                </div>
+              </div>
+
+              {/* Metadata */}
+              {selectedCreation.metadata && Object.keys(selectedCreation.metadata).length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-lg mb-3">Additional Details</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    {Object.entries(selectedCreation.metadata).map(([key, value]) => (
+                      <div key={key} className="bg-gray-50 p-3 rounded">
+                        <div className="text-sm font-medium text-gray-600 capitalize">
+                          {key.replace(/([A-Z])/g, ' $1')}
+                        </div>
+                        <div className="text-sm">{String(value)}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Form Data */}
+              {selectedCreation.form_data && Object.keys(selectedCreation.form_data).length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-lg mb-3">Form Data</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    {Object.entries(selectedCreation.form_data).map(([key, value]) => (
+                      <div key={key} className="bg-gray-50 p-3 rounded">
+                        <div className="text-sm font-medium text-gray-600 capitalize">
+                          {key.replace(/([A-Z])/g, ' $1')}
+                        </div>
+                        <div className="text-sm">{String(value)}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="flex justify-end gap-3 pt-4 border-t">
+                <Button
+                  variant="outline"
+                  onClick={() => selectedCreation && downloadCreation(selectedCreation)}
+                  disabled={isDownloading === selectedCreation.id}
+                >
+                  {isDownloading === selectedCreation.id ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      Generating PDF...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="h-4 w-4 mr-2" />
+                      Download PDF
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
