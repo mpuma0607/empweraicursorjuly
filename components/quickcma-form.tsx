@@ -13,7 +13,7 @@ import { useMemberSpaceUser } from "@/hooks/use-memberspace-user"
 import { saveUserCreation, generateCreationTitle } from "@/lib/auto-save-creation"
 import { toast } from "@/hooks/use-toast"
 import { getUserBrandingProfile } from "@/app/profile/branding/actions"
-import { useTenantConfig } from "@/hooks/useTenantConfig"
+import { useTenantConfig } from "@/contexts/tenant-context"
 import { QuickCMAResults } from "./quickcma-results"
 import { PropertyScriptGenerator } from "./property-script-generator"
 

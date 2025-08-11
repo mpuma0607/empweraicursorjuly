@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast"
 import { Upload, User, Building2, ImageIcon } from "lucide-react"
 import { useMemberSpaceUser } from "@/hooks/use-memberspace-user"
-import { useTenantConfig } from "@/hooks/useTenantConfig"
+import { useTenantConfig } from "@/contexts/tenant-context"
 import { getBrandOptionsForTenant } from "@/lib/tenant-brand-options"
 import {
   getUserBrandingProfile,

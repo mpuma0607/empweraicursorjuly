@@ -14,7 +14,7 @@ import { generateContent } from "./actions"
 import { Loader2, Copy, Download, Mail, Mic, MicOff, Save, Upload } from "lucide-react"
 import Image from "next/image"
 import { useMemberSpaceUser } from "@/hooks/use-memberspace-user"
-import { useTenantConfig } from "@/hooks/useTenantConfig"
+import { useTenantConfig } from "@/contexts/tenant-context"
 import { saveUserCreation, generateCreationTitle } from "@/lib/auto-save-creation"
 
 const topicOptions = [
