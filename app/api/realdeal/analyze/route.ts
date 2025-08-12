@@ -188,9 +188,9 @@ Please make the summary clear, professional, and easy to read—avoid legal jarg
 
     // Calculate available tokens for contract text
     // GPT-5 has much higher context limits - use 128k tokens total
-    // Reserve tokens for: system prompt (~500), response (~2000), safety buffer (~200)
+    // Reserve tokens for: system prompt (~500), response (~8000), safety buffer (~200)
     const systemPromptTokens = estimateTokens(systemPrompt)
-    const responseTokens = 2000
+    const responseTokens = 8000
     const safetyBuffer = 200
     const availableTokensForContract = 128000 - systemPromptTokens - responseTokens - safetyBuffer
 
@@ -224,7 +224,7 @@ Please make the summary clear, professional, and easy to read—avoid legal jarg
           content: `Please analyze this real estate contract for the property at ${propertyAddress}:\n\n${truncatedContractText}`,
         },
       ],
-      max_completion_tokens: 2000,
+      max_completion_tokens: 8000,
     })
 
     console.log("OpenAI analysis completed successfully")
