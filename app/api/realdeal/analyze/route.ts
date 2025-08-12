@@ -187,15 +187,15 @@ IMPORTANT: Search thoroughly for these dates throughout the entire contract. The
 Please make the summary clear, professional, and easy to read—avoid legal jargon when possible. Structure matters: bold each section header and use bullet points for all details underneath.`
 
     // Calculate available tokens for contract text
-    // GPT-4 has 8192 tokens total
+    // GPT-5 has much higher context limits - use 128k tokens total
     // Reserve tokens for: system prompt (~500), response (~2000), safety buffer (~200)
     const systemPromptTokens = estimateTokens(systemPrompt)
     const responseTokens = 2000
     const safetyBuffer = 200
-    const availableTokensForContract = 8192 - systemPromptTokens - responseTokens - safetyBuffer
+    const availableTokensForContract = 128000 - systemPromptTokens - responseTokens - safetyBuffer
 
     console.log("Token allocation:", {
-      totalLimit: 8192,
+      totalLimit: 128000,
       systemPromptTokens,
       responseTokens,
       safetyBuffer,
