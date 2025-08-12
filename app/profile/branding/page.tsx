@@ -297,14 +297,9 @@ export default function BrandingProfilePage() {
                   </SelectContent>
                 </Select>
                 {showOtherInput && (
-                  <div className="mt-2 space-y-2">
-                    <Input
-                      placeholder="Enter your brand name"
-                      value={formData.brand === "other" ? "" : formData.brand}
-                      onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-                    />
-                    <p className="text-sm text-orange-600">
-                      Since you selected "Other", please upload your logo using the logo upload section below.
+                  <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm text-blue-800">
+                      Since you selected "Other", please enter your brokerage name in the <strong>Brokerage</strong> field below and upload your logo using the <strong>Logo</strong> upload section below.
                     </p>
                   </div>
                 )}
