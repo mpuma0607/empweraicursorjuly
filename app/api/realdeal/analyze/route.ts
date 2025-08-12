@@ -72,30 +72,30 @@ export async function POST(request: NextRequest) {
         const addressSampleSize = Math.min(contractText.length, 5000) // Use up to first 5000 chars
         const addressSample = contractText.substring(0, addressSampleSize)
 
-                 const addressResponse = await openai.chat.completions.create({
-           model: "gpt-4o",
-           messages: [
-             {
-               role: "system",
-               content: `You are an expert at extracting property addresses from real estate contracts.
-Your task is to find and extract ONLY the complete property address from the contract text.
-Look for patterns like:
-- "Property Address:" followed by an address
-- "Subject Property:" followed by an address
-- "Real property located at:" followed by an address
-- Street numbers followed by street names, city, state, zip
-- Legal descriptions that include lot numbers, block numbers, subdivision names
+                                  const addressResponse = await openai.chat.completions.create({
+            model: "gpt-4o",
+            messages: [
+              {
+                role: "system",
+                content: `You are an expert at extracting property addresses from real estate contracts.
+ Your task is to find and extract ONLY the complete property address from the contract text.
+ Look for patterns like:
+ - "Property Address:" followed by an address
+ - "Subject Property:" followed by an address
+ - "Real property located at:" followed by an address
+ - Street numbers followed by street names, city, state, zip
+ - Legal descriptions that include lot numbers, block numbers, subdivision names
 
-Return ONLY the complete property address with no additional text or explanation.
-If you cannot find a property address with high confidence, respond with "PROPERTY ADDRESS NOT FOUND".`,
-             },
-             {
-               role: "user",
-               content: addressSample,
-             },
-           ],
-           max_tokens: 150,
-         })
+ Return ONLY the complete property address with no additional text or explanation.
+ If you cannot find a property address with high confidence, respond with "PROPERTY ADDRESS NOT FOUND".`,
+              },
+              {
+                role: "user",
+                content: addressSample,
+              },
+            ],
+            max_completion_tokens: 150,
+          })
 
         const extractedAddress = addressResponse.choices[0].message.content?.trim()
         console.log("Extracted address:", extractedAddress)
@@ -110,22 +110,22 @@ If you cannot find a property address with high confidence, respond with "PROPER
           // Try a second attempt with a different prompt if the first fails
           console.log("First address extraction attempt failed, trying alternative approach...")
 
-                     const secondAttemptResponse = await openai.chat.completions.create({
-             model: "gpt-4o",
-             messages: [
-               {
-                 role: "system",
-                 content: `Extract the property address from this real estate contract text.
-Look at the beginning of the document, as addresses are typically mentioned early.
-Return ONLY the address, with no additional text.`,
-               },
-               {
-                 role: "user",
-                 content: addressSample,
-               },
-             ],
-             max_tokens: 150,
-           })
+                                          const secondAttemptResponse = await openai.chat.completions.create({
+              model: "gpt-4o",
+              messages: [
+                {
+                  role: "system",
+                  content: `Extract the property address from this real estate contract text.
+ Look at the beginning of the document, as addresses are typically mentioned early.
+ Return ONLY the address, with no additional text.`,
+                },
+                {
+                  role: "user",
+                  content: addressSample,
+                },
+              ],
+              max_completion_tokens: 150,
+            })
 
           const secondExtractedAddress = secondAttemptResponse.choices[0].message.content?.trim()
           console.log("Second attempt extracted address:", secondExtractedAddress)
@@ -224,7 +224,7 @@ Please make the summary clear, professional, and easy to read—avoid legal jarg
           content: `Please analyze this real estate contract for the property at ${propertyAddress}:\n\n${truncatedContractText}`,
         },
       ],
-      max_tokens: 2000,
+      max_completion_tokens: 2000,
     })
 
     console.log("OpenAI analysis completed successfully")
