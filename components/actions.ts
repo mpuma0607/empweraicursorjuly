@@ -76,7 +76,7 @@ Short motivational note tied to the agent's bigger goals
 Generate a complete, detailed action plan with all 5 sections. Each section should contain substantial, actionable content.`
 
     const { text: generatedPlan } = await generateText({
-      model: openai("gpt-4o"),
+      model: openai("gpt-5"),
       prompt,
     })
 
@@ -174,7 +174,7 @@ Create a professional CMA report with these EXACT sections:
 Format each section with detailed bullet points using specific data from the comparable properties provided.`
 
     const response = await openaiInstance.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-5",
       messages: [
         {
           role: "system",
@@ -557,7 +557,7 @@ ${formData.additionalContext ? `- Additional Context: ${formData.additionalConte
 Please create engaging, professional content that matches these specifications.`
 
     const { text: generatedContent } = await generateText({
-      model: openai("gpt-4o"),
+      model: openai("gpt-5"),
       prompt,
     })
 

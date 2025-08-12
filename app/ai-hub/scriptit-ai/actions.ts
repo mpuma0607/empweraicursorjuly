@@ -108,7 +108,7 @@ ${scriptTypeDetails.lengthGuidance}
 Write this as ONE complete, flowing script that naturally weaves in visual, auditory, and kinesthetic language throughout while maintaining the ${formData.tonality} tonality. Make it sound conversational and natural. Do NOT create separate sections or versions. Just write one professional script.`
 
     const { text: generatedScript } = await generateText({
-      model: openai("gpt-4o"),
+      model: openai("gpt-5"),
       prompt: prompt,
     })
 
