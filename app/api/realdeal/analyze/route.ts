@@ -228,10 +228,17 @@ Please make the summary clear, professional, and easy to read—avoid legal jarg
     })
 
     console.log("OpenAI analysis completed successfully")
+    console.log("OpenAI response structure:", {
+      choices: analysisResponse.choices?.length,
+      firstChoice: analysisResponse.choices?.[0],
+      messageContent: analysisResponse.choices?.[0]?.message?.content,
+      messageRole: analysisResponse.choices?.[0]?.message?.role,
+    })
 
-    const analysis = analysisResponse.choices[0].message.content || "Analysis could not be generated."
+    const analysis = analysisResponse.choices[0]?.message?.content || "Analysis could not be generated."
 
     console.log("Analysis length:", analysis.length)
+    console.log("Analysis content preview:", analysis.substring(0, 200))
 
     const result = {
       analysis,
