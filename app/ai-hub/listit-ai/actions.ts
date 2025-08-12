@@ -45,13 +45,14 @@ Avoid robotic or cliché phrases. Keep it unique, story-driven, and emotionally 
 
 End the description with a strong, inviting call to action that encourages scheduling a private showing or reaching out for more information.`
 
-    const { text: generatedDescription } = await generateText({
+    const { text } = await generateText({
       model: openai("gpt-5"),
       prompt,
+      temperature: 1, // GPT-5 only supports default temperature (1)
     })
 
     return {
-      description: generatedDescription,
+      description: text,
     }
   } catch (error) {
     console.error("Error generating listing description:", error)

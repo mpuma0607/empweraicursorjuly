@@ -67,13 +67,14 @@ Format:
 
 The script should be appropriate for ${formData.scriptType} communication and feel natural and conversational while being highly effective.`
 
-    const { text: generatedScript } = await generateText({
+    const { text } = await generateText({
       model: openai("gpt-5"),
       prompt,
+      temperature: 1, // GPT-5 only supports default temperature (1)
     })
 
     return {
-      script: generatedScript,
+      script: text,
     }
   } catch (error) {
     console.error("Error generating script:", error)

@@ -45,11 +45,16 @@ const topicOptions = [
 
 export async function generateScript(formData: ScriptFormData) {
   try {
+    console.log("=== ScriptIt generateScript Started ===")
+    console.log("Form data received:", formData)
+    
     // Determine the topic to use
     const topicToUse = formData.topic === "other" ? formData.customTopic : formData.topic
+    console.log("Topic to use:", topicToUse)
 
     // Get script type details
     const scriptTypeDetails = getScriptTypeDetails(formData.scriptType)
+    console.log("Script type details:", scriptTypeDetails)
 
     // Get topic-specific context
     let topicContext = ""
@@ -63,6 +68,9 @@ export async function generateScript(formData: ScriptFormData) {
       topicContext = getTopicContext(topicToUse)
       scriptPurpose = `This is a ${formData.scriptTypeCategory.toLowerCase()} targeting ${topicToUse}.`
     }
+    
+    console.log("Topic context:", topicContext)
+    console.log("Script purpose:", scriptPurpose)
 
     const prompt = `You are an expert real estate script writer. Create ONE professional ${formData.scriptType} script for ${formData.agentName} from ${formData.brokerageName}.
 
@@ -107,16 +115,28 @@ ${scriptTypeDetails.lengthGuidance}
 
 Write this as ONE complete, flowing script that naturally weaves in visual, auditory, and kinesthetic language throughout while maintaining the ${formData.tonality} tonality. Make it sound conversational and natural. Do NOT create separate sections or versions. Just write one professional script.`
 
+    console.log("Prompt constructed successfully, length:", prompt.length)
+    console.log("About to call generateText with GPT-5...")
+
     const { text: generatedScript } = await generateText({
       model: openai("gpt-5"),
       prompt: prompt,
+      temperature: 1, // GPT-5 only supports default temperature (1)
     })
+
+    console.log("Text generation successful, script length:", generatedScript.length)
+    console.log("=== ScriptIt generateScript Completed Successfully ===")
 
     return {
       script: generatedScript,
     }
-  } catch (error) {
-    console.error("Error generating script:", error)
+  } catch (error: unknown) {
+    console.error("=== ScriptIt generateScript Error ===")
+    console.error("Error type:", typeof error)
+    console.error("Error constructor:", error instanceof Error ? error.constructor.name : 'Unknown')
+    console.error("Error message:", error instanceof Error ? error.message : 'Unknown error')
+    console.error("Error stack:", error instanceof Error ? error.stack : 'No stack trace')
+    console.error("Full error object:", error)
     throw new Error("Failed to generate script. Please try again.")
   }
 }

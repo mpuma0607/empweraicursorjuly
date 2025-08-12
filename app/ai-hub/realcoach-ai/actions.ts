@@ -135,7 +135,7 @@ Format the response with clear headers using the color #b6a888 for section title
     const { text } = await generateText({
       model: openai("gpt-5"),
       prompt,
-      maxTokens: 4000,
+      temperature: 1, // GPT-5 only supports default temperature (1)
     })
 
     return { success: true, plan: text }

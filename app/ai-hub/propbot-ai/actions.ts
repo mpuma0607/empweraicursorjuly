@@ -190,9 +190,7 @@ export async function searchProperties(prevState: any, formData: FormData) {
             Description: ${property.description || "No description available"}
           `
 
-          const aiAnalysis = await generateText({
-            model: openai("gpt-5"),
-            prompt: `
+          const prompt = `
               Analyze this property against the search query: "${searchQuery}"
               
               Property Details:
@@ -221,12 +219,17 @@ export async function searchProperties(prevState: any, formData: FormData) {
                 "features": ["notable property features found"],
                 "highlights": ["key selling points"]
               }
-            `,
+            `
+
+          const { text } = await generateText({
+            model: openai("gpt-5"),
+            prompt,
+            temperature: 1, // GPT-5 only supports default temperature (1)
           })
 
           let analysisData
           try {
-            analysisData = JSON.parse(aiAnalysis.text)
+            analysisData = JSON.parse(text)
           } catch (parseError) {
             console.log(`PropBot AI: Failed to parse AI analysis for property ${index + 1}`)
             // Generate varied scores instead of always 70

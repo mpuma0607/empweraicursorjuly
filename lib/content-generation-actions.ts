@@ -97,6 +97,7 @@ Please write the content in ${formData.language} and ensure it reads naturally a
     const { text: generatedText } = await generateText({
       model: openai("gpt-5"),
       prompt: textPrompt,
+      temperature: 1, // GPT-5 only supports default temperature (1)
     })
 
     // Generate image
@@ -121,10 +122,13 @@ This image should look like it was taken by a professional photographer and shou
       quality: "standard",
     })
 
-    const originalImageUrl = imageResponse.data[0]?.url || ""
+    const generatedImageUrl = imageResponse.data?.[0]?.url
+    if (!generatedImageUrl) {
+      throw new Error("Failed to generate image")
+    }
 
     // In browser environment, use original image URL
-    const processedImageUrl = await addLogoToImage(originalImageUrl)
+    const processedImageUrl = await addLogoToImage(generatedImageUrl)
 
     return {
       text: generatedText,

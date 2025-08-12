@@ -135,7 +135,7 @@ Write this as ONE complete, flowing script that naturally weaves in visual, audi
             IMPORTANT: Personalize the script using the specific property address, owner names, and property value. Make it clear this is about their specific property. Use owner names naturally in the conversation flow.`
 
     const { text: generatedScript } = await generateText({
-      model: openai("gpt-5"),
+      model: openai("gpt-4o"),
       prompt: prompt,
     })
 

@@ -110,9 +110,7 @@ export async function skipTraceProperty(formData: SkipTraceFormData) {
     // Generate AI summary with all available data
     const fullAddress = `${formData.street}, ${formData.city}, ${formData.state} ${formData.zip}`
 
-    const { text: summary } = await generateText({
-      model: openai("gpt-5"),
-      prompt: `
+    const prompt = `
 You are a professional real estate assistant. Analyze the following property skip trace data and create a comprehensive, professional summary report.
 
 Property Address: ${fullAddress}
@@ -164,7 +162,12 @@ Format this as a clean, professional report with clear headings and organized in
 Focus on actionable information for real estate professionals.
 If specific information isn't available, clearly state "Not Available" rather than making assumptions.
 For any URLs or web links found in the data, present them clearly in the CONTACT DETAILS section.
-`,
+`
+
+    const { text } = await generateText({
+      model: openai("gpt-5"),
+      prompt,
+      temperature: 1, // GPT-5 only supports default temperature (1)
     })
 
     // Send email with results
@@ -179,7 +182,7 @@ For any URLs or web links found in the data, present them clearly in the CONTACT
           body: JSON.stringify({
             email: formData.email,
             address: fullAddress,
-            summary: summary,
+            summary: text,
             rawData: skipTraceData,
             additionalData: additionalContactData,
           }),
@@ -196,7 +199,7 @@ For any URLs or web links found in the data, present them clearly in the CONTACT
     return {
       success: true,
       data: {
-        summary,
+        summary: text,
         rawData: skipTraceData,
         additionalData: additionalContactData,
         address: fullAddress,

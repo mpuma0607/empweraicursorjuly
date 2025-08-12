@@ -91,15 +91,16 @@ ${formData.contentType === "Blog article" ? "Include a compelling title and stru
 
 Please write the content in ${formData.language} and ensure it reads naturally and professionally for native speakers.`
 
-    const { text: generatedText } = await generateText({
+    const { text } = await generateText({
       model: openai("gpt-5"),
       prompt: textPrompt,
+      temperature: 1, // GPT-5 only supports default temperature (1)
     })
 
     // Generate image
     const imagePrompt = `You are an elite graphic designer for a Century 21 real estate brokerage. Your task is to create a **realistic, photo-quality, high-definition image** to accompany the following social media post:
 
-${generatedText.substring(0, 300)}...
+${text.substring(0, 300)}...
 
 Design requirements:
 - The image must align visually and emotionally with the message or theme of the post
@@ -118,13 +119,16 @@ This image should look like it was taken by a professional photographer and shou
       quality: "standard",
     })
 
-    const originalImageUrl = imageResponse.data[0]?.url || ""
+    const generatedImageUrl = imageResponse.data?.[0]?.url
+    if (!generatedImageUrl) {
+      throw new Error("Failed to generate image")
+    }
 
     // In browser environment, use original image URL
-    const processedImageUrl = await addLogoToImage(originalImageUrl)
+    const processedImageUrl = await addLogoToImage(generatedImageUrl)
 
     return {
-      text: generatedText,
+      text: text,
       imageUrl: processedImageUrl,
       imageBuffer: null, // No buffer processing in browser environment
     }

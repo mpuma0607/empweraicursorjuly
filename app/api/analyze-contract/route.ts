@@ -72,12 +72,12 @@ export async function POST(request: NextRequest) {
         const addressSampleSize = Math.min(contractText.length, 5000) // Use up to first 5000 chars
         const addressSample = contractText.substring(0, addressSampleSize)
 
-        const addressResponse = await openai.chat.completions.create({
-          model: "gpt-5",
-          messages: [
-            {
-              role: "system",
-              content: `You are an expert at extracting property addresses from real estate contracts.
+                 const addressResponse = await openai.chat.completions.create({
+           model: "gpt-4o",
+           messages: [
+             {
+               role: "system",
+               content: `You are an expert at extracting property addresses from real estate contracts.
 Your task is to find and extract ONLY the complete property address from the contract text.
 Look for patterns like:
 - "Property Address:" followed by an address
@@ -88,15 +88,14 @@ Look for patterns like:
 
 Return ONLY the complete property address with no additional text or explanation.
 If you cannot find a property address with high confidence, respond with "PROPERTY ADDRESS NOT FOUND".`,
-            },
-            {
-              role: "user",
-              content: addressSample,
-            },
-          ],
-          max_tokens: 150,
-          temperature: 0.1,
-        })
+             },
+             {
+               role: "user",
+               content: addressSample,
+             },
+           ],
+           max_tokens: 150,
+         })
 
         const extractedAddress = addressResponse.choices[0].message.content?.trim()
         console.log("Extracted address:", extractedAddress)
@@ -111,23 +110,22 @@ If you cannot find a property address with high confidence, respond with "PROPER
           // Try a second attempt with a different prompt if the first fails
           console.log("First address extraction attempt failed, trying alternative approach...")
 
-          const secondAttemptResponse = await openai.chat.completions.create({
-            model: "gpt-5",
-            messages: [
-              {
-                role: "system",
-                content: `Extract the property address from this real estate contract text.
+                     const secondAttemptResponse = await openai.chat.completions.create({
+             model: "gpt-4o",
+             messages: [
+               {
+                 role: "system",
+                 content: `Extract the property address from this real estate contract text.
 Look at the beginning of the document, as addresses are typically mentioned early.
 Return ONLY the address, with no additional text.`,
-              },
-              {
-                role: "user",
-                content: addressSample,
-              },
-            ],
-            max_tokens: 150,
-            temperature: 0.1,
-          })
+               },
+               {
+                 role: "user",
+                 content: addressSample,
+               },
+             ],
+             max_tokens: 150,
+           })
 
           const secondExtractedAddress = secondAttemptResponse.choices[0].message.content?.trim()
           console.log("Second attempt extracted address:", secondExtractedAddress)
@@ -227,7 +225,6 @@ Please make the summary clear, professional, and easy to read—avoid legal jarg
         },
       ],
       max_tokens: 2000,
-      temperature: 0.7,
     })
 
     console.log("OpenAI analysis completed successfully")

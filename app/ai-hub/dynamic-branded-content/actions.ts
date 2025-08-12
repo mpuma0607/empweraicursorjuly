@@ -64,6 +64,7 @@ Generate only the content text, no additional formatting or explanations.`
     const { text } = await generateText({
       model: openai("gpt-5"),
       prompt,
+      temperature: 1, // GPT-5 only supports default temperature (1)
     })
 
     console.log("Text generation successful")
@@ -184,7 +185,7 @@ async function generateAndProcessImage(formData: FormData, topic: string): Promi
       n: 1,
     })
 
-    const generatedImageUrl = imageResponse.data[0]?.url
+    const generatedImageUrl = imageResponse.data?.[0]?.url
     if (!generatedImageUrl) {
       throw new Error("Failed to generate image")
     }

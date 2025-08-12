@@ -34,13 +34,14 @@ Avoid clichés. Write like you're telling a story that helps the reader see the 
 
 The bio should be approximately 150-250 words and written in first person.`
 
-    const { text: generatedBio } = await generateText({
+    const { text } = await generateText({
       model: openai("gpt-5"),
       prompt,
+      temperature: 1, // GPT-5 only supports default temperature (1)
     })
 
     return {
-      bio: generatedBio,
+      bio: text,
     }
   } catch (error) {
     console.error("Error generating agent bio:", error)
