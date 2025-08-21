@@ -43,6 +43,7 @@ export async function analyzeMarket(
     
     // Generate AI insights for deeper analysis
     const aiInsights = await generateAIInsights(searchQuery, marketType, marketData)
+    console.log("MyMarket AI: Generated AI insights:", aiInsights ? "Success" : "Failed")
     
     // Combine market data with AI insights
     const enhancedData = {
@@ -57,6 +58,9 @@ export async function analyzeMarket(
       agentEmail,
       marketType,
       searchQuery,
+      homeType,
+      rentalType,
+      bedroomType,
       timestamp: new Date().toISOString(),
       data: enhancedData
     }
@@ -88,9 +92,9 @@ async function generateAIInsights(location: string, marketType: 'housing' | 'ren
     } else {
       marketContext = `
         Location: ${location}
-        Average Rent: $${marketData.rental_data?.average_rent?.toLocaleString() || 'N/A'}
-        Rental Inventory: ${marketData.rental_data?.rental_inventory?.toLocaleString() || 'N/A'}
-        Rent Trend: ${marketData.rental_data?.rent_trend || 'N/A'}
+        Average Rent: $${marketData.rental_market_trends?.average_rent?.toLocaleString() || marketData.average_rent?.toLocaleString() || 'N/A'}
+        Rental Inventory: ${marketData.rental_market_trends?.rental_inventory?.toLocaleString() || marketData.rental_inventory?.toLocaleString() || 'N/A'}
+        Rent Trend: ${marketData.rental_market_trends?.rent_trend || marketData.rent_trend || 'N/A'}
       `
     }
 
@@ -110,7 +114,7 @@ Please provide:
 Keep the analysis professional, data-driven, and actionable. Focus on real insights that would help real estate agents and their clients make informed decisions.`
 
         const completion = await openai.chat.completions.create({
-      model: "gpt-5",
+      model: "gpt-4",
       messages: [
         {
           role: "system",

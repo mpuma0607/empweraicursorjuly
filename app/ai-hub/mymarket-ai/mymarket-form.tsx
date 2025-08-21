@@ -685,6 +685,8 @@ export default function MyMarketForm() {
               {/* Professional Market Data Display */}
               {(() => {
                 const formattedData = formatMarketData(result.data)
+                console.log("MyMarket AI: Formatted data:", formattedData)
+                console.log("MyMarket AI: AI insights in formatted data:", formattedData.aiInsights)
                 
                 if (formattedData.error) {
                   return (
