@@ -345,19 +345,14 @@ export default function MyMarketForm() {
         }
       }
 
-      // Handle rental market data - check multiple possible structures
-      console.log("MyMarket AI: Processing rental data...")
-      
-      // Check if the data is directly the rental response
-      if (data.rental_market_trends || data.rental_data || data.rental_market) {
-        const rentalData = data.rental_market_trends || data.rental_data || data.rental_market || {}
-        console.log("MyMarket AI: Found rental data structure:", rentalData)
+      // Handle rental market data - simplified and more reliable
+      if (data.rental_market_trends || data.rental_data || data.rental_market || data.average_rent || data.avgRent) {
+        const rentalData = data.rental_market_trends || data.rental_data || data.rental_market || data
         
-        // Extract values from the correct structure
-        const averageRent = rentalData.summary?.medianRent || rentalData.average_rent || rentalData.avgRent || rentalData.averageRent || 'N/A'
-        const rentalInventory = rentalData.summary?.availableRentals || rentalData.rental_inventory || rentalData.inventory || rentalData.rentalInventory || 'N/A'
-        const monthlyChange = rentalData.summary?.monthlyChange || 0
-        const rentTrend = monthlyChange > 0 ? `+$${monthlyChange}` : monthlyChange < 0 ? `-$${Math.abs(monthlyChange)}` : 'No change'
+        // Extract rental values with fallbacks
+        const averageRent = rentalData.average_rent || rentalData.avgRent || rentalData.medianRent || rentalData.summary?.medianRent || 'N/A'
+        const rentalInventory = rentalData.rental_inventory || rentalData.inventory || rentalData.availableRentals || rentalData.summary?.availableRentals || 'N/A'
+        const rentTrend = rentalData.rent_trend || rentalData.rentTrend || rentalData.trend || rentalData.summary?.monthlyChange || 'N/A'
         
         return {
           type: 'rental',
@@ -370,38 +365,8 @@ export default function MyMarketForm() {
         }
       }
 
-      // Check if the entire response is the rental data (no wrapper)
-      if (data.average_rent || data.avgRent || data.averageRent || data.rental_inventory || data.inventory) {
-        console.log("MyMarket AI: Found direct rental data fields")
-        return {
-          type: 'rental',
-          location: data.search_query || data.areaName || data.location || "Unknown Location",
-          averageRent: data.average_rent || data.avgRent || data.averageRent || 'N/A',
-          rentTrend: data.rent_trend || data.rentTrend || data.trend || 'N/A',
-          rentalInventory: data.rental_inventory || data.inventory || data.rentalInventory || 'N/A',
-          description: data.description || `Rental market data for ${data.areaName || data.location || 'this area'}`,
-          aiInsights: data.ai_insights || null
-        }
-      }
-
-      // Handle case where rental data might be in a different structure
-      if (data.message === 'success' && (data.rental_market_trends || data.rental_data || data.rental_market)) {
-        const rentalData = data.rental_market_trends || data.rental_data || data.rental_market || {}
-        console.log("MyMarket AI: Found success message with rental data:", rentalData)
-        
-        return {
-          type: 'rental',
-          location: data.search_query || rentalData.areaName || rentalData.location || "Unknown Location",
-          averageRent: rentalData.average_rent || rentalData.avgRent || rentalData.averageRent || 'N/A',
-          rentTrend: rentalData.rent_trend || rentalData.rentTrend || rentalData.trend || 'N/A',
-          rentalInventory: rentalData.rental_inventory || rentalData.inventory || rentalData.rentalInventory || 'N/A',
-          description: rentalData.description || `Rental market data for ${rentalData.areaName || rentalData.location || 'this area'}`,
-          aiInsights: data.ai_insights || null
-        }
-      }
-
-      // Fallback for other data structures
-      console.log("MyMarket AI: No recognized rental data structure found, using fallback")
+      // Fallback for unknown data structures
+      console.log("MyMarket AI: No recognized data structure found, using fallback")
       return {
         type: 'unknown',
         location: data.search_query || "Unknown Location",

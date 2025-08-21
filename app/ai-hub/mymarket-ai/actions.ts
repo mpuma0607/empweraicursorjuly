@@ -154,7 +154,7 @@ async function fetchMarketData(
     endpoint = "/rental_market"
     params = {
       search_query: searchQuery,
-      bedrooom_type: bedroomType || "All_Bedrooms",
+      bedroom_type: bedroomType || "All_Bedrooms",
       home_type: rentalType || "All_Property_Types"
     }
   } else {
@@ -196,7 +196,7 @@ async function fetchMarketData(
           average_rent: null,
           rental_inventory: null,
           rent_trend: null,
-          description: `Rental market data for ${searchQuery} is currently unavailable. Please try again later.`
+          description: `Rental market data for ${searchQuery} is currently unavailable. Please try again later or contact support if the issue persists.`
         }
       }
     } else {
@@ -207,7 +207,7 @@ async function fetchMarketData(
           for_sale_inventory: null,
           new_listings: null,
           "market saletolist ratio": null,
-          description: `Housing market data for ${searchQuery} is currently unavailable. Please try again later.`
+          description: `Housing market data for ${searchQuery} is currently unavailable. Please try again later or contact support if the issue persists.`
         }
       }
     }
