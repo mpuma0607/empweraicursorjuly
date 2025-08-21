@@ -27,7 +27,6 @@ import {
   Users,
   Building,
   TrendingUp,
-  Download,
   Save,
 } from "lucide-react"
 import { skipTraceProperty } from "./actions"
@@ -80,7 +79,6 @@ export function WhosWhoForm() {
   const [showScriptGenerator, setShowScriptGenerator] = useState(false)
 
   // Action states
-  const [isDownloading, setIsDownloading] = useState(false)
   const [isEmailing, setIsEmailing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [emailSent, setEmailSent] = useState(false)
@@ -171,46 +169,6 @@ export function WhosWhoForm() {
     }
   }
 
-  const handleDownloadPDF = async () => {
-    if (!result) return
-    
-    setIsDownloading(true)
-    try {
-      const response = await fetch('/api/generate-property-script', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          propertyAddress: result.address,
-          ownerNames: extractOwnerNames(result.summary),
-          propertyType: extractPropertyType(result.summary),
-          estimatedValue: extractEstimatedValue(result.summary),
-          propertyDetails: extractPropertyDetails(result.summary),
-          toolType: 'whos-who',
-          content: result.summary,
-          email: formData.email
-        })
-      })
-      
-      if (response.ok) {
-        const blob = await response.blob()
-        const url = window.URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `property-owner-report-${result.address.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`
-        document.body.appendChild(a)
-        a.click()
-        window.URL.revokeObjectURL(url)
-        document.body.removeChild(a)
-      } else {
-        console.error('Failed to generate PDF')
-      }
-    } catch (error) {
-      console.error('PDF generation error:', error)
-    } finally {
-      setIsDownloading(false)
-    }
-  }
-
   const handleEmailResults = async () => {
     if (!result) return
     
@@ -218,6 +176,14 @@ export function WhosWhoForm() {
     setEmailSent(false)
     
     try {
+      console.log('Sending email with data:', {
+        email: formData.email,
+        address: result.address,
+        summaryLength: result.summary.length,
+        hasRawData: !!result.rawData,
+        hasAdditionalData: !!result.additionalData
+      })
+      
       const response = await fetch('/api/send-whos-who-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -230,11 +196,16 @@ export function WhosWhoForm() {
         })
       })
       
+      console.log('Email API response:', response.status, response.statusText)
+      
       if (response.ok) {
+        const responseData = await response.json()
+        console.log('Email API success:', responseData)
         setEmailSent(true)
         setTimeout(() => setEmailSent(false), 5000) // Hide after 5 seconds
       } else {
-        console.error('Failed to send email')
+        const errorText = await response.text()
+        console.error('Failed to send email:', response.status, errorText)
       }
     } catch (error) {
       console.error('Email error:', error)
@@ -244,7 +215,7 @@ export function WhosWhoForm() {
   }
 
   const handleSaveToProfile = async () => {
-    if (!result || !isLoggedIn) return
+    if (!result || !isLoggedIn || !user) return
     
     setIsSaving(true)
     setSaveSuccess(false)
@@ -254,6 +225,8 @@ export function WhosWhoForm() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          userId: String(user.id), // Convert to string as required by API
+          userEmail: formData.email,
           toolType: 'whos-who',
           title: `Property Owner Report - ${result.address}`,
           content: result.summary,
@@ -652,25 +625,6 @@ export function WhosWhoForm() {
 
               {/* Download, Email & Save Actions */}
               <div className="flex flex-wrap gap-3 mt-4 pt-4 border-t border-blue-200">
-                <Button
-                  onClick={handleDownloadPDF}
-                  disabled={isDownloading}
-                  variant="outline"
-                  className="flex items-center gap-2 border-blue-300 text-blue-700 hover:bg-blue-50"
-                >
-                  {isDownloading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Generating PDF...
-                    </>
-                  ) : (
-                    <>
-                      <Download className="h-4 w-4" />
-                      Download PDF
-                    </>
-                  )}
-                </Button>
-                
                 <Button
                   onClick={handleEmailResults}
                   disabled={isEmailing}
