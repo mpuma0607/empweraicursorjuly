@@ -27,6 +27,8 @@ import {
   Users,
   Building,
   TrendingUp,
+  Download,
+  Save,
 } from "lucide-react"
 import { skipTraceProperty } from "./actions"
 import { analyzeComparables } from "@/components/actions"
@@ -70,15 +72,19 @@ export function WhosWhoForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [result, setResult] = useState<SkipTraceResult | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [emailSent, setEmailSent] = useState(false)
-
-  // CMA-related state
   const [cmaResult, setCmaResult] = useState<CMAResult | null>(null)
   const [isCmaLoading, setIsCmaLoading] = useState(false)
   const [cmaError, setCmaError] = useState<string | null>(null)
 
   // Script generation state
   const [showScriptGenerator, setShowScriptGenerator] = useState(false)
+
+  // Action states
+  const [isDownloading, setIsDownloading] = useState(false)
+  const [isEmailing, setIsEmailing] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [emailSent, setEmailSent] = useState(false)
+  const [saveSuccess, setSaveSuccess] = useState(false)
 
   const { user, isLoggedIn } = useMemberSpaceUser()
 
@@ -122,7 +128,6 @@ export function WhosWhoForm() {
     setIsLoading(true)
     setError(null)
     setResult(null)
-    setEmailSent(false)
     setCmaResult(null) // Clear any previous CMA results
 
     try {
@@ -130,7 +135,6 @@ export function WhosWhoForm() {
 
       if (response.success && response.data) {
         setResult(response.data)
-        setEmailSent(true)
       } else {
         setError(response.error || "Failed to retrieve property information")
       }
@@ -164,6 +168,117 @@ export function WhosWhoForm() {
       setCmaError("An unexpected error occurred while generating the CMA. Please try again.")
     } finally {
       setIsCmaLoading(false)
+    }
+  }
+
+  const handleDownloadPDF = async () => {
+    if (!result) return
+    
+    setIsDownloading(true)
+    try {
+      const response = await fetch('/api/generate-property-script', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          propertyAddress: result.address,
+          ownerNames: extractOwnerNames(result.summary),
+          propertyType: extractPropertyType(result.summary),
+          estimatedValue: extractEstimatedValue(result.summary),
+          propertyDetails: extractPropertyDetails(result.summary),
+          toolType: 'whos-who',
+          content: result.summary,
+          email: formData.email
+        })
+      })
+      
+      if (response.ok) {
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `property-owner-report-${result.address.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+      } else {
+        console.error('Failed to generate PDF')
+      }
+    } catch (error) {
+      console.error('PDF generation error:', error)
+    } finally {
+      setIsDownloading(false)
+    }
+  }
+
+  const handleEmailResults = async () => {
+    if (!result) return
+    
+    setIsEmailing(true)
+    setEmailSent(false)
+    
+    try {
+      const response = await fetch('/api/send-whos-who-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: formData.email,
+          address: result.address,
+          summary: result.summary,
+          rawData: result.rawData,
+          additionalData: result.additionalData
+        })
+      })
+      
+      if (response.ok) {
+        setEmailSent(true)
+        setTimeout(() => setEmailSent(false), 5000) // Hide after 5 seconds
+      } else {
+        console.error('Failed to send email')
+      }
+    } catch (error) {
+      console.error('Email error:', error)
+    } finally {
+      setIsEmailing(false)
+    }
+  }
+
+  const handleSaveToProfile = async () => {
+    if (!result || !isLoggedIn) return
+    
+    setIsSaving(true)
+    setSaveSuccess(false)
+    
+    try {
+      const response = await fetch('/api/user-creations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          toolType: 'whos-who',
+          title: `Property Owner Report - ${result.address}`,
+          content: result.summary,
+          formData: {
+            address: result.address,
+            email: formData.email
+          },
+          metadata: {
+            address: result.address,
+            hasAdditionalData: !!result.additionalData,
+            generatedAt: new Date().toISOString()
+          }
+        })
+      })
+      
+      if (response.ok) {
+        setSaveSuccess(true)
+        setTimeout(() => setSaveSuccess(false), 5000) // Hide after 5 seconds
+      } else {
+        console.error('Failed to save to profile')
+      }
+    } catch (error) {
+      console.error('Save error:', error)
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -433,7 +548,7 @@ export function WhosWhoForm() {
             onChange={handleInputChange}
             required
           />
-          <p className="text-sm text-gray-500">The detailed property owner report will be sent to this email address</p>
+          <p className="text-sm text-gray-500">Your email is used to track your search history, provide support if needed, and send you the property owner report</p>
         </div>
 
         <Button type="submit" className="w-full" disabled={!isFormValid || isLoading}>
@@ -449,24 +564,21 @@ export function WhosWhoForm() {
             </>
           )}
         </Button>
+        
+        {isLoading && (
+          <div className="mt-4 text-center">
+            <div className="text-sm text-gray-600 mb-2">This may take 15-30 seconds for comprehensive results</div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="bg-blue-600 h-2 rounded-full animate-pulse"></div>
+            </div>
+          </div>
+        )}
       </form>
 
       {error && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-
-      {emailSent && (
-        <Alert className="border-green-200 bg-green-50">
-          <CheckCircle className="h-4 w-4 text-green-600" />
-          <AlertDescription className="text-green-800">
-            <div className="flex items-center gap-2">
-              <Mail className="h-4 w-4" />
-              Detailed report sent successfully to {formData.email}
-            </div>
-          </AlertDescription>
         </Alert>
       )}
 
@@ -491,10 +603,6 @@ export function WhosWhoForm() {
                 <Badge variant="secondary" className="bg-green-100 text-green-800">
                   <CheckCircle className="h-3 w-3 mr-1" />
                   Skip Trace Complete
-                </Badge>
-                <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                  <Mail className="h-3 w-3 mr-1" />
-                  Email Sent
                 </Badge>
                 {result.additionalData && (
                   <Badge variant="secondary" className="bg-purple-100 text-purple-800">
@@ -541,6 +649,86 @@ export function WhosWhoForm() {
                   Generate Personalized Script
                 </Button>
               </div>
+
+              {/* Download, Email & Save Actions */}
+              <div className="flex flex-wrap gap-3 mt-4 pt-4 border-t border-blue-200">
+                <Button
+                  onClick={handleDownloadPDF}
+                  disabled={isDownloading}
+                  variant="outline"
+                  className="flex items-center gap-2 border-blue-300 text-blue-700 hover:bg-blue-50"
+                >
+                  {isDownloading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Generating PDF...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="h-4 w-4" />
+                      Download PDF
+                    </>
+                  )}
+                </Button>
+                
+                <Button
+                  onClick={handleEmailResults}
+                  disabled={isEmailing}
+                  variant="outline"
+                  className="flex items-center gap-2 border-green-300 text-green-700 hover:bg-green-50"
+                >
+                  {isEmailing ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Sending Email...
+                    </>
+                  ) : (
+                    <>
+                      <Mail className="h-4 w-4" />
+                      Email Results
+                    </>
+                  )}
+                </Button>
+                
+                <Button
+                  onClick={handleSaveToProfile}
+                  disabled={isSaving || !isLoggedIn}
+                  variant="outline"
+                  className="flex items-center gap-2 border-purple-300 text-purple-700 hover:bg-purple-50"
+                  title={!isLoggedIn ? "Please log in to save reports to your profile" : ""}
+                >
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4" />
+                      Save to Profile
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              {/* Success Messages */}
+              {emailSent && (
+                <Alert className="border-green-200 bg-green-50 mt-4">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <AlertDescription className="text-green-800">
+                    Email sent successfully to {formData.email}
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {saveSuccess && (
+                <Alert className="border-purple-200 bg-purple-50 mt-4">
+                  <CheckCircle className="h-4 w-4 text-purple-600" />
+                  <AlertDescription className="text-purple-800">
+                    Report saved to your profile successfully
+                  </AlertDescription>
+                </Alert>
+              )}
             </CardContent>
           </Card>
 

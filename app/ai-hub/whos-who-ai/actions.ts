@@ -111,63 +111,51 @@ export async function skipTraceProperty(formData: SkipTraceFormData) {
     const fullAddress = `${formData.street}, ${formData.city}, ${formData.state} ${formData.zip}`
 
     const prompt = `
-You are a professional real estate assistant. Analyze the following property skip trace data and create a comprehensive, professional summary report.
+You are a professional real estate assistant. Create a concise, professional property owner report from this skip trace data.
 
-Property Address: ${fullAddress}
+Property: ${fullAddress}
 
-Primary Skip Trace Data: ${JSON.stringify(skipTraceData, null, 2)}
+Data: ${JSON.stringify(skipTraceData, null, 2)}
+Additional: ${additionalContactData ? JSON.stringify(additionalContactData, null, 2) : "None"}
 
-Additional Contact Data: ${additionalContactData ? JSON.stringify(additionalContactData, null, 2) : "None available"}
-
-Please create a well-structured, professional report with clear sections. For any URLs or links found in the data, include them in the CONTACT DETAILS section with clear labels.
+Create a structured report with these sections:
 
 ## PROPERTY OVERVIEW
-- Full Address: ${fullAddress}
-- Property type and characteristics
-- Any property value information
-- Property details and features
+- Address: ${fullAddress}
+- Property details and value info
 
-## OWNER INFORMATION
-- Primary owner name(s) and any associated individuals
-- Mailing address (if different from property address)
-- Owner demographics and background information
-- Property ownership history
+## OWNER INFORMATION  
+- Primary owner names
+- Mailing address (if different)
+- Ownership history
 
 ## CONTACT DETAILS
-- Phone numbers (with type - mobile, landline, work, etc.)
-- Email addresses (if available)
-- Social media profiles (if found)
-- Public record links and additional data sources
-- **IMPORTANT: Include any URLs or links from the data here with clear descriptions**
+- Phone numbers with type
+- Email addresses
+- Social media profiles
+- Public record links (include URLs clearly)
 
 ## PROPERTY CHARACTERISTICS
-- Property type, size, and features
-- Estimated value and market information
-- Property history and transaction records
-- Neighborhood and location details
+- Type, size, features
+- Estimated value
+- Transaction history
 
-## PROFESSIONAL OUTREACH STRATEGY
-- Recommended initial contact approach
-- Best times and methods for outreach
-- Key talking points based on property and owner data
-- Follow-up sequence recommendations
+## OUTREACH STRATEGY
+- Best contact approach
+- Key talking points
+- Follow-up recommendations
 
 ## MARKET INSIGHTS
-- Local market conditions
-- Property investment potential
-- Comparable properties in area
-- Market timing considerations
+- Local conditions
+- Investment potential
+- Market timing
 
-Format this as a clean, professional report with clear headings and organized information.
-Focus on actionable information for real estate professionals.
-If specific information isn't available, clearly state "Not Available" rather than making assumptions.
-For any URLs or web links found in the data, present them clearly in the CONTACT DETAILS section.
-`
+Keep it concise but comprehensive. Focus on actionable information. Include any URLs found in the data.`
 
     const { text } = await generateText({
       model: openai("gpt-5"),
       prompt,
-      temperature: 1, // GPT-5 only supports default temperature (1)
+      temperature: 0.7, // Reduced from 1 for faster, more consistent generation
     })
 
     // Send email with results
