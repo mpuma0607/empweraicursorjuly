@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { FileText, Users, Target, Play, BookOpen } from "lucide-react"
+import { FileText, Target, BookOpen } from "lucide-react"
 
 const tabs = [
   { id: "overview", label: "Overview" },
@@ -147,39 +147,6 @@ export default function BuyerBrokerAgreementTraining() {
                       all available training videos and navigate between them.
                     </p>
                   </div>
-                </div>
-
-                {/* Additional Training Materials */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <Card>
-                    <CardContent className="p-6">
-                      <div className="flex items-center gap-3 mb-3">
-                        <Play className="h-5 w-5 text-blue-600" />
-                        <h4 className="font-semibold text-gray-900">Interactive Practice</h4>
-                      </div>
-                      <p className="text-gray-600 text-sm mb-4">
-                        Practice your buyer broker agreement presentation with our interactive scenarios.
-                      </p>
-                      <Button variant="outline" size="sm">
-                        Start Practice Session
-                      </Button>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardContent className="p-6">
-                      <div className="flex items-center gap-3 mb-3">
-                        <Users className="h-5 w-5 text-green-600" />
-                        <h4 className="font-semibold text-gray-900">Role-Play Exercises</h4>
-                      </div>
-                      <p className="text-gray-600 text-sm mb-4">
-                        Practice handling objections and difficult scenarios with guided role-play exercises.
-                      </p>
-                      <Button variant="outline" size="sm">
-                        Access Role-Play
-                      </Button>
-                    </CardContent>
-                  </Card>
                 </div>
               </div>
             )}
