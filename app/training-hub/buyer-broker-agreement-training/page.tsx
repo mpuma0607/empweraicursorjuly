@@ -4,12 +4,11 @@ import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { FileText, Users, Target, Download, Play, BookOpen } from "lucide-react"
+import { FileText, Users, Target, Play, BookOpen } from "lucide-react"
 
 const tabs = [
   { id: "overview", label: "Overview" },
   { id: "videos", label: "Training Videos" },
-  { id: "resources", label: "Resources" },
 ]
 
 const learningPoints = [
@@ -32,16 +31,6 @@ const objectives = [
 
 export default function BuyerBrokerAgreementTraining() {
   const [activeTab, setActiveTab] = useState("overview")
-
-  const handleDownloadPDF = () => {
-    // Create a link element and trigger download
-    const link = document.createElement("a")
-    link.href = "/pdfs/buyer-broker-agreement-step-by-step-guide.pdf"
-    link.download = "buyer-broker-agreement-step-by-step-guide.pdf"
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -189,38 +178,6 @@ export default function BuyerBrokerAgreementTraining() {
                       <Button variant="outline" size="sm">
                         Access Role-Play
                       </Button>
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
-            )}
-
-            {/* Resources Tab */}
-            {activeTab === "resources" && (
-              <div className="space-y-8">
-                <div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-6">Training Resources</h3>
-
-                  {/* Single PDF Resource */}
-                  <Card>
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-                            <FileText className="h-6 w-6 text-red-600" />
-                          </div>
-                          <div>
-                            <h4 className="font-semibold text-gray-900">Buyer Buyer Agreement Step By Step Guide</h4>
-                            <p className="text-sm text-gray-600">
-                              Comprehensive step-by-step guide for buyer broker agreements
-                            </p>
-                          </div>
-                        </div>
-                        <Button onClick={handleDownloadPDF} className="flex items-center gap-2">
-                          <Download className="h-4 w-4" />
-                          Download PDF
-                        </Button>
-                      </div>
                     </CardContent>
                   </Card>
                 </div>
