@@ -42,29 +42,23 @@ export async function generateDynamicContent(formData: FormData) {
   })
 
   // Generate the text content using AI SDK
-  const prompt = `Create a ${contentType.toLowerCase()} about "${topic}" in ${language} with a ${tonality.toLowerCase()} tone.
-
-Guidelines:
-- Make it engaging and relevant to real estate professionals
-- Keep it appropriate for social media if it's a social post
-- Use professional language that builds trust
-- Include actionable insights when possible
-- Make it conversational and human-sounding
-- Don't use excessive hashtags or emojis
-- Focus on providing value to the reader
-
+  const prompt = `
+Generate: Branded real estate content
+Style: Professional, engaging, brand-consistent
+Brand: ${brandName}
 Content Type: ${contentType}
-Topic: ${topic}
-Language: ${language}
-Tone: ${tonality}
 
-Generate only the content text, no additional formatting or explanations.`
+Create:
+- Brand-aligned messaging
+- Professional tone
+- Engaging content
+- Call-to-action`
 
-  try {
     const { text } = await generateText({
-      model: openai("gpt-5"),
+      model: openai("gpt-4o"),
+      maxTokens: 1500,
+      temperature: 0.7,
       prompt,
-      temperature: 1, // GPT-5 only supports default temperature (1)
     })
 
     console.log("Text generation successful")

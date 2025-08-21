@@ -72,63 +72,30 @@ export async function generateScript(formData: ScriptFormData) {
     console.log("Topic context:", topicContext)
     console.log("Script purpose:", scriptPurpose)
 
-    const prompt = `You are an expert real estate script writer. Create ONE professional ${formData.scriptType} script for ${formData.agentName} from ${formData.brokerageName}.
+    const prompt = `
+Generate: Real estate script
+Style: Professional, engaging, conversion-focused
+Type: ${formData.scriptType}
+Topic: ${topicToUse}
 
-SCRIPT PURPOSE: ${scriptPurpose}
+Create:
+- Compelling opening
+- Key talking points
+- Call-to-action
+- Professional closing`
 
-${scriptTypeDetails.requirements}
-
-TONALITY: Use a ${formData.tonality} tonality throughout the script. This should influence your word choice, sentence structure, and overall approach.
-
-IMPORTANT LANGUAGE REQUIREMENTS:
-
-- Naturally incorporate Visual language: "see," "picture," "look," "view," "imagine," "envision," "clear," "bright," "focus," "show," "appear," "visualize"
-
-- Naturally incorporate Auditory language: "hear," "listen," "sounds," "tell," "discuss," "rings true," "clicks," "resonates," "speak," "talk," "mention"  
-
-- Naturally incorporate Kinesthetic language: "feel," "touch," "grasp," "handle," "solid," "smooth," "comfortable," "experience," "sense," "connect," "move"
-
-TOPIC CONTEXT: ${topicContext}
-
-SCRIPT STRUCTURE:
-
-${
-  formData.scriptTypeCategory === "Difficult conversation"
-    ? `1. Opening (acknowledge the situation with empathy)
-2. Present the facts clearly and professionally
-3. Listen and validate their concerns
-4. Offer solutions or next steps
-5. Reaffirm your commitment to their success
-6. Close with confidence and next actions`
-    : `1. Opening Hook (attention-grabbing, builds rapport)
-2. Value Proposition (clear benefit using sensory language)
-3. Proof/Credibility (establish trust)
-4. Call to Action (specific next step)
-5. Objection Handling (brief, if applicable)`
-}
-
-TONE: ${formData.tonality}, professional, conversational, confident but not pushy, empathetic
-
-${formData.additionalDetails ? `ADDITIONAL REQUIREMENTS: ${formData.additionalDetails}` : ""}
-
-${scriptTypeDetails.lengthGuidance}
-
-Write this as ONE complete, flowing script that naturally weaves in visual, auditory, and kinesthetic language throughout while maintaining the ${formData.tonality} tonality. Make it sound conversational and natural. Do NOT create separate sections or versions. Just write one professional script.`
-
-    console.log("Prompt constructed successfully, length:", prompt.length)
-    console.log("About to call generateText with GPT-5...")
-
-    const { text: generatedScript } = await generateText({
-      model: openai("gpt-5"),
-      prompt: prompt,
-      temperature: 1, // GPT-5 only supports default temperature (1)
+    const { text } = await generateText({
+      model: openai("gpt-4o"),
+      maxTokens: 1500,
+      temperature: 0.7,
+      prompt,
     })
 
-    console.log("Text generation successful, script length:", generatedScript.length)
+    console.log("Text generation successful, script length:", text.length)
     console.log("=== ScriptIt generateScript Completed Successfully ===")
 
     return {
-      script: generatedScript,
+      script: text,
     }
   } catch (error: unknown) {
     console.error("=== ScriptIt generateScript Error ===")

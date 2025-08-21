@@ -34,43 +34,28 @@ export async function generateScript(formData: ScriptFormData) {
 
     const readableTopic = topicMap[formData.topic] || actualTopic
 
-    const prompt = `Take on the role of an expert real estate scriptwriter and communication strategist for ${formData.brokerageName}, a professional real estate brokerage.
+    const prompt = `
+Generate: Personalized property outreach script
+Style: Professional, engaging, conversion-focused
+Target: Property owners for real estate opportunities
 
-Using the information provided:
+Property: ${propertyAddress}
+Owner: ${ownerNames.join(', ')}
+Type: ${propertyType || 'Residential'}
+Value: ${estimatedValue || 'Not specified'}
+Details: ${propertyDetails || 'Standard residential property'}
 
-Script Type: ${formData.scriptType}
-Topic: ${readableTopic}
-Agent Name: ${formData.agentName}
-${formData.additionalDetails ? `Additional Details: ${formData.additionalDetails}` : ""}
-
-Your task:
-Write a custom, compelling, and highly effective real estate script tailored to the selected topic and audience.
-
-Must-Haves in Every Script:
-• Speak from the perspective of a local, trusted real estate expert named ${formData.agentName}
-• Ensure the tone is professional, polished, and human
-• Leverage DISC behavioral principles to speak effectively to everyone so each script should take into account:
-  - D (Dominance): Direct, results-driven, time-sensitive phrasing
-  - I (Influence): Friendly, energetic, story-based language  
-  - S (Steadiness): Reassuring, supportive, relationship-based phrasing
-  - C (Conscientiousness): Detailed, factual, logic-based language
-
-• Use VAK sensory language throughout to connect emotionally and mentally:
-  - Visual cues: see, picture, imagine, look at
-  - Auditory cues: hear, tell, listen, sound like
-  - Kinesthetic cues: feel, touch, sense, experience
-
-Format:
-• Structure the script in a clean, organized format for easy delivery
-• Provide optional alternate phrasing where appropriate (e.g., "If you're more data-driven, you might say it this way...")
-• End with a clear, confident call-to-action that feels natural for the setting (e.g., "Let's connect this week" or "Would it be helpful if I showed you some local insights?")
-
-The script should be appropriate for ${formData.scriptType} communication and feel natural and conversational while being highly effective.`
+Create:
+- Personalized introduction
+- Property-specific value proposition
+- Call-to-action
+- Professional closing`
 
     const { text } = await generateText({
-      model: openai("gpt-5"),
+      model: openai("gpt-4o"),
+      maxTokens: 1000,
+      temperature: 0.7,
       prompt,
-      temperature: 1, // GPT-5 only supports default temperature (1)
     })
 
     return {

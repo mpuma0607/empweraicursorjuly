@@ -20,35 +20,23 @@ type ListingFormData = {
 
 export async function generateListingDescription(formData: ListingFormData) {
   try {
-    const prompt = `Take on the role of a seasoned real estate copywriter and marketing expert. Write an emotionally compelling, professionally polished, and sensory-rich listing description for a home located at ${formData.propertyAddress}, listed for ${formData.listingPrice}.
+    const prompt = `
+Generate: Property listing content
+Style: Professional, engaging, conversion-focused
+Property: ${propertyAddress}
+Type: ${propertyType}
 
-Highlight the following key features in a natural, engaging flow:
-
-Feature 1: ${formData.feature1}
-Feature 2: ${formData.feature2}
-Feature 3: ${formData.feature3}
-Feature 4: ${formData.feature4}
-Feature 5: ${formData.feature5}
-
-Bedrooms: ${formData.bedrooms}
-Bathrooms: ${formData.bathrooms}
-Square Footage: ${formData.squareFootage}
-
-Writing Guidelines:
-Use Visual Language: Words like see, picture, stunning, view, design, bright, sun-drenched, open-concept
-Use Auditory Language: Words like quiet, peaceful, echoes of laughter, welcoming tone, soothing
-Use Kinesthetic Language: Words like feel, warm, cozy, inviting, flow, spacious, touch
-
-Make the reader see the lifestyle, hear the peace or excitement, and feel the comfort and charm of living in this home.
-
-Avoid robotic or cliché phrases. Keep it unique, story-driven, and emotionally resonant. The goal is to help potential buyers instantly imagine themselves living there and inspire them to take the next step.
-
-End the description with a strong, inviting call to action that encourages scheduling a private showing or reaching out for more information.`
+Create:
+- Compelling listing description
+- Key features and benefits
+- Professional presentation
+- Call-to-action`
 
     const { text } = await generateText({
-      model: openai("gpt-5"),
+      model: openai("gpt-4o"),
+      maxTokens: 1500,
+      temperature: 0.7,
       prompt,
-      temperature: 1, // GPT-5 only supports default temperature (1)
     })
 
     return {

@@ -63,79 +63,23 @@ export interface CoachingFormData {
 
 export async function generateCoachingPlan(formData: CoachingFormData) {
   try {
-    const prompt = `You are an elite real estate coach for Century 21, dedicated to helping agents reach their short-term income goals with precision and purpose. Based on the agent's responses to the questions below, generate a highly detailed, structured action plan that includes:
+    const prompt = `
+Generate: Real estate coaching insights
+Style: Professional, motivational, actionable
+Focus: ${coachingTopic}
+Agent Level: ${agentLevel}
 
-1. Executive Summary
-Summarize the agent's current status, goals, and driving motivation. Clearly state:
-
-Their experience level: ${formData.agentExperience}
-Transactions completed in the past 12 months: ${formData.totalDealsLastYear}
-Current situation: ${formData.status}
-Immediate income goal: ${formData.totalIncome30Days}
-Reason for the income need: ${formData.incomeReason}
-Biggest need for cash: ${formData.biggestNeed}
-
-2. Transaction Goal Breakdown
-Clearly outline how the transaction goal is calculated:
-
-Income Target: ${formData.totalIncome30Days}
-Average Commission per Deal: ${formData.averageCommission}
-Required Transactions: ${formData.dealsNeeded30Days}
-Required Appointments: ${formData.appointments30Days}
-Conversion Rate: ${formData.conversionRate}%
-Estimated Conversations Needed: ${formData.weeklyProspectConversations}
-
-3. Prospecting Strategy & Tactics
-Design a personalized lead generation plan based on the agent's preferences and strengths:
-
-Time in market: ${formData.timeInArea}
-Willingness to:
-- Use social networking: ${formData.willJoinGroups ? "Yes" : "No"}
-- Cold call: ${formData.willColdCall ? "Yes" : "No"}
-- Text prospects: ${formData.willText ? "Yes" : "No"}
-- Leverage sphere of influence: ${formData.bigSphere ? "Yes" : "No"}
-
-Preferred Prospecting Lane: ${formData.preferredLane}
-
-Provide action steps tailored to that lane and preferences. Include:
-- Daily Contact Goals
-- Call, text, DM, or post templates based on channel
-- Prospecting schedule (Monday–Friday)
-- Social media posting strategy (if applicable)
-- CTA script examples for each channel
-
-4. Daily Execution Plan (Mon–Fri)
-Break down exact daily activities needed to hit weekly and monthly appointment/conversation goals:
-
-Monday – Friday Breakdown:
-📞 Calls: [Insert Daily Target #]
-💬 Texts: [Insert Daily Target #]
-📱 Social Media: [Post Idea + DM Targets]
-👥 Follow-Up: Re-attempts (from prior conversations)
-✍️ Track All Conversations and Attempts
-
-5. Accountability Tracker
-Provide a simple, trackable system with weekly milestones. Include:
-- Weekly conversation targets: ${formData.weeklyProspectConversations}
-- Weekly appointments goal: ${formData.weeklyAppointments}
-- Weekly deals target (based on conv. rate)
-
-Use spreadsheet or CRM logging to track:
-- Attempts made
-- Conversations had
-- Appointments set
-- Appointments held
-- Transactions in progress
-
-6. Motivation & Coaching Mindset
-Wrap up with a motivational paragraph that ties into the agent's "why," reinforcing that this plan is not just about transactions—it's about reclaiming control, creating momentum, and taking daily action that leads to big breakthroughs.
-
-Format the response with clear headers using the color #b6a888 for section titles, and include relevant emojis for each section. Make it professional and actionable.`
+Create:
+- Key coaching points
+- Actionable strategies
+- Motivation and encouragement
+- Next steps`
 
     const { text } = await generateText({
-      model: openai("gpt-5"),
+      model: openai("gpt-4o"),
+      maxTokens: 1500,
+      temperature: 0.7,
       prompt,
-      temperature: 1, // GPT-5 only supports default temperature (1)
     })
 
     return { success: true, plan: text }

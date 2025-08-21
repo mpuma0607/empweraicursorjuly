@@ -213,7 +213,7 @@ Please make the summary clear, professional, and easy to read—avoid legal jarg
     })
 
     const analysisResponse = await openai.chat.completions.create({
-      model: "gpt-5",
+      model: "gpt-4o",
       messages: [
         {
           role: "system",

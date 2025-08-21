@@ -15,29 +15,23 @@ type BioFormData = {
 
 export async function generateAgentBio(formData: BioFormData) {
   try {
-    const prompt = `You are an expert prompt engineer and professional real estate copywriter. Write a compelling, first-person real estate agent bio that is polished, professional, and emotionally resonant. The bio should instantly connect with all personality types—visual (use words like see, show, picture), auditory (hear, tell, listen), and kinesthetic (feel, experience, guide)—by weaving in sensory-based language throughout.
+    const prompt = `
+Generate: Real estate agent bio
+Style: Professional, engaging, trust-building
+Agent: ${agentName}
+Specialties: ${specialties}
 
-Here are the required details to include:
-
-Name: ${formData.name}
-Brokerage: ${formData.brokerage}
-Time in Industry: ${formData.timeInIndustry}
-Origin: ${formData.origin}
-Areas Served: ${formData.areasServed}
-Hobbies: ${formData.hobbies}
-
-Ensure the bio communicates the agent's passion for helping clients buy, sell, invest, or rent. Emphasize their ability to guide people through every step of the process with confidence, clarity, and care. Highlight any unique strategies or perspectives they bring that set them apart in the real estate world.
-
-The tone should reflect warmth, trustworthiness, and professionalism—sounding human, not robotic. Each bio should feel personal, distinct, and aligned with the agent's personality and brand.
-
-Avoid clichés. Write like you're telling a story that helps the reader see the person, hear their values, and feel inspired to work with them.
-
-The bio should be approximately 150-250 words and written in first person.`
+Create:
+- Professional introduction
+- Key achievements
+- Specialties and expertise
+- Call-to-action`
 
     const { text } = await generateText({
-      model: openai("gpt-5"),
+      model: openai("gpt-4o"),
+      maxTokens: 1000,
+      temperature: 0.7,
       prompt,
-      temperature: 1, // GPT-5 only supports default temperature (1)
     })
 
     return {

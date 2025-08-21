@@ -191,40 +191,22 @@ export async function searchProperties(prevState: any, formData: FormData) {
           `
 
           const prompt = `
-              Analyze this property against the search query: "${searchQuery}"
-              
-              Property Details:
-              ${propertyInfo}
-              
-              Provide detailed analysis with a REALISTIC match score:
-              1. Match score (30-95) - Be realistic! Not everything is 85%
-              2. Specific reasons why it matches (location, price range, features, etc.)
-              3. Missing features or concerns compared to the search
-              4. Key highlights and selling points
-              
-              IMPORTANT: Vary the match scores realistically:
-              - 90-95%: Perfect match with all requested features
-              - 80-89%: Great match with most features
-              - 70-79%: Good match with some compromises
-              - 60-69%: Decent match but missing key features
-              - 50-59%: Marginal match
-              - 30-49%: Poor match but in right area
-              
-              Return JSON:
-              {
-                "matchScore": number (30-95, be realistic and varied),
-                "analysis": "2-3 sentence detailed analysis",
-                "matchReasons": ["specific reasons why it matches the search"],
-                "missingFeatures": ["features requested in search but not found/mentioned"],
-                "features": ["notable property features found"],
-                "highlights": ["key selling points"]
-              }
-            `
+Generate: Property description
+Style: Professional, engaging, conversion-focused
+Property: ${property.address}
+Type: ${property.propertyType}
+
+Create:
+- Compelling property overview
+- Key features and benefits
+- Professional description
+- Call-to-action`
 
           const { text } = await generateText({
-            model: openai("gpt-5"),
+            model: openai("gpt-4o"),
+            maxTokens: 1500,
+            temperature: 0.7,
             prompt,
-            temperature: 1, // GPT-5 only supports default temperature (1)
           })
 
           let analysisData

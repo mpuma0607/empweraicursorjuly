@@ -75,29 +75,23 @@ export async function generateContent(formData: FormData) {
         characterLimit = "Keep the post under 280 characters."
     }
 
-    const textPrompt = `You are a professional content creator for a Century 21 real estate brokerage. Your task is to write a unique, polished, and professional ${formData.contentType.toLowerCase()} in ${formData.language}.
+    const prompt = `
+Generate: Real estate content
+Style: Professional, engaging, brand-consistent
+Content Type: ${contentType}
+Topic: ${topic}
 
-${contentTypeInstructions}
+Create:
+- Brand-aligned messaging
+- Professional tone
+- Engaging content
+- Call-to-action`
 
-The content should be based on the topic: ${topicToUse}
-
-Requirements:
-- Maintain a **professional and polished tone** at all times  
-- Ensure the content is **unique**, not generic or templated  
-- Highlight how I, as a **top local real estate agent**, can assist with this topic  
-- Keep the content informative, relevant, and audience-focused  
-- ${characterLimit}
-- Close with a subtle but strong call to action that encourages engagement or contact
-
-${formData.contentType === "Email" ? "Format as a complete email with subject line, greeting, body, and closing." : ""}
-${formData.contentType === "Blog article" ? "Include a compelling title and structure with subheadings where appropriate." : ""}
-
-Please write the content in ${formData.language} and ensure it reads naturally and professionally for native speakers.`
-
-    const { text: generatedText } = await generateText({
-      model: openai("gpt-5"),
-      prompt: textPrompt,
-      temperature: 1, // GPT-5 only supports default temperature (1)
+    const { text } = await generateText({
+      model: openai("gpt-4o"),
+      maxTokens: 1500,
+      temperature: 0.7,
+      prompt,
     })
 
     // Generate image

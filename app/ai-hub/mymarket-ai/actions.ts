@@ -98,36 +98,29 @@ async function generateAIInsights(location: string, marketType: 'housing' | 'ren
       `
     }
 
-    const prompt = `As a real estate market analyst, provide deep insights about the ${marketType} market in ${location}. 
+    const prompt = `
+Generate: AI market analysis insights
+Style: Professional, actionable, data-driven
+Focus: Market trends, investment opportunities, local conditions
 
-Market Data:
-${marketContext}
+Market Data: ${JSON.stringify(marketData, null, 2)}
+Property Type: ${homeType}
+Rental Type: ${rentalType}
+Bedroom Type: ${bedroomType}
 
-Please provide:
-1. Market trends and what they indicate
-2. Opportunities for buyers/sellers/renters
-3. Potential challenges in this market
-4. Seasonal factors that might affect this market
-5. Economic indicators that could impact this area
-6. Recommendations for different types of clients
+Analyze the market data and provide:
+- Key market trends and insights
+- Investment opportunities and risks
+- Local market conditions
+- Recommendations for buyers/sellers/investors
+- Data-driven insights for decision making`
 
-Keep the analysis professional, data-driven, and actionable. Focus on real insights that would help real estate agents and their clients make informed decisions.`
-
-        const completion = await openai.chat.completions.create({
-      model: "gpt-4",
-      messages: [
-        {
-          role: "system",
-          content: "You are an expert real estate market analyst with deep knowledge of local markets, economic trends, and real estate dynamics. Provide insightful, professional analysis that helps real estate professionals and their clients understand market conditions."
-        },
-        {
-          role: "user",
-          content: prompt
-        }
-      ],
-      max_tokens: 800,
- 
-    })
+      const { text } = await generateText({
+        model: openai("gpt-4o"),
+        maxTokens: 1500,
+        temperature: 0.7,
+        prompt,
+      })
 
     return completion.choices[0]?.message?.content || "Unable to generate AI insights at this time."
   } catch (error) {
