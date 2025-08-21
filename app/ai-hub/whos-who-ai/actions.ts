@@ -155,7 +155,7 @@ Keep it concise but comprehensive. Focus on actionable information. Include any 
     const { text } = await generateText({
       model: openai("gpt-5"),
       prompt,
-      // GPT-5 only supports default temperature (1) - no temperature parameter needed
+      temperature: 1, // GPT-5 only supports default temperature (1)
     })
 
     // Send email with results
