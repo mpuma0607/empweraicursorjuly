@@ -7,17 +7,17 @@ import Image from "next/image"
 
 const images = [
   {
-    src: "/images/moxi-essentials-1.png",
+    src: "/images/moxi-essential-1.png",
     alt: "Moxi Account Setup",
     title: "Moxi Account Setup",
   },
   {
-    src: "/images/moxi-essentials-2.png",
+    src: "/images/moxi-essential-2.png",
     alt: "Moxi Engage Setup",
     title: "Moxi Engage Setup",
   },
   {
-    src: "/images/moxi-essentials-3.png",
+    src: "/images/moxi-essential-3.png",
     alt: "Share Moxi Account",
     title: "Share Moxi Account",
   },
