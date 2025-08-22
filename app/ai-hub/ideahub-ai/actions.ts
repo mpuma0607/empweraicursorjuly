@@ -92,7 +92,6 @@ Create:
 
     const { text } = await generateText({
       model: openai("gpt-4o"),
-      maxTokens,
       temperature: 0.7,
       prompt,
     })

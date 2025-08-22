@@ -66,8 +66,12 @@ export async function generateCoachingPlan(formData: CoachingFormData) {
     const prompt = `
 Generate: Real estate coaching insights
 Style: Professional, motivational, actionable
-Focus: ${coachingTopic}
-Agent Level: ${agentLevel}
+Focus: Agent coaching and development
+Agent Status: ${formData.status}
+Agent Experience: ${formData.agentExperience}
+Current Earnings: ${formData.lastYearEarnings}
+Desired Income: ${formData.desiredIncome}
+Biggest Need: ${formData.biggestNeed}
 
 Create:
 - Key coaching points
@@ -77,7 +81,6 @@ Create:
 
     const { text } = await generateText({
       model: openai("gpt-4o"),
-      maxTokens: 1500,
       temperature: 0.7,
       prompt,
     })

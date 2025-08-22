@@ -48,8 +48,9 @@ Style: Creative, engaging, professional
 Focus: Marketing content, social media, property descriptions
 
 Topic: ${topic}
-Property Type: ${propertyType}
-Target Audience: ${targetAudience}
+Content Type: ${contentType}
+Target Audience: ${language}
+Tonality: ${tonality}
 
 Create:
 - Content ideas and concepts
@@ -60,7 +61,6 @@ Create:
   try {
     const { text } = await generateText({
       model: openai("gpt-4o"),
-      maxTokens: 1500,
       temperature: 0.7,
       prompt,
     })

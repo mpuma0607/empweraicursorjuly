@@ -143,7 +143,6 @@ Additional: ${additionalContactData ? JSON.stringify(additionalContactData, null
 
     const { text } = await generateText({
       model: openai("gpt-4o"),
-      maxTokens: 2000,
       temperature: 0.7,
       prompt,
     })
