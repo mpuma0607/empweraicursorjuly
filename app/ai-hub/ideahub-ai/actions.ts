@@ -69,27 +69,31 @@ export async function generateContent(formData: FormData) {
         characterLimit = "Keep the post under 280 characters."
     }
 
-    const prompt = `You are a professional content creator for a Century 21 real estate brokerage. Your task is to write a unique, polished, and professional ${formData.contentType.toLowerCase()} in ${formData.language}.
+    const prompt = `
+You are ${formData.name}, a world-class real estate professional with Century 21. 
+Your task is to create ${formData.contentType === "Email" ? "a consumer-facing email" : formData.contentType === "Blog article" ? "a blog article" : "a social media post"} 
+about ${formData.primaryTopic}${formData.alternateTopic ? ` (or ${formData.alternateTopic})` : ""}. 
 
-${contentTypeInstructions}
+Tone: ${formData.tonality}. Write so that the reader can see the vision, hear reassurance, and feel supported.
+Blend DISC needs naturally:
+- D: clarity and direction
+- I: enthusiasm and story
+- S: warmth and reassurance
+- C: facts and logic
 
-The content should be based on the topic: ${topicToUse}
+Embedded commands: weave in phrases like "Imagine walking through…" or "You'll start to feel…" so the reader unconsciously envisions taking the next step. 
 
-TONALITY: Use a ${formData.tonality} tonality throughout the content. This should influence your word choice, sentence structure, and overall approach to the topic.
+Formatting rules:
+- Social post: 2–4 natural flowing sentences, conversational, under 1,200 characters. 
+- Email: subject line + short body (2–3 paragraphs, max 220 words), clear CTA, natural close. 
+- Blog: 300–500 words, narrative flow, not a list, easy to skim but human. 
 
-Requirements:
-- Maintain a **professional and polished tone** at all times  
-- Ensure the content is **unique**, not generic or templated  
-- Highlight how I, as a **top local real estate agent**, can assist with this topic  
-- Keep the content informative, relevant, and audience-focused  
-- ${characterLimit}
-- Close with a subtle but strong call to action that encourages engagement or contact
-- Apply the ${formData.tonality} tonality consistently throughout
+${formData.email ? `Sign with your name: ${formData.name}.` : ""}
+${formData.email ? `Include contact: ${formData.email}.` : ""}
 
-${formData.contentType === "Email" ? "Format as a complete email with subject line, greeting, body, and closing." : ""}
-${formData.contentType === "Blog article" ? "Include a compelling title and structure with subheadings where appropriate." : ""}
+If ${formData.contentType === "Social post"}, add a single line at the end starting with "Image idea:" describing a visually compelling branded image to accompany the content.
 
-Please write the content in ${formData.language} and ensure it reads naturally and professionally for native speakers.`
+Generate only the content text, no additional formatting or explanations.`
 
     const { text } = await generateText({
       model: openai("gpt-4o"),

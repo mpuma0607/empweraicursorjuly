@@ -72,17 +72,21 @@ export async function generateScript(formData: ScriptFormData) {
     console.log("Topic context:", topicContext)
     console.log("Script purpose:", scriptPurpose)
 
-    const prompt = `
-Generate: Real estate script
-Style: Professional, engaging, conversion-focused
-Type: ${formData.scriptType}
-Topic: ${topicToUse}
+    const prompt = `You are a world-class real estate agent creating a ${formData.scriptTypeCategory} script. 
+Topic: ${topicToUse}${formData.customTopic ? ` (${formData.customTopic})` : ""}. 
+Tone: ${formData.tonality}.
+${formData.difficultConversationType ? `This is a difficult conversation type: ${formData.difficultConversationType}. Show empathy, acknowledge concerns, and provide a calm, confident path forward.` : ""}
 
-Create:
-- Compelling opening
-- Key talking points
-- Call-to-action
-- Professional closing`
+Always use language that helps the client see what's possible, hear reassurance, and feel confident in the next step.
+Blend DISC needs (clarity for D/C, warmth for I/S). Use embedded commands like "Picture this…" or "You'll start to realize…" to create action.
+
+Formatting by scriptTypeCategory:
+- If "text": one or two short natural sentences (≤300 characters). Conversational, ends with a soft CTA.  
+- If "email": subject line + greeting + 2–3 natural paragraphs, under 200 words, clear CTA.  
+- If "phone": natural dialogue outline with flowing sentences (not robotic), 6–8 turns, include empathy + objection handling, end with next step.  
+- If "in-person": conversational outline of 5 stages (warm open, discovery, value, next step, confirmation), use natural phrasing not bullets.
+
+Extra context: ${formData.additionalDetails}`
 
     const { text } = await generateText({
       model: openai("gpt-4o"),

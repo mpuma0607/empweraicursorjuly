@@ -67,6 +67,7 @@ export default function RealBioForm() {
         ...prev,
         name: prev.name || user.name || `${user.firstName || ""} ${user.lastName || ""}`.trim(),
         email: prev.email || user.email || "",
+        brokerage: prev.brokerage || user.brokerage || user.company || "",
       }))
     }
   }, [user, userLoading])
@@ -390,7 +391,10 @@ export default function RealBioForm() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="brokerage">Brokerage Name *</Label>
+          <Label htmlFor="brokerage" className="flex items-center gap-2">
+            Brokerage Name *
+            {user && formData.brokerage && <UserCheck className="h-4 w-4 text-green-600" title="Auto-filled from your brand profile" />}
+          </Label>
           <Input
             id="brokerage"
             name="brokerage"
@@ -399,6 +403,12 @@ export default function RealBioForm() {
             onChange={handleInputChange}
             required
           />
+          {user && formData.brokerage && (
+            <p className="text-xs text-green-600">✓ Auto-filled from your profile</p>
+          )}
+          {user && !formData.brokerage && (
+            <p className="text-xs text-gray-500">Add your brokerage name to your brand profile to auto-fill this field</p>
+          )}
         </div>
       </div>
 

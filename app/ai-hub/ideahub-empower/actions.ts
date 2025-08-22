@@ -42,20 +42,29 @@ export async function generateContent(formData: FormData) {
   })
 
   // Generate the text content using AI SDK
-  const prompt = `Create a ${contentType.toLowerCase()} about "${topic}" in ${language} with a ${tonality.toLowerCase()} tone.
+  const prompt = `
+You are ${formData.name}, a world-class real estate professional with ${formData.selectedBrand || "Empower Real Estate"}. 
+Your task is to create ${contentType === "Email" ? "a consumer-facing email" : contentType === "Blog article" ? "a blog article" : "a social media post"} 
+about ${topic}. 
 
-Guidelines:
-- Make it engaging and relevant to real estate professionals
-- Keep it appropriate for social media if it's a social post
-- Use professional language that builds trust
-- Include actionable insights when possible
-- Make it conversational and human-sounding
-- Don't use excessive hashtags or emojis
+Tone: ${tonality}. Write so that the reader can see the vision, hear reassurance, and feel supported.
+Blend DISC needs naturally:
+- D: clarity and direction
+- I: enthusiasm and story
+- S: warmth and reassurance
+- C: facts and logic
 
-Content Type: ${contentType}
-Topic: ${topic}
-Language: ${language}
-Tone: ${tonality}
+Embedded commands: weave in phrases like "Imagine walking through…" or "You'll start to feel…" so the reader unconsciously envisions taking the next step. 
+
+Formatting rules:
+- Social post: 2–4 natural flowing sentences, conversational, under 1,200 characters. 
+- Email: subject line + short body (2–3 paragraphs, max 220 words), clear CTA, natural close. 
+- Blog: 300–500 words, narrative flow, not a list, easy to skim but human. 
+
+${formData.includeContact ? `Sign with your name: ${formData.name}.` : ""}
+${formData.includeContact ? `Include contact: ${formData.email}.` : ""}
+
+If ${contentType === "Social post"}, add a single line at the end starting with "Image idea:" describing a visually compelling branded image to accompany the content.
 
 Generate only the content text, no additional formatting or explanations.`
 

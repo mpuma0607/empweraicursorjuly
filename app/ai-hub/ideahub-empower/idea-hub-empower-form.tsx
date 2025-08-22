@@ -155,6 +155,7 @@ export default function IdeaHubEmpowerForm() {
   })
 
   const [result, setResult] = useState<ContentResult | null>(null)
+  const [editableText, setEditableText] = useState("")
 
   // Load user branding profile
   useEffect(() => {
@@ -292,8 +293,9 @@ export default function IdeaHubEmpowerForm() {
   }
 
   const copyToClipboard = () => {
-    if (result?.text) {
-      navigator.clipboard.writeText(result.text)
+    const textToCopy = editableText || result?.text
+    if (textToCopy) {
+      navigator.clipboard.writeText(textToCopy)
       alert("Text copied to clipboard!")
     }
   }
@@ -315,7 +317,8 @@ export default function IdeaHubEmpowerForm() {
   }
 
   const sendEmail = async () => {
-    if (result?.text && result?.imageUrl) {
+    const contentToSend = editableText || result?.text
+    if (contentToSend && result?.imageUrl) {
       setIsSendingEmail(true)
       try {
         const response = await fetch("/api/ideahub-email", {
@@ -328,7 +331,7 @@ export default function IdeaHubEmpowerForm() {
             data: {
               to: formData.email,
               name: formData.name,
-              content: result.text,
+              content: contentToSend,
               imageUrl: result.imageUrl,
             },
           }),
@@ -350,7 +353,8 @@ export default function IdeaHubEmpowerForm() {
   }
 
   const saveToProfile = async () => {
-    if (!user || !result?.text) {
+    const contentToSave = editableText || result?.text
+    if (!user || !contentToSave) {
       alert("Please log in to save your content.")
       return
     }
@@ -363,7 +367,7 @@ export default function IdeaHubEmpowerForm() {
         userEmail: user.email,
         toolType: "ideahub-empower",
         title,
-        content: result.text,
+        content: contentToSave,
         formData,
         metadata: {
           imageUrl: result.imageUrl,
@@ -925,7 +929,17 @@ export default function IdeaHubEmpowerForm() {
         <TabsContent value="text">
           <Card className="border-0 shadow-md">
             <CardContent className="p-6">
-              <Textarea value={result?.text || ""} readOnly className="min-h-[300px] resize-none" />
+              <div className="space-y-2">
+                <Textarea 
+                  value={editableText || result?.text || ""} 
+                  onChange={(e) => setEditableText(e.target.value)}
+                  className="min-h-[300px] resize-none" 
+                  placeholder="Generated content will appear here..."
+                />
+                <div className="text-right text-sm text-gray-500">
+                  {editableText ? editableText.length : (result?.text?.length || 0)} characters
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -970,6 +984,7 @@ export default function IdeaHubEmpowerForm() {
         onClick={() => {
           setStep(1)
           setResult(null)
+          setEditableText("")
           setFormData({
             primaryTopic: "",
             alternateTopic: "",

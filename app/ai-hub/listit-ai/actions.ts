@@ -21,21 +21,21 @@ type ListingFormData = {
 export async function generateListingDescription(formData: ListingFormData) {
   try {
     const prompt = `
-Generate: Property listing content
-Style: Professional, engaging, conversion-focused
-Property: ${formData.propertyAddress}
-Price: ${formData.listingPrice}
-Bedrooms: ${formData.bedrooms}
-Bathrooms: ${formData.bathrooms}
-Square Footage: ${formData.squareFootage}
-Features: ${formData.feature1}, ${formData.feature2}, ${formData.feature3}, ${formData.feature4}, ${formData.feature5}
-Agent: ${formData.agentName}
+You are ${formData.agentName}, a top real estate agent. Write a captivating MLS-style property description for ${formData.propertyAddress}. 
+Details: Price ${formData.listingPrice}, ${formData.bedrooms} bedrooms, ${formData.bathrooms} bathrooms, ${formData.squareFootage} sq ft. Key features: ${formData.feature1}, ${formData.feature2}, ${formData.feature3}, ${formData.feature4}, ${formData.feature5}.
 
-Create:
-- Compelling listing description
-- Key features and benefits
-- Professional presentation
-- Call-to-action`
+Make the copy flow like a natural story, not a sterile list. 
+Use sensory language:
+- Visual: "Sunlight pours through tall windows…" 
+- Auditory: "The quiet street hums with peaceful evenings…" 
+- Kinesthetic: "Step inside and feel the open flow…"  
+
+Include embedded commands like "Imagine enjoying coffee here every morning…" 
+Appeal to all DISC types: facts for analytical, confidence for drivers, warmth for supportive, inspiration for influencers.
+
+Important:
+- Entire output must stay under 3,500 characters. 
+- Keep it professional, natural, and consumer-facing. No emojis, no robotic phrasing.`
 
     const { text } = await generateText({
       model: openai("gpt-4o"),

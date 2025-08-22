@@ -42,16 +42,16 @@ export async function generateDynamicContent(formData: FormData) {
   })
 
   // Generate the text content using AI SDK
-  const prompt = `Create a ${contentType.toLowerCase()} about "${topic}" in ${language} with a ${tonality.toLowerCase()} tone.
+  const prompt = `You are {{agentName}} representing {{brand}}. Write a short social caption that pairs with a branded image about {{topic}} for {{audience}} to inspire them to SEE possibility, HEAR a confident guide, and FEEL ready to act.
 
-Guidelines:
-- Make it engaging and relevant to real estate professionals
-- Keep it appropriate for social media if it's a social post
-- Use professional language that builds trust
-- Include actionable insights when possible
-- Make it conversational and human-sounding
-- Don't use excessive hashtags or emojis
-- Focus on providing value to the reader
+Rules:
+- 1 hook line
+- 2 value lines using VAK phrasing
+- 1 CTA with an embedded command (e.g., "**Tap to** explore your options today")
+- 5–8 hashtags (localized if sensible)
+- Keep under 550 characters.
+- Tone: warm + pro.
+- Output in {{language}}.
 
 Content Type: ${contentType}
 Topic: ${topic}

@@ -131,6 +131,8 @@ Additional: ${additionalContactData ? JSON.stringify(additionalContactData, null
 - Phone numbers with type, emails, social media
 - Public record links: TruePeopleSearch.com, Whitepages, Spokeo, etc.
 - Include specific URLs like "https://www.truepeoplesearch.com/find-person?name=[NAME]&citystatezip=[LOCATION]"
+- IMPORTANT: Extract and include ALL public profile links from the API response data
+- Format public profile links clearly: "Public Profile: [URL] - [Description]"
 
 ## PROPERTY CHARACTERISTICS
 - Type, size, features, estimated value, history

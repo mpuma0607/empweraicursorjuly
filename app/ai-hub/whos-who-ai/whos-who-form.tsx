@@ -282,32 +282,57 @@ export function WhosWhoForm() {
             primaryOwners.map((owner, index) => `- ${owner}: Age information not available, Lives in current location`).join('\n')
         }
       } else if (title.includes("CONTACT DETAILS")) {
-        // Only keep public record links for primary owners
-        const primaryOwners = extractOwnerNames(summary)
-        
-        // Filter content to only show public record links for primary owners
+        // Extract ALL public profile links from the content
         const lines = content.split('\n')
-        const filteredLines = lines.filter(line => {
-          // Check if this line contains a URL (public record link)
+        const publicProfileLines: string[] = []
+        const otherContactLines: string[] = []
+        
+        lines.forEach(line => {
+          // Check if this line contains a URL (public profile link)
           const hasUrl = /https?:\/\/[^\s)]+/.test(line)
           
-          // Check if this line mentions one of the primary owners
-          const mentionsPrimaryOwner = isPrimaryOwnerLine(line, primaryOwners)
-          
-          // Remove lines with phone numbers, email addresses, social media
-          const hasPhone = /\b\d{3}[-.]?\d{3}[-.]?\d{4}\b/.test(line)
-          const hasEmail = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/.test(line)
-          const hasSocialMedia = /(facebook|twitter|instagram|linkedin|social media)/i.test(line)
-          
-          // Only keep lines that have URLs AND mention primary owners, AND don't have phone/email/social
-          return hasUrl && mentionsPrimaryOwner && !hasPhone && !hasEmail && !hasSocialMedia
+          if (hasUrl) {
+            // This is a public profile link - format it nicely
+            const urlMatch = line.match(/(https?:\/\/[^\s)]+)/)
+            if (urlMatch) {
+              const url = urlMatch[1]
+              let description = line.replace(url, '').trim()
+              
+              // Clean up the description
+              if (description.startsWith('-')) description = description.substring(1).trim()
+              if (description.startsWith('•')) description = description.substring(1).trim()
+              
+              // If no description, create one based on the URL
+              if (!description || description.length < 5) {
+                if (url.includes('truepeoplesearch.com')) description = 'TruePeopleSearch Profile'
+                else if (url.includes('whitepages.com')) description = 'Whitepages Profile'
+                else if (url.includes('spokeo.com')) description = 'Spokeo Profile'
+                else if (url.includes('beenverified.com')) description = 'BeenVerified Profile'
+                else if (url.includes('peoplefinder.com')) description = 'PeopleFinder Profile'
+                else description = 'Public Profile'
+              }
+              
+              publicProfileLines.push(`• ${description}: ${url}`)
+            }
+          } else {
+            // This is other contact info (phone, email, etc.)
+            const trimmedLine = line.trim()
+            if (trimmedLine && !trimmedLine.startsWith('##')) {
+              otherContactLines.push(trimmedLine)
+            }
+          }
         })
         
-        // If we found filtered lines, use them; otherwise create a clean section
-        if (filteredLines.length > 0) {
-          content = `Public Record Links:\n` + filteredLines.join('\n')
+        // Combine public profile links with other contact info
+        if (publicProfileLines.length > 0) {
+          content = `Public Profile Links:\n${publicProfileLines.join('\n')}`
+          if (otherContactLines.length > 0) {
+            content += `\n\nOther Contact Information:\n${otherContactLines.join('\n')}`
+          }
+        } else if (otherContactLines.length > 0) {
+          content = `Other Contact Information:\n${otherContactLines.join('\n')}`
         } else {
-          content = `Public Record Links:\nNo public record links available for the primary owners.`
+          content = `No contact information available.`
         }
       }
 
@@ -352,8 +377,15 @@ export function WhosWhoForm() {
       }
       urls.push(url)
       
-      // Create clickable link with better formatting
+      // Create clickable link with better formatting for public profile links
       const displayName = match.replace(/^https?:\/\//, '').replace(/^www\./, '')
+      
+      // Special styling for public profile links
+      if (isContactSection && (url.includes('truepeoplesearch.com') || url.includes('whitepages.com') || url.includes('spokeo.com') || url.includes('beenverified.com') || url.includes('peoplefinder.com'))) {
+        return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-purple-600 hover:text-purple-800 underline font-semibold bg-purple-50 px-2 py-1 rounded">🔗 ${displayName}</a>`
+      }
+      
+      // Regular link styling
       return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline font-medium">${displayName}</a>`
     })
     
@@ -720,26 +752,81 @@ export function WhosWhoForm() {
                         console.log("Who's Who: Processed content:", urlData.content)
                         
                         if (urlData.urls.length > 0) {
+                          // Separate public profile links from other URLs
+                          const publicProfileUrls = urlData.urls.filter(url => 
+                            url.includes('truepeoplesearch.com') || 
+                            url.includes('whitepages.com') || 
+                            url.includes('spokeo.com') || 
+                            url.includes('beenverified.com') || 
+                            url.includes('peoplefinder.com')
+                          )
+                          
+                          const otherUrls = urlData.urls.filter(url => 
+                            !url.includes('truepeoplesearch.com') && 
+                            !url.includes('whitepages.com') && 
+                            !url.includes('spokeo.com') && 
+                            !url.includes('beenverified.com') && 
+                            !url.includes('peoplefinder.com')
+                          )
+                          
                           return (
-                            <div className="mt-4 p-3 bg-white rounded-lg border border-purple-200">
-                              <h4 className="font-medium text-purple-800 mb-2 flex items-center gap-2">
-                                <ExternalLink className="h-4 w-4" />
-                                Public Record Links
-                              </h4>
-                              <div className="space-y-2">
-                                {urlData.urls.map((url, urlIndex) => (
-                                  <a
-                                    key={urlIndex}
-                                    href={url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-2 rounded-md transition-colors font-medium"
-                                  >
+                            <div className="mt-4 space-y-4">
+                              {/* Public Profile Links - Highlighted */}
+                              {publicProfileUrls.length > 0 && (
+                                <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
+                                  <h4 className="font-semibold text-purple-800 mb-3 flex items-center gap-2">
+                                    <ExternalLink className="h-5 w-5" />
+                                    🔗 Public Profile Links for Homeowners
+                                  </h4>
+                                  <div className="space-y-2">
+                                    {publicProfileUrls.map((url, urlIndex) => {
+                                      const displayName = url.includes('truepeoplesearch.com') ? 'TruePeopleSearch Profile' :
+                                                        url.includes('whitepages.com') ? 'Whitepages Profile' :
+                                                        url.includes('spokeo.com') ? 'Spokeo Profile' :
+                                                        url.includes('beenverified.com') ? 'BeenVerified Profile' :
+                                                        url.includes('peoplefinder.com') ? 'PeopleFinder Profile' :
+                                                        'Public Profile'
+                                      
+                                      return (
+                                        <a
+                                          key={urlIndex}
+                                          href={url}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="inline-flex items-center gap-2 text-purple-700 hover:text-purple-900 bg-white hover:bg-purple-100 px-4 py-2 rounded-md transition-colors font-medium border border-purple-200 hover:border-purple-300"
+                                        >
+                                          <ExternalLink className="h-4 w-4" />
+                                          {displayName}
+                                        </a>
+                                      )
+                                    })}
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {/* Other URLs */}
+                              {otherUrls.length > 0 && (
+                                <div className="p-3 bg-white rounded-lg border border-gray-200">
+                                  <h4 className="font-medium text-gray-700 mb-2 flex items-center gap-2">
                                     <ExternalLink className="h-4 w-4" />
-                                    View Additional Contact Data
-                                  </a>
-                                ))}
-                              </div>
+                                    Additional Links
+                                  </h4>
+                                  <div className="space-y-2">
+                                    {otherUrls.map((url, urlIndex) => (
+                                      <a
+                                        key={urlIndex}
+                                        href={url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-2 rounded-md transition-colors font-medium"
+                                      >
+                                        <ExternalLink className="h-4 w-4" />
+                                        View Additional Data
+                                      </a>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           )
                         }

@@ -131,6 +131,7 @@ export function PropertyScriptGenerator({
         ...prev,
         agentName: prev.agentName || user.name || `${user.firstName || ""} ${user.lastName || ""}`.trim(),
         agentEmail: prev.agentEmail || user.email || "",
+        brokerageName: prev.brokerageName || user.brokerage || user.company || "",
       }))
     }
   }, [user, isUserLoading])
@@ -447,7 +448,10 @@ export function PropertyScriptGenerator({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="brokerageName">Brokerage Name *</Label>
+              <Label htmlFor="brokerageName" className="flex items-center gap-2">
+                Brokerage Name *
+                {user && formData.brokerageName && <UserCheck className="h-4 w-4 text-green-600" title="Auto-filled from your brand profile" />}
+              </Label>
               <Input
                 id="brokerageName"
                 name="brokerageName"
@@ -456,6 +460,12 @@ export function PropertyScriptGenerator({
                 onChange={handleInputChange}
                 required
               />
+              {user && formData.brokerageName && (
+                <p className="text-xs text-green-600">✓ Auto-filled from your profile</p>
+              )}
+              {user && !formData.brokerageName && (
+                <p className="text-xs text-gray-500">Add your brokerage name to your brand profile to auto-fill this field</p>
+              )}
             </div>
           </div>
 

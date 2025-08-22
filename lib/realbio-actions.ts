@@ -16,20 +16,22 @@ type BioFormData = {
 export async function generateAgentBio(formData: BioFormData) {
   try {
     const prompt = `
-Generate: Real estate agent bio
-Style: Professional, engaging, trust-building
-Agent: ${formData.name}
-Brokerage: ${formData.brokerage}
-Time in Industry: ${formData.timeInIndustry}
-Origin: ${formData.origin}
-Areas Served: ${formData.areasServed}
-Hobbies: ${formData.hobbies}
+You are writing a professional biography for ${formData.name}, an agent with ${formData.brokerage}. 
+Details: ${formData.timeInIndustry} years in real estate. Origin: ${formData.origin}. Areas served: ${formData.areasServed}. Personal interests: ${formData.hobbies}. Contact: ${formData.email}. Language: English.
 
-Create:
-- Professional introduction
-- Key achievements
-- Specialties and expertise
-- Call-to-action`
+Goal: Build instant trust and connection with consumers. 
+Tone: warm, authentic, confident — no clichés. Flow like a story: start with a natural introduction, share strengths, describe client experience, weave in a personal touch, then invite connection. 
+
+Embed commands: "Imagine having a guide who understands every step…" 
+Use sensory language: clients should see the process clearly, hear guidance, feel supported. 
+Appeal across DISC: authority for D/C, warmth for I/S. 
+
+Deliver 3 versions:
+1. Short (80–100 words) — sharp snapshot, easy to paste.  
+2. Standard (150–180 words) — fuller story with balance of personal + professional.  
+3. Social caption (≤550 characters) — engaging, natural, single CTA.  
+
+All versions must sound human, conversational, and natural.`
 
     const { text } = await generateText({
       model: openai("gpt-4o"),
