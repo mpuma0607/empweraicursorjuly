@@ -352,13 +352,28 @@ export default function MyMarketForm() {
         // Extract rental values with fallbacks
         const averageRent = rentalData.average_rent || rentalData.avgRent || rentalData.medianRent || rentalData.summary?.medianRent || 'N/A'
         const rentalInventory = rentalData.rental_inventory || rentalData.inventory || rentalData.availableRentals || rentalData.summary?.availableRentals || 'N/A'
-        const rentTrend = rentalData.rent_trend || rentalData.rentTrend || rentalData.trend || rentalData.summary?.monthlyChange || 'N/A'
+        
+        // Enhanced rent trend extraction with better labeling
+        let rentTrend = rentalData.rent_trend || rentalData.rentTrend || rentalData.trend || rentalData.summary?.monthlyChange || 'N/A'
+        let rentTrendLabel = 'Rent Trend'
+        
+        // Determine if trend is percentage, dollar amount, or unit count
+        if (typeof rentTrend === 'string' && rentTrend !== 'N/A') {
+          if (rentTrend.includes('%') || rentTrend.includes('percent')) {
+            rentTrendLabel = 'Rent Change (%)'
+          } else if (rentTrend.includes('$') || rentTrend.includes('dollar')) {
+            rentTrendLabel = 'Rent Change ($)'
+          } else if (rentTrend.includes('unit') || rentTrend.includes('property')) {
+            rentTrendLabel = 'Available Units'
+          }
+        }
         
         return {
           type: 'rental',
           location: data.search_query || rentalData.areaName || rentalData.location || "Unknown Location",
           averageRent: averageRent,
           rentTrend: rentTrend,
+          rentTrendLabel: rentTrendLabel,
           rentalInventory: rentalInventory,
           description: rentalData.description || `Rental market data for ${rentalData.areaName || rentalData.location || 'this area'}`,
           aiInsights: data.ai_insights || null
@@ -687,6 +702,8 @@ export default function MyMarketForm() {
                 const formattedData = formatMarketData(result.data)
                 console.log("MyMarket AI: Formatted data:", formattedData)
                 console.log("MyMarket AI: AI insights in formatted data:", formattedData.aiInsights)
+                console.log("MyMarket AI: Raw result data:", result.data)
+                console.log("MyMarket AI: Raw result data keys:", Object.keys(result.data || {}))
                 
                 if (formattedData.error) {
                   return (
@@ -800,7 +817,7 @@ export default function MyMarketForm() {
                           <CardContent className="p-4">
                             <div className="flex items-center space-x-2 mb-2">
                               <TrendingUp className="h-4 w-4 text-purple-600" />
-                              <span className="font-semibold">Rent Trend</span>
+                              <span className="font-semibold">{formattedData.rentTrendLabel || 'Rent Trend'}</span>
                             </div>
                             <p className="text-2xl font-bold text-purple-600">
                               {formattedData.rentTrend || 'N/A'}

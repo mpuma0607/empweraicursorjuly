@@ -338,30 +338,26 @@ export function WhosWhoForm() {
     return "border-gray-200 bg-gray-50"
   }
 
-  // Function to make URLs clickable in content
-  const makeUrlsClickable = (content: string, isContactSection = false) => {
-    const urlRegex = /(https?:\/\/[^\s)]+)/g
-    const parts = content.split(urlRegex)
-
-    return parts.map((part, index) => {
-      if (urlRegex.test(part)) {
-        return (
-          <a
-            key={index}
-            href={part}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 underline font-medium ${
-              isContactSection ? "bg-blue-100 px-2 py-1 rounded-md" : ""
-            }`}
-          >
-            {isContactSection ? "View Public Records" : part}
-            <ExternalLink className="h-3 w-3" />
-          </a>
-        )
+  // Enhanced function to make URLs clickable and extract public record links
+  const makeUrlsClickable = (text: string, isContactSection: boolean = false): { content: string; urls: string[] } => {
+    const urls: string[] = []
+    
+    // Enhanced regex to catch more URL patterns including public record sites
+    const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|(truepeoplesearch\.com[^\s]*)|(whitepages\.com[^\s]*)|(spokeo\.com[^\s]*)|(beenverified\.com[^\s]*)|(peoplefinder\.com[^\s]*)/gi
+    
+    const content = text.replace(urlRegex, (match) => {
+      let url = match
+      if (!url.startsWith('http')) {
+        url = 'https://' + url
       }
-      return part
+      urls.push(url)
+      
+      // Create clickable link with better formatting
+      const displayName = match.replace(/^https?:\/\//, '').replace(/^www\./, '')
+      return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline font-medium">${displayName}</a>`
     })
+    
+    return { content, urls }
   }
 
   // Helper functions to extract property information from summary
@@ -709,33 +705,46 @@ export function WhosWhoForm() {
                   </CardHeader>
                   <CardContent>
                     <div className="prose prose-sm max-w-none">
-                      <div className="whitespace-pre-wrap leading-relaxed text-gray-700">
-                        {makeUrlsClickable(section.content, isContactSection)}
-                      </div>
+                      <div 
+                        className="whitespace-pre-wrap leading-relaxed text-gray-700"
+                        dangerouslySetInnerHTML={{ 
+                          __html: makeUrlsClickable(section.content, isContactSection).content 
+                        }}
+                      />
 
                       {/* Special handling for contact section URLs */}
-                      {isContactSection && section.urls.length > 0 && (
-                        <div className="mt-4 p-3 bg-white rounded-lg border border-purple-200">
-                          <h4 className="font-medium text-purple-800 mb-2 flex items-center gap-2">
-                            <ExternalLink className="h-4 w-4" />
-                            Public Record Links
-                          </h4>
-                          <div className="space-y-2">
-                            {section.urls.map((url, urlIndex) => (
-                              <a
-                                key={urlIndex}
-                                href={url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-2 rounded-md transition-colors font-medium"
-                              >
+                      {isContactSection && (() => {
+                        const urlData = makeUrlsClickable(section.content, isContactSection)
+                        console.log("Who's Who: Contact section content:", section.content)
+                        console.log("Who's Who: Extracted URLs:", urlData.urls)
+                        console.log("Who's Who: Processed content:", urlData.content)
+                        
+                        if (urlData.urls.length > 0) {
+                          return (
+                            <div className="mt-4 p-3 bg-white rounded-lg border border-purple-200">
+                              <h4 className="font-medium text-purple-800 mb-2 flex items-center gap-2">
                                 <ExternalLink className="h-4 w-4" />
-                                View Additional Contact Data
-                              </a>
-                            ))}
-                          </div>
-                        </div>
-                      )}
+                                Public Record Links
+                              </h4>
+                              <div className="space-y-2">
+                                {urlData.urls.map((url, urlIndex) => (
+                                  <a
+                                    key={urlIndex}
+                                    href={url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-2 rounded-md transition-colors font-medium"
+                                  >
+                                    <ExternalLink className="h-4 w-4" />
+                                    View Additional Contact Data
+                                  </a>
+                                ))}
+                              </div>
+                            </div>
+                          )
+                        }
+                        return null
+                      })()}
                     </div>
                   </CardContent>
                 </Card>

@@ -275,82 +275,11 @@ export default function ScriptForm() {
         ...prev,
         agentName: prev.agentName || user.name || `${user.firstName || ""} ${user.lastName || ""}`.trim(),
         agentEmail: prev.agentEmail || user.email || "",
+        // Auto-fill brokerage name from Memberspace user data if available
+        brokerageName: prev.brokerageName || user.brokerage || user.company || "",
       }))
       
-      // Load brokerage name from brand profile
-      async function loadBrokerageName() {
-        console.log("loadBrokerageName called - user:", user, "isUserLoading:", isUserLoading)
-        if (user?.id) {
-          console.log("User ID:", user.id, "Type:", typeof user.id)
-          try {
-            // Get the current tenant from the URL or use a default
-            const pathname = window.location.pathname
-            const hostname = window.location.hostname
-            let tenantId = "century21-beggins" // default
-            
-            // Check pathname first
-            if (pathname.includes("/empower/")) {
-              tenantId = "empower"
-            } else if (pathname.includes("/beggins/")) {
-              tenantId = "century21-beggins"
-            } else if (pathname.includes("/century21/")) {
-              tenantId = "century21"
-            }
-            
-            // Fallback to hostname if pathname doesn't have tenant info
-            if (tenantId === "century21-beggins" && !pathname.includes("/beggins/")) {
-              if (hostname.includes("empower")) {
-                tenantId = "empower"
-              } else if (hostname.includes("century21")) {
-                tenantId = "century21"
-              }
-            }
-            
-            console.log("Detected tenant:", tenantId, "from pathname:", pathname)
-            
-            // Try the detected tenant first
-            let response = await fetch(`/api/user-branding-profile?userId=${String(user.id)}&tenantId=${tenantId}`)
-            let profile = null
-            
-            if (response.ok) {
-              profile = await response.json()
-              console.log("Loaded branding profile from detected tenant:", profile)
-            } else {
-              console.log("Failed to load branding profile from detected tenant, status:", response.status)
-              
-              // Try fallback tenants if the detected one doesn't work
-              const fallbackTenants = ["century21-beggins", "empower", "century21"]
-              for (const fallbackTenant of fallbackTenants) {
-                if (fallbackTenant !== tenantId) {
-                  console.log("Trying fallback tenant:", fallbackTenant)
-                  response = await fetch(`/api/user-branding-profile?userId=${String(user.id)}&tenantId=${fallbackTenant}`)
-                  if (response.ok) {
-                    profile = await response.json()
-                    console.log("Loaded branding profile from fallback tenant:", fallbackTenant, profile)
-                    break
-                  }
-                }
-              }
-            }
-            
-            console.log("Current formData.brokerageName:", formData.brokerageName)
-            if (profile?.brokerage) {
-              console.log("Setting brokerage name to:", profile.brokerage)
-              setFormData(prev => ({
-                ...prev,
-                brokerageName: profile.brokerage
-              }))
-              hasLoadedBrokerageName.current = true
-            } else {
-              console.log("No branding profile found or no brokerage name in profile")
-            }
-          } catch (error) {
-            console.log("Could not load brokerage name from profile:", error)
-          }
-        }
-      }
-      
-      loadBrokerageName()
+      hasLoadedBrokerageName.current = true
     }
   }, [user, isUserLoading])
 

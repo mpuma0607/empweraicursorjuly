@@ -66,6 +66,12 @@ export async function analyzeMarket(
     }
 
     console.log("MyMarket AI: Analysis completed successfully")
+    console.log("MyMarket AI: Enhanced data structure:", {
+      hasAiInsights: !!enhancedData.ai_insights,
+      aiInsightsLength: enhancedData.ai_insights?.length || 0,
+      marketDataType: enhancedData.market_type,
+      searchQuery: enhancedData.search_query
+    })
     return result
 
   } catch (error) {
@@ -88,6 +94,8 @@ async function generateAIInsights(location: string, marketType: 'housing' | 'ren
         For Sale Inventory: ${marketData.market_overview?.for_sale_inventory?.toLocaleString() || 'N/A'}
         New Listings: ${marketData.market_overview?.new_listings?.toLocaleString() || 'N/A'}
         Sale/List Ratio: ${marketData.market_overview?.["market saletolist ratio"] || 'N/A'}
+        Days on Market: ${marketData.market_overview?.median_dom || 'N/A'}
+        Price Trends: ${marketData.market_overview?.price_trends || 'N/A'}
       `
     } else {
       marketContext = `
@@ -95,37 +103,49 @@ async function generateAIInsights(location: string, marketType: 'housing' | 'ren
         Average Rent: $${marketData.rental_market_trends?.average_rent?.toLocaleString() || marketData.average_rent?.toLocaleString() || 'N/A'}
         Rental Inventory: ${marketData.rental_market_trends?.rental_inventory?.toLocaleString() || marketData.rental_inventory?.toLocaleString() || 'N/A'}
         Rent Trend: ${marketData.rental_market_trends?.rent_trend || marketData.rent_trend || 'N/A'}
+        Vacancy Rate: ${marketData.rental_market_trends?.vacancy_rate || marketData.vacancy_rate || 'N/A'}
+        Rental Yield: ${marketData.rental_market_trends?.rental_yield || marketData.rental_yield || 'N/A'}
       `
     }
 
     const prompt = `
-Generate: AI market analysis insights
-Style: Professional, actionable, data-driven
-Focus: Market trends, investment opportunities, local conditions
+Generate: Comprehensive ${marketType} market analysis
+Style: Professional, data-driven insights
+Focus: Market trends, investment potential, actionable recommendations
 
-Market Data: ${JSON.stringify(marketData, null, 2)}
-Property Type: ${homeType}
-Rental Type: ${rentalType}
-Bedroom Type: ${bedroomType}
+Market Data: ${marketContext}
 
-Analyze the market data and provide:
-- Key market trends and insights
-- Investment opportunities and risks
-- Local market conditions
-- Recommendations for buyers/sellers/investors
-- Data-driven insights for decision making`
+Provide detailed analysis including:
+1. Current Market Conditions
+2. Price/Rent Trends Analysis
+3. Inventory and Supply Analysis
+4. Investment Opportunities
+5. Risk Factors
+6. Strategic Recommendations for ${marketType === 'rental' ? 'rental property investors' : 'homebuyers/sellers'}
+7. Market Outlook (3-6 months)
 
-      const { text } = await generateText({
-        model: openai("gpt-4o"),
-        maxTokens: 1500,
-        temperature: 0.7,
-        prompt,
-      })
+Format with clear sections and bullet points for easy reading.`
 
-    return completion.choices[0]?.message?.content || "Unable to generate AI insights at this time."
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: "You are a professional real estate market analyst with expertise in ${marketType} markets."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      max_tokens: 1500,
+      temperature: 0.7,
+    })
+
+    return completion.choices[0]?.message?.content || "Unable to generate market insights at this time."
   } catch (error) {
     console.error("Error generating AI insights:", error)
-    return "AI insights temporarily unavailable."
+    return "Market analysis temporarily unavailable. Please try again later."
   }
 }
 

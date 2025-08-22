@@ -129,7 +129,8 @@ Additional: ${additionalContactData ? JSON.stringify(additionalContactData, null
 
 ## CONTACT DETAILS
 - Phone numbers with type, emails, social media
-- Public record links and data sources
+- Public record links: TruePeopleSearch.com, Whitepages, Spokeo, etc.
+- Include specific URLs like "https://www.truepeoplesearch.com/find-person?name=[NAME]&citystatezip=[LOCATION]"
 
 ## PROPERTY CHARACTERISTICS
 - Type, size, features, estimated value, history

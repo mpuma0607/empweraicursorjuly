@@ -466,7 +466,26 @@ const QuickCMAResults = ({ data }: QuickCMAResultsProps) => {
         )}
       </div>
 
-      {/* Market Summary Cards with Dynamic Brand Colors */}
+      {/* Market Analysis Section */}
+      {data.analysisText && (
+        <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-blue-900">
+              <TrendingUp className="h-5 w-5" />
+              AI Market Analysis
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="prose prose-sm max-w-none text-blue-800">
+              <div className="whitespace-pre-wrap leading-relaxed">
+                {data.analysisText}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Comparable Properties Section */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="border-l-4" style={{ borderLeftColor: brandColors.primary }}>
           <CardHeader className="pb-3">

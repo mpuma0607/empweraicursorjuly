@@ -18,8 +18,12 @@ export async function generateAgentBio(formData: BioFormData) {
     const prompt = `
 Generate: Real estate agent bio
 Style: Professional, engaging, trust-building
-Agent: ${agentName}
-Specialties: ${specialties}
+Agent: ${formData.name}
+Brokerage: ${formData.brokerage}
+Time in Industry: ${formData.timeInIndustry}
+Origin: ${formData.origin}
+Areas Served: ${formData.areasServed}
+Hobbies: ${formData.hobbies}
 
 Create:
 - Professional introduction

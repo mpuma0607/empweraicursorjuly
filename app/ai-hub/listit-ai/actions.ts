@@ -23,8 +23,13 @@ export async function generateListingDescription(formData: ListingFormData) {
     const prompt = `
 Generate: Property listing content
 Style: Professional, engaging, conversion-focused
-Property: ${propertyAddress}
-Type: ${propertyType}
+Property: ${formData.propertyAddress}
+Price: ${formData.listingPrice}
+Bedrooms: ${formData.bedrooms}
+Bathrooms: ${formData.bathrooms}
+Square Footage: ${formData.squareFootage}
+Features: ${formData.feature1}, ${formData.feature2}, ${formData.feature3}, ${formData.feature4}, ${formData.feature5}
+Agent: ${formData.agentName}
 
 Create:
 - Compelling listing description
