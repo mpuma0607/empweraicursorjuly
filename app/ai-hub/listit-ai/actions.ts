@@ -39,8 +39,11 @@ Create:
       prompt,
     })
 
+    // Ensure the description doesn't exceed 3500 characters
+    const truncatedDescription = text.length > 3500 ? text.substring(0, 3500) + "..." : text
+
     return {
-      description: text,
+      description: truncatedDescription,
     }
   } catch (error) {
     console.error("Error generating listing description:", error)

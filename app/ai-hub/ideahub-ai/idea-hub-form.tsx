@@ -798,9 +798,12 @@ export default function IdeaHubForm() {
                   className="min-h-[300px] resize-none" 
                   placeholder="Your generated content ideas will appear here for editing..."
                 />
-                <p className="text-xs text-gray-500">
-                  💡 You can edit the content above to customize it for your specific needs before copying, downloading, or saving.
-                </p>
+                <div className="flex items-center justify-between text-xs text-gray-500">
+                  <p>💡 You can edit the content above to customize it for your specific needs before copying, downloading, or saving.</p>
+                  <span className="text-gray-500">
+                    {(result?.text?.length || 0)} characters
+                  </span>
+                </div>
               </div>
             </CardContent>
           </Card>

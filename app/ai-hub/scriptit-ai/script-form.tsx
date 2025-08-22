@@ -255,57 +255,109 @@ export default function ScriptForm() {
 
   const isLoggedIn = !!user && !isUserLoading
 
-  const resultsRef = useRef<HTMLDivElement>(null)
-
-  // Auto-populate user data when available
-
+  // Debug user data
   useEffect(() => {
-    if (user && !isUserLoading) {
+    console.log("User data changed:", { user, isUserLoading, isLoggedIn })
+    // Reset the brokerage name loading flag when user changes
+    if (!user) {
+      hasLoadedBrokerageName.current = false
+    }
+  }, [user, isUserLoading, isLoggedIn])
+
+  const resultsRef = useRef<HTMLDivElement>(null)
+  const hasLoadedBrokerageName = useRef(false)
+
+  // Auto-populate user data and brokerage name when available
+  useEffect(() => {
+    if (user && !isUserLoading && !hasLoadedBrokerageName.current) {
+      console.log("Setting user data - current formData:", formData)
       setFormData((prev) => ({
         ...prev,
-
         agentName: prev.agentName || user.name || `${user.firstName || ""} ${user.lastName || ""}`.trim(),
-
         agentEmail: prev.agentEmail || user.email || "",
       }))
-    }
-  }, [user, isUserLoading])
-
-  // Auto-populate brokerage name from brand profile
-  useEffect(() => {
-    async function loadBrokerageName() {
-      if (user?.id && !isUserLoading) {
-        try {
-          // Get the current tenant from the URL or use a default
-          const pathname = window.location.pathname
-          let tenantId = "century21-beggins" // default
-          
-          if (pathname.includes("/empower/")) {
-            tenantId = "empower"
-          } else if (pathname.includes("/beggins/")) {
-            tenantId = "century21-beggins"
-          } else if (pathname.includes("/century21/")) {
-            tenantId = "century21"
-          }
-          
-          const response = await fetch(`/api/user-branding-profile?userId=${user.id}&tenantId=${tenantId}`)
-          if (response.ok) {
-            const profile = await response.json()
-            if (profile?.brokerage && !formData.brokerageName) {
+      
+      // Load brokerage name from brand profile
+      async function loadBrokerageName() {
+        console.log("loadBrokerageName called - user:", user, "isUserLoading:", isUserLoading)
+        if (user?.id) {
+          console.log("User ID:", user.id, "Type:", typeof user.id)
+          try {
+            // Get the current tenant from the URL or use a default
+            const pathname = window.location.pathname
+            const hostname = window.location.hostname
+            let tenantId = "century21-beggins" // default
+            
+            // Check pathname first
+            if (pathname.includes("/empower/")) {
+              tenantId = "empower"
+            } else if (pathname.includes("/beggins/")) {
+              tenantId = "century21-beggins"
+            } else if (pathname.includes("/century21/")) {
+              tenantId = "century21"
+            }
+            
+            // Fallback to hostname if pathname doesn't have tenant info
+            if (tenantId === "century21-beggins" && !pathname.includes("/beggins/")) {
+              if (hostname.includes("empower")) {
+                tenantId = "empower"
+              } else if (hostname.includes("century21")) {
+                tenantId = "century21"
+              }
+            }
+            
+            console.log("Detected tenant:", tenantId, "from pathname:", pathname)
+            
+            // Try the detected tenant first
+            let response = await fetch(`/api/user-branding-profile?userId=${String(user.id)}&tenantId=${tenantId}`)
+            let profile = null
+            
+            if (response.ok) {
+              profile = await response.json()
+              console.log("Loaded branding profile from detected tenant:", profile)
+            } else {
+              console.log("Failed to load branding profile from detected tenant, status:", response.status)
+              
+              // Try fallback tenants if the detected one doesn't work
+              const fallbackTenants = ["century21-beggins", "empower", "century21"]
+              for (const fallbackTenant of fallbackTenants) {
+                if (fallbackTenant !== tenantId) {
+                  console.log("Trying fallback tenant:", fallbackTenant)
+                  response = await fetch(`/api/user-branding-profile?userId=${String(user.id)}&tenantId=${fallbackTenant}`)
+                  if (response.ok) {
+                    profile = await response.json()
+                    console.log("Loaded branding profile from fallback tenant:", fallbackTenant, profile)
+                    break
+                  }
+                }
+              }
+            }
+            
+            console.log("Current formData.brokerageName:", formData.brokerageName)
+            if (profile?.brokerage) {
+              console.log("Setting brokerage name to:", profile.brokerage)
               setFormData(prev => ({
                 ...prev,
                 brokerageName: profile.brokerage
               }))
+              hasLoadedBrokerageName.current = true
+            } else {
+              console.log("No branding profile found or no brokerage name in profile")
             }
+          } catch (error) {
+            console.log("Could not load brokerage name from profile:", error)
           }
-        } catch (error) {
-          console.log("Could not load brokerage name from profile:", error)
         }
       }
+      
+      loadBrokerageName()
     }
-    
-    loadBrokerageName()
-  }, [user, isUserLoading, formData.brokerageName])
+  }, [user, isUserLoading])
+
+  // Debug form data changes
+  useEffect(() => {
+    console.log("Form data changed:", formData)
+  }, [formData])
 
   // Auto-scroll to results when they're generated
 
@@ -606,6 +658,9 @@ export default function ScriptForm() {
 
           {user && formData.brokerageName && (
             <p className="text-xs text-green-600">✓ Auto-filled from your brand profile</p>
+          )}
+          {user && !formData.brokerageName && (
+            <p className="text-xs text-gray-500">💡 Set up your brand profile to auto-fill this field</p>
           )}
         </div>
       </div>
@@ -979,9 +1034,12 @@ export default function ScriptForm() {
                   className="min-h-[400px] resize-none" 
                   placeholder="Your generated script will appear here for editing..."
                 />
-                <p className="text-xs text-gray-500">
-                  💡 You can edit the script above to customize it for your specific needs before copying, downloading, or saving.
-                </p>
+                <div className="flex items-center justify-between text-xs text-gray-500">
+                  <p>💡 You can edit the script above to customize it for your specific needs before copying, downloading, or saving.</p>
+                  <span className="text-gray-500">
+                    {(result?.script?.length || 0)} characters
+                  </span>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -1070,7 +1128,7 @@ export default function ScriptForm() {
           setFormData({
             agentName: user?.name || `${user?.firstName || ""} ${user?.lastName || ""}`.trim() || "",
 
-            brokerageName: "",
+            brokerageName: formData.brokerageName, // Keep the auto-filled brokerage name
 
             scriptType: "",
 

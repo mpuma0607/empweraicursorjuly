@@ -39,34 +39,40 @@ export async function generateContent(formData: FormData) {
       throw new Error("Please provide either a selected topic or custom topic")
     }
 
-    // Generate content type specific prompts
+    // Generate content type specific prompts with appropriate length constraints
     let contentTypeInstructions = ""
     let characterLimit = ""
+    let maxTokens = 1500
 
     switch (formData.contentType) {
       case "Social post":
         contentTypeInstructions =
           "Create a professional social media post that is engaging and shareable. Focus on being concise while still providing value."
         characterLimit = "Keep the post under 280 characters to ensure it works well across all social platforms."
+        maxTokens = 400 // Shorter for social posts
         break
       case "Text message":
         contentTypeInstructions =
           "Create a brief, friendly text message that gets straight to the point. Use a conversational tone appropriate for SMS."
         characterLimit = "Keep the message under 160 characters to fit in a single SMS."
+        maxTokens = 300 // Very short for text messages
         break
       case "Email":
         contentTypeInstructions =
           "Create a professional email with a clear subject line, proper greeting, informative body content, and appropriate closing. Structure it with proper email formatting."
         characterLimit = "Write a complete email with full details and explanations."
+        maxTokens = 1200 // Medium length for emails
         break
       case "Blog article":
         contentTypeInstructions =
           "Create a comprehensive blog article with an engaging title, introduction, main content with subheadings, and conclusion. Make it informative and valuable for readers."
         characterLimit = "Write a full-length article with detailed explanations and examples."
+        maxTokens = 2000 // Longer for blog articles
         break
       default:
         contentTypeInstructions = "Create a professional social media post that is engaging and shareable."
         characterLimit = "Keep the post under 280 characters."
+        maxTokens = 400
     }
 
     const prompt = `
@@ -86,7 +92,7 @@ Create:
 
     const { text } = await generateText({
       model: openai("gpt-4o"),
-      maxTokens: 1500,
+      maxTokens,
       temperature: 0.7,
       prompt,
     })

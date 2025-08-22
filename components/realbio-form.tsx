@@ -641,9 +641,12 @@ export default function RealBioForm() {
                 placeholder="Your generated bio will appear here for editing..."
               />
             </div>
-            <p className="text-xs text-gray-500">
-              💡 You can edit the bio above to customize it for your specific needs before copying, downloading, or saving.
-            </p>
+                            <div className="flex items-center justify-between text-xs text-gray-500">
+                  <p>💡 You can edit the bio above to customize it for your specific needs before copying, downloading, or saving.</p>
+                  <span className="text-gray-500">
+                    {(result?.bio?.length || 0)} characters
+                  </span>
+                </div>
           </div>
         </CardContent>
       </Card>

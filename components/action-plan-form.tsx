@@ -448,9 +448,12 @@ export default function ActionPlanForm() {
                   className="min-h-[400px] resize-none" 
                   placeholder="Your generated action plan will appear here for editing..."
                 />
-                <p className="text-xs text-gray-500">
-                  💡 You can edit the action plan above to customize it for your specific needs before copying, downloading, or saving.
-                </p>
+                <div className="flex items-center justify-between text-xs text-gray-500">
+                  <p>💡 You can edit the action plan above to customize it for your specific needs before copying, downloading, or saving.</p>
+                  <span className="text-gray-500">
+                    {(result?.plan?.length || 0)} characters
+                  </span>
+                </div>
               </div>
             </CardContent>
           </Card>

@@ -667,10 +667,14 @@ export default function ListingForm() {
                   onChange={(e) => setResult(prev => prev ? { ...prev, description: e.target.value } : null)}
                   className="min-h-[300px] resize-none" 
                   placeholder="Your generated listing description will appear here for editing..."
+                  maxLength={3500}
                 />
-                <p className="text-xs text-gray-500">
-                  💡 You can edit the description above to customize it for your specific needs before copying, downloading, or saving.
-                </p>
+                <div className="flex items-center justify-between text-xs text-gray-500">
+                  <p>💡 You can edit the description above to customize it for your specific needs before copying, downloading, or saving.</p>
+                  <span className={`${(result?.description?.length || 0) > 3200 ? 'text-orange-600' : 'text-gray-500'}`}>
+                    {(result?.description?.length || 0)}/3500 characters
+                  </span>
+                </div>
               </div>
             </CardContent>
           </Card>
