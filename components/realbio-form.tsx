@@ -617,11 +617,33 @@ export default function RealBioForm() {
 
       <Card className="border-0 shadow-md">
         <CardContent className="p-6">
-          <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 p-6 rounded-lg border border-yellow-200">
-            <h4 className="font-semibold text-black mb-4">Your Agent Bio:</h4>
-            <div className="prose prose-gray max-w-none">
-              <p className="whitespace-pre-wrap text-gray-800 leading-relaxed">{result?.bio}</p>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h4 className="font-semibold text-black">Your Agent Bio:</h4>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  if (result?.bio) {
+                    setResult({ bio: result.bio })
+                  }
+                }}
+                className="text-xs"
+              >
+                Reset to Original
+              </Button>
             </div>
+            <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 p-4 rounded-lg border border-yellow-200">
+              <Textarea
+                value={result?.bio || ""}
+                onChange={(e) => setResult(prev => prev ? { ...prev, bio: e.target.value } : null)}
+                className="min-h-[300px] resize-none border-0 bg-transparent text-gray-800 leading-relaxed font-medium"
+                placeholder="Your generated bio will appear here for editing..."
+              />
+            </div>
+            <p className="text-xs text-gray-500">
+              💡 You can edit the bio above to customize it for your specific needs before copying, downloading, or saving.
+            </p>
           </div>
         </CardContent>
       </Card>

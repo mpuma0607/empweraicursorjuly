@@ -643,7 +643,35 @@ export default function ListingForm() {
         <TabsContent value="text">
           <Card className="border-0 shadow-md">
             <CardContent className="p-6">
-              <Textarea value={result?.description || ""} readOnly className="min-h-[300px] resize-none" />
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="editableListing" className="text-sm font-medium text-gray-700">
+                    Edit Your Listing Description
+                  </Label>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      if (result?.description) {
+                        setResult({ description: result.description })
+                      }
+                    }}
+                    className="text-xs"
+                  >
+                    Reset to Original
+                  </Button>
+                </div>
+                <Textarea 
+                  id="editableListing"
+                  value={result?.description || ""} 
+                  onChange={(e) => setResult(prev => prev ? { ...prev, description: e.target.value } : null)}
+                  className="min-h-[300px] resize-none" 
+                  placeholder="Your generated listing description will appear here for editing..."
+                />
+                <p className="text-xs text-gray-500">
+                  💡 You can edit the description above to customize it for your specific needs before copying, downloading, or saving.
+                </p>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

@@ -271,6 +271,42 @@ export default function ScriptForm() {
     }
   }, [user, isUserLoading])
 
+  // Auto-populate brokerage name from brand profile
+  useEffect(() => {
+    async function loadBrokerageName() {
+      if (user?.id && !isUserLoading) {
+        try {
+          // Get the current tenant from the URL or use a default
+          const pathname = window.location.pathname
+          let tenantId = "century21-beggins" // default
+          
+          if (pathname.includes("/empower/")) {
+            tenantId = "empower"
+          } else if (pathname.includes("/beggins/")) {
+            tenantId = "century21-beggins"
+          } else if (pathname.includes("/century21/")) {
+            tenantId = "century21"
+          }
+          
+          const response = await fetch(`/api/user-branding-profile?userId=${user.id}&tenantId=${tenantId}`)
+          if (response.ok) {
+            const profile = await response.json()
+            if (profile?.brokerage && !formData.brokerageName) {
+              setFormData(prev => ({
+                ...prev,
+                brokerageName: profile.brokerage
+              }))
+            }
+          }
+        } catch (error) {
+          console.log("Could not load brokerage name from profile:", error)
+        }
+      }
+    }
+    
+    loadBrokerageName()
+  }, [user, isUserLoading, formData.brokerageName])
+
   // Auto-scroll to results when they're generated
 
   useEffect(() => {
@@ -554,7 +590,10 @@ export default function ScriptForm() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="brokerageName">Brokerage Name *</Label>
+          <Label htmlFor="brokerageName" className="flex items-center gap-2">
+            Brokerage Name *
+            {user && formData.brokerageName && <UserCheck className="h-4 w-4 text-green-600" title="Auto-filled from your brand profile" />}
+          </Label>
 
           <Input
             id="brokerageName"
@@ -564,6 +603,10 @@ export default function ScriptForm() {
             onChange={handleInputChange}
             required
           />
+
+          {user && formData.brokerageName && (
+            <p className="text-xs text-green-600">✓ Auto-filled from your brand profile</p>
+          )}
         </div>
       </div>
 
@@ -911,7 +954,35 @@ export default function ScriptForm() {
         <TabsContent value="text">
           <Card className="border-0 shadow-md">
             <CardContent className="p-6">
-              <Textarea value={result?.script || ""} readOnly className="min-h-[400px] resize-none" />
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="editableScript" className="text-sm font-medium text-gray-700">
+                    Edit Your Script
+                  </Label>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      if (result?.script) {
+                        setResult({ script: result.script })
+                      }
+                    }}
+                    className="text-xs"
+                  >
+                    Reset to Original
+                  </Button>
+                </div>
+                <Textarea 
+                  id="editableScript"
+                  value={result?.script || ""} 
+                  onChange={(e) => setResult(prev => prev ? { ...prev, script: e.target.value } : null)}
+                  className="min-h-[400px] resize-none" 
+                  placeholder="Your generated script will appear here for editing..."
+                />
+                <p className="text-xs text-gray-500">
+                  💡 You can edit the script above to customize it for your specific needs before copying, downloading, or saving.
+                </p>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

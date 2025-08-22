@@ -773,7 +773,35 @@ export default function IdeaHubForm() {
         <TabsContent value="text">
           <Card className="border-0 shadow-md">
             <CardContent className="p-6">
-              <Textarea value={result?.text || ""} readOnly className="min-h-[300px] resize-none" />
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="editableIdeas" className="text-sm font-medium text-gray-700">
+                    Edit Your Content Ideas
+                  </Label>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      if (result?.text) {
+                        setResult({ text: result.text })
+                      }
+                    }}
+                    className="text-xs"
+                  >
+                    Reset to Original
+                  </Button>
+                </div>
+                <Textarea 
+                  id="editableIdeas"
+                  value={result?.text || ""} 
+                  onChange={(e) => setResult(prev => prev ? { ...prev, text: e.target.value } : null)}
+                  className="min-h-[300px] resize-none" 
+                  placeholder="Your generated content ideas will appear here for editing..."
+                />
+                <p className="text-xs text-gray-500">
+                  💡 You can edit the content above to customize it for your specific needs before copying, downloading, or saving.
+                </p>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

@@ -423,7 +423,35 @@ export default function ActionPlanForm() {
         <TabsContent value="text">
           <Card className="border-0 shadow-md">
             <CardContent className="p-6">
-              <Textarea value={result?.plan || ""} readOnly className="min-h-[400px] resize-none" />
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="editableActionPlan" className="text-sm font-medium text-gray-700">
+                    Edit Your Action Plan
+                  </Label>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      if (result?.plan) {
+                        setResult({ plan: result.plan })
+                      }
+                    }}
+                    className="text-xs"
+                  >
+                    Reset to Original
+                  </Button>
+                </div>
+                <Textarea 
+                  id="editableActionPlan"
+                  value={result?.plan || ""} 
+                  onChange={(e) => setResult(prev => prev ? { ...prev, plan: e.target.value } : null)}
+                  className="min-h-[400px] resize-none" 
+                  placeholder="Your generated action plan will appear here for editing..."
+                />
+                <p className="text-xs text-gray-500">
+                  💡 You can edit the action plan above to customize it for your specific needs before copying, downloading, or saving.
+                </p>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
