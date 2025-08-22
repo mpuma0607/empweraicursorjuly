@@ -70,30 +70,27 @@ export async function generateContent(formData: FormData) {
     }
 
     const prompt = `
-You are ${formData.name}, a world-class real estate professional with Century 21. 
-Your task is to create ${formData.contentType === "Email" ? "a consumer-facing email" : formData.contentType === "Blog article" ? "a blog article" : "a social media post"} 
-about ${formData.primaryTopic}${formData.alternateTopic ? ` (or ${formData.alternateTopic})` : ""}. 
+Write a ${formData.contentType.toLowerCase()} in English with a ${formData.tonality.toLowerCase()} voice about "${formData.primaryTopic}${formData.alternateTopic ? ` (or ${formData.alternateTopic})` : ""}". 
+Audience is consumers (buyers/sellers/homeowners). Produce only the ${formData.contentType.toLowerCase()} text itself—no labels, no headings, no explanation, no hashtags unless it's a social post, and never mention images or visuals as a separate instruction.
 
-Tone: ${formData.tonality}. Write so that the reader can see the vision, hear reassurance, and feel supported.
-Blend DISC needs naturally:
-- D: clarity and direction
-- I: enthusiasm and story
-- S: warmth and reassurance
-- C: facts and logic
+Style targets:
+- Natural cadence that sounds spoken, not listy. Mix short and medium sentences.
+- VAK language woven into normal phrasing so readers can see possibilities, hear reassurance, and feel momentum.
+- Embedded commands blended into sentences (e.g., "imagine walking in," "notice how the plan comes together," "go ahead and pick a time that works").
+- Subtle DISC coverage: clear direction and options (D), friendly enthusiasm (I), calm reassurance (S), and a touch of practical detail or logic (C).
 
-Embedded commands: weave in phrases like "Imagine walking through…" or "You'll start to feel…" so the reader unconsciously envisions taking the next step. 
+Channel rules:
+- If Social post: 2–4 flowing sentences, light and shareable, soft CTA at the end. Up to ~900–1200 characters maximum. Hashtags optional (0–3) and only if they feel natural at the end.
+- If Email: Subject line first, then greeting and 2–3 short paragraphs (≤ 220 words total), and a plain CTA line to reply or schedule. No bullets.
+- If Blog article: 300–500 words, conversational narrative with clear arc and a single CTA in the final lines. No headings.
+- If Text message: 1–2 warm, direct sentences (≤ 240 characters), one simple CTA. No links unless natural.
 
-Formatting rules:
-- Social post: 2–4 natural flowing sentences, conversational, under 1,200 characters. 
-- Email: subject line + short body (2–3 paragraphs, max 220 words), clear CTA, natural close. 
-- Blog: 300–500 words, narrative flow, not a list, easy to skim but human. 
+Important output constraints:
+- Output only the ${formData.contentType.toLowerCase()} content with no prefaces or postfaces.
+- No asterisks, no em dashes. Use simple punctuation and clean spacing.
 
 ${formData.email ? `Sign with your name: ${formData.name}.` : ""}
-${formData.email ? `Include contact: ${formData.email}.` : ""}
-
-If ${formData.contentType === "Social post"}, add a single line at the end starting with "Image idea:" describing a visually compelling branded image to accompany the content.
-
-Generate only the content text, no additional formatting or explanations.`
+${formData.email ? `Include contact: ${formData.email}.` : ""}`
 
     const { text } = await generateText({
       model: openai("gpt-4o"),
