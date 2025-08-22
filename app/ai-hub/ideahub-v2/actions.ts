@@ -40,21 +40,22 @@ export async function generateContent(formData: FormData) {
   })
 
   // Generate the text content using AI SDK
-  const prompt = `
-Generate: Real estate content ideas
-Style: Creative, engaging, professional
-Focus: Marketing content, social media, property descriptions
+  const prompt = `Create a ${contentType.toLowerCase()} about "${topic}" in ${language} with a ${tonality.toLowerCase()} tone.
 
-Topic: ${topic}
+Guidelines:
+- Make it engaging and relevant to real estate professionals
+- Keep it appropriate for social media if it's a social post
+- Use professional language that builds trust
+- Include actionable insights when possible
+- Make it conversational and human-sounding
+- Don't use excessive hashtags or emojis
+
 Content Type: ${contentType}
-Target Audience: ${language}
-Tonality: ${tonality}
+Topic: ${topic}
+Language: ${language}
+Tone: ${tonality}
 
-Create:
-- Content ideas and concepts
-- Marketing strategies
-- Engagement approaches
-- Professional insights`
+Generate only the content text, no additional formatting or explanations.`
 
   try {
     const { text } = await generateText({
