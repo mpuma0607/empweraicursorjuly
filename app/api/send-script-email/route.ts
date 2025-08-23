@@ -15,6 +15,7 @@ export async function POST(request: NextRequest) {
       email: "Email Script",
       phone: "Phone Call Script",
       text: "Text Message Script",
+      "in-person": "In-Person Script",
       video: "Video Script",
       doorknocking: "Door Knocking Script",
     }
@@ -30,10 +31,19 @@ export async function POST(request: NextRequest) {
       rental: "Rental",
       divorce: "Divorce",
       "just-sold": "Just Sold",
+      expired: "Expired Listing",
+      absentee: "Absentee Owner",
+      "off-market": "Off Market",
+      other: "Custom Prospect Type",
     }
 
-    const scriptTypeLabel = scriptTypeMap[formData.scriptType] || formData.scriptType
-    const topicLabel = formData.topic === "other" ? formData.customTopic : topicMap[formData.topic] || formData.topic
+    // Handle both ScriptIT and Property Script Generator data structures
+    const scriptType = formData.scriptType || formData.deliveryMethod
+    const topic = formData.topic || formData.prospectType
+    const customTopic = formData.customTopic || formData.customProspectType
+    
+    const scriptTypeLabel = scriptTypeMap[scriptType] || scriptType
+    const topicLabel = topic === "other" ? customTopic : topicMap[topic] || topic
 
     // Create HTML content for email attachment
     const scriptHTML = `
@@ -114,6 +124,7 @@ export async function POST(request: NextRequest) {
         
         <div class="script-title">${name} - ${formData.brokerageName}</div>
         <div class="script-details">${scriptTypeLabel} - ${topicLabel}</div>
+        ${formData.propertyAddress ? `<div class="script-details">Property: ${formData.propertyAddress}</div>` : ''}
         
         <div class="divider"></div>
         
@@ -130,7 +141,7 @@ export async function POST(request: NextRequest) {
     const { data: emailData, error } = await resend.emails.send({
       from: "Mike Puma - The Next Level U <noreply@marketing.getempowerai.com>",
       to: [to],
-      subject: `Your ${scriptTypeLabel} for ${topicLabel} - ScriptIT by The Next Level U`,
+      subject: `Your ${scriptTypeLabel} for ${topicLabel} - ${formData.propertyAddress ? `Property: ${formData.propertyAddress}` : 'ScriptIT'} by The Next Level U`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
           <div style="background: linear-gradient(135deg, #ea580c, #dc2626); padding: 30px; text-align: center;">
@@ -142,8 +153,20 @@ export async function POST(request: NextRequest) {
             <h2 style="color: #1f2937; margin-bottom: 20px; font-size: 24px;">Hi ${name},</h2>
             
             <p style="color: #4b5563; line-height: 1.6; font-size: 16px;">
-              Your professional <strong>${scriptTypeLabel.toLowerCase()}</strong> for <strong>${topicLabel.toLowerCase()}</strong> has been generated! This script incorporates DISC behavioral principles and VAK sensory language for maximum effectiveness.
+              Your professional <strong>${scriptTypeLabel.toLowerCase()}</strong> for <strong>${topicLabel.toLowerCase()}</strong>${formData.propertyAddress ? ` at ${formData.propertyAddress}` : ''} has been generated! This script incorporates DISC behavioral principles and VAK sensory language for maximum effectiveness.
             </p>
+            
+            ${formData.propertyAddress ? `
+            <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #0ea5e9;">
+              <h4 style="color: #0c4a6e; margin: 0 0 10px 0; font-size: 16px;">🏠 Property Details:</h4>
+              <p style="color: #0c4a6e; margin: 0; font-size: 14px;">
+                <strong>Address:</strong> ${formData.propertyAddress}<br>
+                ${formData.propertyType ? `<strong>Type:</strong> ${formData.propertyType}<br>` : ''}
+                ${formData.estimatedValue ? `<strong>Estimated Value:</strong> ${formData.estimatedValue}<br>` : ''}
+                ${formData.ownerNames && formData.ownerNames.length > 0 ? `<strong>Owners:</strong> ${formData.ownerNames.join(', ')}` : ''}
+              </p>
+            </div>
+            ` : ''}
             
             <div style="background: white; padding: 25px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #ea580c; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
               <h3 style="color: #1f2937; margin-top: 0; font-size: 18px;">Your Professional Script:</h3>
@@ -194,7 +217,7 @@ export async function POST(request: NextRequest) {
       `,
       attachments: [
         {
-          filename: `${name.replace(/\s+/g, "_")}_${formData.scriptType}_Script.html`,
+          filename: `${name.replace(/\s+/g, "_")}_${scriptTypeLabel.replace(/\s+/g, "_")}_${formData.propertyAddress ? formData.propertyAddress.split(',')[0].replace(/[^a-zA-Z0-9]/g, "_") : topicLabel.replace(/\s+/g, "_")}_Script.html`,
           content: scriptHTML,
         },
       ],
