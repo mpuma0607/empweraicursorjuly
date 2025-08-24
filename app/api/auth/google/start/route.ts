@@ -14,8 +14,8 @@ export async function GET(request: NextRequest) {
     // For now, we'll use cookies with httpOnly
     const response = NextResponse.redirect(
       `https://accounts.google.com/o/oauth2/v2/auth?` +
-      `client_id=${process.env.GOOGLE_CLIENT_ID}` +
-      `&redirect_uri=${encodeURIComponent(process.env.GOOGLE_REDIRECT_URI || 'https://getempowerai.com/api/auth/google/callback')}` +
+      `client_id=${process.env.GOOGLE_OAUTH_CLIENT_ID}` +
+      `&redirect_uri=${encodeURIComponent(process.env.GOOGLE_OAUTH_REDIRECT_URI || 'https://getempowerai.com/api/auth/google/callback')}` +
       `&response_type=code` +
       `&scope=${encodeURIComponent('https://www.googleapis.com/auth/gmail.send')}` +
       `&access_type=offline` +
