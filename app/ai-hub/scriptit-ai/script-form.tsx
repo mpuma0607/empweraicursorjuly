@@ -27,6 +27,7 @@ import { useToast } from "@/hooks/use-toast"
 import { useMemberSpaceUser } from "@/hooks/use-memberspace-user"
 
 import { saveUserCreation, generateCreationTitle } from "@/lib/auto-save-creation"
+import EmailCompositionModal from "@/components/email-composition-modal"
 
 type ScriptFormState = {
   agentName: string
@@ -226,6 +227,7 @@ export default function ScriptForm() {
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false)
 
   const [isSaving, setIsSaving] = useState(false)
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
 
   const [formData, setFormData] = useState<ScriptFormState>({
     agentName: "",
@@ -648,6 +650,13 @@ export default function ScriptForm() {
             <SelectItem value="doorknocking">In Person</SelectItem>
           </SelectContent>
         </Select>
+        
+        {/* Email delivery note */}
+        {formData.scriptType === "email" && (
+          <div className="text-sm text-blue-600 bg-blue-50 p-3 rounded-md border border-blue-200">
+            💡 <strong>Email Delivery:</strong> When you select "Email" as your script type, you'll be able to send the generated script directly to clients using your connected Gmail account. The script will be pre-filled in the email composition form.
+          </div>
+        )}
       </div>
 
       {formData.scriptTypeCategory === "Difficult conversation" && (
@@ -997,13 +1006,21 @@ export default function ScriptForm() {
 
         <Button
           variant="outline"
-          onClick={sendEmail}
+          onClick={() => {
+            if (formData.scriptType === "email") {
+              setIsEmailModalOpen(true)
+            } else {
+              sendEmail()
+            }
+          }}
           disabled={isSendingEmail}
           className="flex items-center justify-center gap-2 bg-transparent"
         >
           {isSendingEmail ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
 
-          <span className="whitespace-nowrap">Email</span>
+          <span className="whitespace-nowrap">
+            {formData.scriptType === "email" ? "Send Script Email" : "Email"}
+          </span>
         </Button>
 
         <Button
@@ -1148,6 +1165,17 @@ export default function ScriptForm() {
 
         {step === 4 && renderStepFour()}
       </form>
+
+      {/* Email Composition Modal */}
+      {result && (
+        <EmailCompositionModal
+          isOpen={isEmailModalOpen}
+          onClose={() => setIsEmailModalOpen(false)}
+          scriptContent={result.script}
+          agentName={formData.agentName}
+          brokerageName={formData.brokerageName}
+        />
+      )}
     </div>
   )
 }
