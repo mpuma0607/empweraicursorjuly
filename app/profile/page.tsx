@@ -3,6 +3,7 @@
 import { useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { User } from "lucide-react"
+import { ProfileNavigation } from "@/components/profile-navigation"
 
 export default function ProfilePage() {
   useEffect(() => {
@@ -78,6 +79,9 @@ export default function ProfilePage() {
           <p className="text-gray-600">Manage your account settings and preferences</p>
         </div>
 
+        {/* Profile Navigation */}
+        <ProfileNavigation />
+        
         {/* Profile Embed */}
         <Card className="max-w-6xl mx-auto border-0 shadow-lg">
           <CardHeader>

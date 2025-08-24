@@ -12,6 +12,7 @@ import { Upload, User, Building2, ImageIcon } from "lucide-react"
 import { useMemberSpaceUser } from "@/hooks/use-memberspace-user"
 import { useTenantConfig } from "@/contexts/tenant-context"
 import { getBrandOptionsForTenant } from "@/lib/tenant-brand-options"
+import { ProfileNavigation } from "@/components/profile-navigation"
 import {
   getUserBrandingProfile,
   saveUserBrandingProfile,
@@ -269,6 +270,9 @@ export default function BrandingProfilePage() {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-2xl mx-auto px-4">
+        {/* Profile Navigation */}
+        <ProfileNavigation />
+        
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">

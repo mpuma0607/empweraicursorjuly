@@ -1,0 +1,59 @@
+"use client"
+
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { cn } from "@/lib/utils"
+import { 
+  User, 
+  Palette, 
+  Mail,
+  Settings
+} from "lucide-react"
+
+const navigation = [
+  {
+    name: "Profile",
+    href: "/profile",
+    icon: User,
+    description: "Account settings and preferences"
+  },
+  {
+    name: "Branding",
+    href: "/profile/branding",
+    icon: Palette,
+    description: "Customize your brand appearance"
+  },
+  {
+    name: "Email Integration",
+    href: "/profile/email-integration",
+    icon: Mail,
+    description: "Connect Gmail for sending emails"
+  }
+]
+
+export function ProfileNavigation() {
+  const pathname = usePathname()
+
+  return (
+    <nav className="flex space-x-1 mb-8" aria-label="Profile navigation">
+      {navigation.map((item) => {
+        const isActive = pathname === item.href
+        return (
+          <Link
+            key={item.name}
+            href={item.href}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors",
+              isActive
+                ? "bg-blue-100 text-blue-700 border border-blue-200"
+                : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+            )}
+          >
+            <item.icon className="h-4 w-4" />
+            {item.name}
+          </Link>
+        )
+      })}
+    </nav>
+  )
+}
