@@ -11,6 +11,23 @@ CREATE TABLE IF NOT EXISTS users (
   subscription_status VARCHAR(50) DEFAULT 'active'
 );
 
+-- OAuth tokens table for Gmail integration
+CREATE TABLE IF NOT EXISTS oauth_tokens (
+  id SERIAL PRIMARY KEY,
+  user_email VARCHAR(255) NOT NULL,
+  provider VARCHAR(50) NOT NULL DEFAULT 'google',
+  access_token TEXT NOT NULL,
+  refresh_token TEXT,
+  expires_at TIMESTAMP NOT NULL,
+  scopes TEXT[] NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  last_used TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  is_active BOOLEAN DEFAULT true,
+  
+  FOREIGN KEY (user_email) REFERENCES users(email) ON DELETE CASCADE,
+  UNIQUE(user_email, provider)
+);
+
 -- Tool usage tracking
 CREATE TABLE IF NOT EXISTS tool_usage (
   id SERIAL PRIMARY KEY,
@@ -76,3 +93,9 @@ CREATE INDEX IF NOT EXISTS idx_page_views_user_email ON page_views(user_email);
 CREATE INDEX IF NOT EXISTS idx_page_views_created_at ON page_views(created_at);
 CREATE INDEX IF NOT EXISTS idx_content_interactions_user_email ON content_interactions(user_email);
 CREATE INDEX IF NOT EXISTS idx_user_sessions_user_email ON user_sessions(user_email);
+
+-- OAuth tokens indexes
+CREATE INDEX IF NOT EXISTS idx_oauth_tokens_user_email ON oauth_tokens(user_email);
+CREATE INDEX IF NOT EXISTS idx_oauth_tokens_provider ON oauth_tokens(provider);
+CREATE INDEX IF NOT EXISTS idx_oauth_tokens_expires_at ON oauth_tokens(expires_at);
+CREATE INDEX IF NOT EXISTS idx_oauth_tokens_is_active ON oauth_tokens(is_active);

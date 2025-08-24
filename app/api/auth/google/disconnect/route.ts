@@ -6,12 +6,12 @@ export async function POST(request: NextRequest) {
     // For now, we'll remove all stored tokens
     // TODO: In production, get user ID from session/auth and remove specific user's tokens
     
-    const allEmails = oauthTokens.getAllEmails()
+    const allEmails = await oauthTokens.getAllEmails()
     console.log('Disconnecting Gmail for emails:', allEmails)
     
     // Revoke tokens with Google and remove locally
     for (const email of allEmails) {
-      const tokens = oauthTokens.get(email)
+      const tokens = await oauthTokens.get(email)
       if (tokens?.accessToken) {
         try {
           // Revoke access token with Google
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
       }
       
       // Remove tokens locally
-      oauthTokens.remove(email)
+      await oauthTokens.remove(email)
     }
     
     return NextResponse.json({ success: true, message: 'Gmail disconnected successfully' })

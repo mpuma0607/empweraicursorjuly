@@ -6,28 +6,30 @@ export async function GET(request: NextRequest) {
     // For now, we'll check all stored tokens and return the first valid one
     // TODO: In production, get user ID from session/auth and check specific user's tokens
     
-    const allEmails = oauthTokens.getAllEmails()
+    const allEmails = await oauthTokens.getAllEmails()
     console.log('Checking OAuth status for emails:', allEmails)
     
     // Find the first user with valid tokens
     for (const email of allEmails) {
-      if (oauthTokens.hasValidTokens(email)) {
-        const tokens = oauthTokens.get(email)!
+      if (await oauthTokens.hasValidTokens(email)) {
+        const tokens = await oauthTokens.get(email)
         
-        // Update last used time
-        oauthTokens.updateLastUsed(email)
-        
-        console.log(`Found valid tokens for ${email}`)
-        
-        return NextResponse.json({
-          status: {
-            connected: true,
-            email: tokens.email,
-            connectedAt: tokens.createdAt,
-            scopes: tokens.scopes,
-            lastUsed: tokens.lastUsed
-          }
-        })
+        if (tokens) {
+          // Update last used time
+          await oauthTokens.updateLastUsed(email)
+          
+          console.log(`Found valid tokens for ${email}`)
+          
+          return NextResponse.json({
+            status: {
+              connected: true,
+              email: tokens.userEmail,
+              connectedAt: tokens.createdAt,
+              scopes: tokens.scopes,
+              lastUsed: tokens.lastUsed
+            }
+          })
+        }
       }
     }
     

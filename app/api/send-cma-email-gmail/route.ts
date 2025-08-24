@@ -14,14 +14,20 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user has valid tokens
-    if (!oauthTokens.hasValidTokens(from)) {
+    if (!(await oauthTokens.hasValidTokens(from))) {
       return NextResponse.json(
         { error: 'Gmail account not connected or tokens expired' },
         { status: 401 }
       )
     }
 
-    const tokens = oauthTokens.get(from)!
+    const tokens = await oauthTokens.get(from)
+    if (!tokens) {
+      return NextResponse.json(
+        { error: 'Gmail account not connected or tokens expired' },
+        { status: 401 }
+      )
+    }
     
     // Create the email message
     const message = [
@@ -57,7 +63,7 @@ export async function POST(request: NextRequest) {
     const result = await response.json()
     
     // Update last used time
-    oauthTokens.updateLastUsed(from)
+    await oauthTokens.updateLastUsed(from)
     
     console.log('CMA email sent successfully via Gmail:', result.id)
     

@@ -3,20 +3,20 @@ import { oauthTokens } from "@/lib/oauth-tokens"
 
 export async function GET(request: NextRequest) {
   try {
-    const allEmails = oauthTokens.getAllEmails()
+    const allEmails = await oauthTokens.getAllEmails()
     const debugInfo = {
       totalStoredEmails: allEmails.length,
       emails: allEmails,
-      details: allEmails.map(email => {
-        const tokens = oauthTokens.get(email)
+      details: await Promise.all(allEmails.map(async email => {
+        const tokens = await oauthTokens.get(email)
         if (!tokens) return { email, status: 'no_tokens' }
-        
+
         const now = new Date()
         const isExpired = tokens.expiresAt < now
-        const isValid = oauthTokens.hasValidTokens(email)
-        
+        const isValid = await oauthTokens.hasValidTokens(email)
+
         return {
-          email: tokens.email,
+          email: tokens.userEmail,
           hasAccessToken: !!tokens.accessToken,
           hasRefreshToken: !!tokens.refreshToken,
           expiresAt: tokens.expiresAt,
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
           createdAt: tokens.createdAt,
           lastUsed: tokens.lastUsed
         }
-      })
+      }))
     }
     
     return NextResponse.json(debugInfo)
