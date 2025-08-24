@@ -80,12 +80,14 @@ ${formData.difficultConversationType ? `This is a difficult conversation type: $
 Always use language that helps the client see what's possible, hear reassurance, and feel confident in the next step.
 Blend DISC needs (clarity for D/C, warmth for I/S). Use embedded commands like "Picture this…" or "You'll start to realize…" to create action.
 
-Formatting by scriptTypeCategory:
-- If "text": one or two short natural sentences (≤300 characters). Conversational, ends with a soft CTA.  
-- If "email": subject line + greeting + 2–3 natural paragraphs, under 200 words, clear CTA.  
-- If "phone": natural dialogue outline with flowing sentences (not robotic), 6–8 turns, include empathy + objection handling, end with next step.  
-- If "in-person": conversational outline of 5 stages (warm open, discovery, value, next step, confirmation), use natural phrasing not bullets.
+IMPORTANT: Format the script based on the DELIVERY METHOD (scriptType), not the script category:
 
+- If "text": one or two short natural sentences (≤300 characters). Conversational, ends with a soft CTA.  
+- If "email": Create a complete email with subject line, greeting, 2–3 natural paragraphs, and closing signature. Keep it under 200 words with a clear CTA. NO dialogue format.
+- If "phone": natural dialogue outline with flowing sentences (not robotic), 6–8 turns, include empathy + objection handling, end with next step. Use "Agent:" and "Client:" format.
+- If "doorknocking": conversational outline of 5 stages (warm open, discovery, value, next step, confirmation), use natural phrasing not bullets.
+
+Script Type: ${formData.scriptType}
 Extra context: ${formData.additionalDetails}`
 
     const { text } = await generateText({

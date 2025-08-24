@@ -13,7 +13,8 @@ import {
   X, 
   CheckCircle, 
   AlertCircle,
-  Loader2
+  Loader2,
+  RefreshCw
 } from "lucide-react"
 
 interface EmailCompositionModalProps {
@@ -51,7 +52,11 @@ export default function EmailCompositionModal({
   // Check connection status on mount
   useEffect(() => {
     if (isOpen) {
-      checkConnectionStatus()
+      // Small delay to ensure OAuth tokens are stored
+      setTimeout(() => {
+        checkConnectionStatus()
+      }, 500)
+      
       // Set default subject and signature
       setSubject(`Script from ${agentName} - ${brokerageName}`)
       setSignature(`Best regards,\n${agentName}\n${brokerageName}`)
@@ -63,15 +68,20 @@ export default function EmailCompositionModal({
   const checkConnectionStatus = async () => {
     try {
       setIsLoading(true)
+      console.log('Email modal: Checking OAuth status...')
       const response = await fetch('/api/auth/google/status')
+      console.log('Email modal: Status response:', response.status, response.ok)
+      
       if (response.ok) {
         const data = await response.json()
+        console.log('Email modal: Status data:', data)
         setConnectionStatus(data.status)
       } else {
+        console.log('Email modal: Status response not ok')
         setConnectionStatus({ connected: false })
       }
     } catch (error) {
-      console.error('Error checking connection status:', error)
+      console.error('Email modal: Error checking connection status:', error)
       setConnectionStatus({ connected: false })
     } finally {
       setIsLoading(false)
@@ -159,14 +169,27 @@ export default function EmailCompositionModal({
                   Gmail account not connected. Please connect your account in the Email Integration section first.
                 </AlertDescription>
               </Alert>
-            ) : (
-              <Alert className="border-green-200 bg-green-50">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-                <AlertDescription className="text-green-800">
-                  Connected to Gmail: {connectionStatus.email}
-                </AlertDescription>
-              </Alert>
-            )}
+                         ) : (
+               <Alert className="border-green-200 bg-green-50">
+                 <CheckCircle className="h-4 w-4 text-green-600" />
+                 <AlertDescription className="text-green-800">
+                   Connected to Gmail: {connectionStatus.email}
+                 </AlertDescription>
+               </Alert>
+             )}
+             
+             {/* Manual refresh button */}
+             <div className="flex justify-center">
+               <Button
+                 variant="outline"
+                 size="sm"
+                 onClick={checkConnectionStatus}
+                 className="text-xs"
+               >
+                 <RefreshCw className="h-3 w-3 mr-1" />
+                 Refresh Connection Status
+               </Button>
+             </div>
 
             {/* Email Form */}
             {connectionStatus?.connected && (
