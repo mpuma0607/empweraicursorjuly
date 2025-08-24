@@ -27,6 +27,7 @@ import {
 import { useToast } from "@/hooks/use-toast"
 import { useMemberSpaceUser } from "@/hooks/use-memberspace-user"
 import { saveUserCreation, generateCreationTitle } from "@/lib/auto-save-creation"
+import EmailCompositionModal from "@/components/email-composition-modal"
 
 interface PropertyScriptGeneratorProps {
   propertyAddress: string
@@ -109,6 +110,8 @@ export function PropertyScriptGenerator({
   const [isSaving, setIsSaving] = useState(false)
   const [showScriptForm, setShowScriptForm] = useState(false)
   const [result, setResult] = useState<ScriptResult | null>(null)
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
+  const [isGmailConnected, setIsGmailConnected] = useState(false)
 
   const [formData, setFormData] = useState<ScriptFormData>({
     deliveryMethod: "phone",
@@ -135,6 +138,24 @@ export function PropertyScriptGenerator({
       }))
     }
   }, [user, isUserLoading])
+
+  // Check Gmail connection status
+  useEffect(() => {
+    const checkGmailStatus = async () => {
+      try {
+        const response = await fetch('/api/auth/google/status')
+        if (response.ok) {
+          const data = await response.json()
+          setIsGmailConnected(data.status.connected)
+        }
+      } catch (error) {
+        console.error('Error checking Gmail status:', error)
+        setIsGmailConnected(false)
+      }
+    }
+    
+    checkGmailStatus()
+  }, [])
 
   // Auto-scroll to results when they're generated
   useEffect(() => {
@@ -487,6 +508,13 @@ export function PropertyScriptGenerator({
                   ))}
                 </SelectContent>
               </Select>
+              
+              {/* Email delivery note */}
+              {formData.deliveryMethod === "email" && (
+                <div className="text-sm text-blue-600 bg-blue-50 p-3 rounded-md border border-blue-200 mt-2">
+                  💡 <strong>Email Delivery:</strong> When you select "Email" as your delivery method, you can send the script to yourself via email, and if you have Gmail connected, you can also send it directly to clients using your Gmail account.
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -679,15 +707,31 @@ export function PropertyScriptGenerator({
                   <span className="whitespace-nowrap">Download</span>
                 </Button>
 
-                <Button
-                  variant="outline"
-                  onClick={sendEmail}
-                  disabled={isSendingEmail}
-                  className="flex items-center justify-center gap-2 bg-transparent"
-                >
-                  {isSendingEmail ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
-                  <span className="whitespace-nowrap">Email</span>
-                </Button>
+                {/* Email Options */}
+                <div className="flex gap-2">
+                  {/* Resend Email to Self (Always Available) */}
+                  <Button
+                    variant="outline"
+                    onClick={sendEmail}
+                    disabled={isSendingEmail}
+                    className="flex items-center justify-center gap-2"
+                  >
+                    {isSendingEmail ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+                    <span className="whitespace-nowrap">Email to Self</span>
+                  </Button>
+
+                  {/* Gmail Client Email (Only if Gmail Connected and Email Delivery Method) */}
+                  {isGmailConnected && formData.deliveryMethod === "email" && (
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsEmailModalOpen(true)}
+                      className="flex items-center justify-center gap-2"
+                    >
+                      <Mail className="h-4 w-4" />
+                      <span className="whitespace-nowrap">Send to Client</span>
+                    </Button>
+                  )}
+                </div>
 
                 <Button
                   variant="outline"
@@ -717,6 +761,18 @@ export function PropertyScriptGenerator({
             </CardContent>
           </Card>
         </div>
+      )}
+
+      {/* Email Composition Modal */}
+      {result && (
+        <EmailCompositionModal
+          isOpen={isEmailModalOpen}
+          onClose={() => setIsEmailModalOpen(false)}
+          scriptContent={result.script}
+          agentName={formData.agentName}
+          brokerageName={formData.brokerageName}
+          contentType="script"
+        />
       )}
     </div>
   )

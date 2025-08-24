@@ -1,4 +1,4 @@
-// Simple in-memory token storage for OAuth
+// OAuth token storage with localStorage persistence
 // TODO: Replace with database storage in production
 
 interface OAuthTokens {
@@ -11,29 +11,63 @@ interface OAuthTokens {
   lastUsed: Date
 }
 
-// In-memory storage (will be cleared on server restart)
-const tokenStore = new Map<string, OAuthTokens>()
+// Helper functions for localStorage
+const getStoredTokens = (): Record<string, OAuthTokens> => {
+  if (typeof window === 'undefined') return {}
+  
+  try {
+    const stored = localStorage.getItem('oauth_tokens')
+    if (!stored) return {}
+    
+    const parsed = JSON.parse(stored)
+    // Convert date strings back to Date objects
+    Object.keys(parsed).forEach(email => {
+      if (parsed[email]) {
+        parsed[email].expiresAt = new Date(parsed[email].expiresAt)
+        parsed[email].createdAt = new Date(parsed[email].createdAt)
+        parsed[email].lastUsed = new Date(parsed[email].lastUsed)
+      }
+    })
+    return parsed
+  } catch (error) {
+    console.error('Error parsing stored OAuth tokens:', error)
+    return {}
+  }
+}
+
+const saveTokensToStorage = (tokens: Record<string, OAuthTokens>) => {
+  if (typeof window === 'undefined') return
+  
+  try {
+    localStorage.setItem('oauth_tokens', JSON.stringify(tokens))
+  } catch (error) {
+    console.error('Error saving OAuth tokens to localStorage:', error)
+  }
+}
 
 export const oauthTokens = {
   // Store tokens for a user (using email as key for now)
   store: (email: string, tokens: Omit<OAuthTokens, 'createdAt' | 'lastUsed'>) => {
     const now = new Date()
-    tokenStore.set(email, {
+    const storedTokens = getStoredTokens()
+    storedTokens[email] = {
       ...tokens,
       createdAt: now,
       lastUsed: now
-    })
+    }
+    saveTokensToStorage(storedTokens)
     console.log(`Stored OAuth tokens for ${email}`)
   },
 
   // Get tokens for a user
   get: (email: string): OAuthTokens | undefined => {
-    return tokenStore.get(email)
+    const storedTokens = getStoredTokens()
+    return storedTokens[email]
   },
 
   // Check if user has valid tokens
   hasValidTokens: (email: string): boolean => {
-    const tokens = tokenStore.get(email)
+    const tokens = getStoredTokens()[email]
     if (!tokens) return false
     
     // Check if token is expired (with 5 minute buffer)
@@ -44,21 +78,23 @@ export const oauthTokens = {
 
   // Update last used time
   updateLastUsed: (email: string) => {
-    const tokens = tokenStore.get(email)
-    if (tokens) {
-      tokens.lastUsed = new Date()
-      tokenStore.set(email, tokens)
+    const storedTokens = getStoredTokens()
+    if (storedTokens[email]) {
+      storedTokens[email].lastUsed = new Date()
+      saveTokensToStorage(storedTokens)
     }
   },
 
   // Remove tokens for a user
   remove: (email: string) => {
-    tokenStore.delete(email)
+    const storedTokens = getStoredTokens()
+    delete storedTokens[email]
+    saveTokensToStorage(storedTokens)
     console.log(`Removed OAuth tokens for ${email}`)
   },
 
   // Get all stored emails (for debugging)
   getAllEmails: (): string[] => {
-    return Array.from(tokenStore.keys())
+    return Object.keys(getStoredTokens())
   }
 }

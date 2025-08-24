@@ -152,7 +152,7 @@ export default function EmailCompositionModal({
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
                          <CardTitle className="flex items-center gap-2">
                <Mail className="h-5 w-5" />
-               {contentType === 'cma' ? 'Send CMA Report via Email' : 'Send Script via Email'}
+               {contentType === 'cma' ? 'Send CMA Report to Client' : 'Send Script to Client'}
              </CardTitle>
             <Button
               variant="ghost"
@@ -205,15 +205,15 @@ export default function EmailCompositionModal({
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="toEmail">To Email *</Label>
-                    <Input
-                      id="toEmail"
-                      type="email"
-                      placeholder="client@example.com"
-                      value={toEmail}
-                      onChange={(e) => setToEmail(e.target.value)}
-                      required
-                    />
+                                         <Label htmlFor="toEmail">Client Email *</Label>
+                     <Input
+                       id="toEmail"
+                       type="email"
+                       placeholder="client@example.com"
+                       value={toEmail}
+                       onChange={(e) => setToEmail(e.target.value)}
+                       required
+                     />
                   </div>
                   
                   <div className="space-y-2">

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import EmailCompositionModal from "@/components/email-composition-modal"
 import {
   Download,
@@ -98,7 +99,15 @@ const QuickCMAResults = ({ data }: QuickCMAResultsProps) => {
 
   const [isDownloading, setIsDownloading] = useState(false)
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
+  const [isResendModalOpen, setIsResendModalOpen] = useState(false)
+  const [isGmailConnected, setIsGmailConnected] = useState(false)
   const [expandedComps, setExpandedComps] = useState<Set<number>>(new Set())
+  
+  // Resend email state
+  const [email, setEmail] = useState("")
+  const [isSendingEmail, setIsSendingEmail] = useState(false)
+  const [emailSent, setEmailSent] = useState(false)
+  const [emailError, setEmailError] = useState<string | null>(null)
 
   // Get brand colors with fallback to black/white
   const brandColors = useMemo(() => {
@@ -108,6 +117,24 @@ const QuickCMAResults = ({ data }: QuickCMAResultsProps) => {
     // Default to black/white if no branding
     return { primary: "#000000", secondary: "#ffffff" }
   }, [data.userBranding])
+
+  // Check Gmail connection status
+  useEffect(() => {
+    const checkGmailStatus = async () => {
+      try {
+        const response = await fetch('/api/auth/google/status')
+        if (response.ok) {
+          const data = await response.json()
+          setIsGmailConnected(data.status.connected)
+        }
+      } catch (error) {
+        console.error('Error checking Gmail status:', error)
+        setIsGmailConnected(false)
+      }
+    }
+    
+    checkGmailStatus()
+  }, [])
 
   // Get brand logo with fallback logic
   const brandLogo = useMemo(() => {
@@ -157,6 +184,44 @@ const QuickCMAResults = ({ data }: QuickCMAResultsProps) => {
       newExpanded.add(index)
     }
     setExpandedComps(newExpanded)
+  }
+
+  const handleSendResendEmail = async () => {
+    if (!email) {
+      setEmailError("Please enter your email address")
+      return
+    }
+
+    setIsSendingEmail(true)
+    setEmailError(null)
+
+    try {
+      const response = await fetch("/api/send-cma-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: email,
+          address: data.address,
+          analysisText: data.analysisText,
+          comparableData: data.comparableData,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(errorText || "Failed to send email")
+      }
+
+      setEmailSent(true)
+      setEmail("")
+    } catch (error) {
+      console.error("Email error:", error)
+      setEmailError(error instanceof Error ? error.message : "Failed to send email")
+    } finally {
+      setIsSendingEmail(false)
+    }
   }
 
   const handleDownloadPDF = async () => {
@@ -356,7 +421,7 @@ Please review the detailed comparables and market analysis below. If you have an
           variant="outline"
           onClick={handleDownloadPDF}
           disabled={isDownloading}
-          className="flex items-center gap-2 bg-transparent"
+          className="flex items-center gap-2"
         >
           {isDownloading ? (
             <>
@@ -371,18 +436,104 @@ Please review the detailed comparables and market analysis below. If you have an
           )}
         </Button>
 
-                <Button 
-          onClick={() => setIsEmailModalOpen(true)} 
-          className="flex items-center gap-2 bg-transparent"
-        >
-          <Mail className="h-4 w-4" />
-          Email CMA Report
-        </Button>
+        {/* Email Options */}
+        <div className="flex gap-2">
+          {/* Resend Email to Self (Always Available) */}
+          <Button 
+            variant="outline"
+            onClick={() => setIsResendModalOpen(true)} 
+            className="flex items-center gap-2"
+          >
+            <Mail className="h-4 w-4" />
+            Email to Self
+          </Button>
+
+          {/* Gmail Client Email (Only if Gmail Connected) */}
+          {isGmailConnected && (
+            <Button 
+              variant="outline"
+              onClick={() => setIsEmailModalOpen(true)} 
+              className="flex items-center gap-2"
+            >
+              <Mail className="h-4 w-4" />
+              Send to Client
+            </Button>
+          )}
+        </div>
       </div>
 
-
-
-
+      {/* Resend Email Modal */}
+      {isResendModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Email CMA Report to Yourself</h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsResendModalOpen(false)}
+                className="h-8 w-8 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="resendEmail">Your Email Address</Label>
+                <Input
+                  id="resendEmail"
+                  type="email"
+                  placeholder="your@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleSendResendEmail}
+                  disabled={isSendingEmail || !email}
+                  className="flex-1"
+                >
+                  {isSendingEmail ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <Mail className="h-4 w-4 mr-2" />
+                      Send Report
+                    </>
+                  )}
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  onClick={() => setIsResendModalOpen(false)}
+                  disabled={isSendingEmail}
+                >
+                  Cancel
+                </Button>
+              </div>
+              
+              {emailError && (
+                <div className="p-3 bg-red-50 text-red-800 rounded-md text-sm">
+                  {emailError}
+                </div>
+              )}
+              
+              {emailSent && (
+                <div className="p-3 bg-green-50 text-green-800 rounded-md text-sm">
+                  CMA report sent successfully to {email}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Header with Dynamic Brand Colors */}
       <div

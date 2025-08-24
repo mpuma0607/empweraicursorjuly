@@ -228,6 +228,8 @@ export default function ScriptForm() {
 
   const [isSaving, setIsSaving] = useState(false)
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
+  const [isResendModalOpen, setIsResendModalOpen] = useState(false)
+  const [isGmailConnected, setIsGmailConnected] = useState(false)
 
   const [formData, setFormData] = useState<ScriptFormState>({
     agentName: "",
@@ -289,6 +291,24 @@ export default function ScriptForm() {
   useEffect(() => {
     console.log("Form data changed:", formData)
   }, [formData])
+
+  // Check Gmail connection status
+  useEffect(() => {
+    const checkGmailStatus = async () => {
+      try {
+        const response = await fetch('/api/auth/google/status')
+        if (response.ok) {
+          const data = await response.json()
+          setIsGmailConnected(data.status.connected)
+        }
+      } catch (error) {
+        console.error('Error checking Gmail status:', error)
+        setIsGmailConnected(false)
+      }
+    }
+    
+    checkGmailStatus()
+  }, [])
 
   // Auto-scroll to results when they're generated
 
@@ -654,7 +674,7 @@ export default function ScriptForm() {
         {/* Email delivery note */}
         {formData.scriptType === "email" && (
           <div className="text-sm text-blue-600 bg-blue-50 p-3 rounded-md border border-blue-200">
-            💡 <strong>Email Delivery:</strong> When you select "Email" as your script type, you'll be able to send the generated script directly to clients using your connected Gmail account. The script will be pre-filled in the email composition form.
+            💡 <strong>Email Delivery:</strong> When you select "Email" as your script type, you can send the script to yourself via email, and if you have Gmail connected, you can also send it directly to clients using your Gmail account.
           </div>
         )}
       </div>
@@ -1004,24 +1024,31 @@ export default function ScriptForm() {
           <span className="whitespace-nowrap">Download</span>
         </Button>
 
-        <Button
-          variant="outline"
-          onClick={() => {
-            if (formData.scriptType === "email") {
-              setIsEmailModalOpen(true)
-            } else {
-              sendEmail()
-            }
-          }}
-          disabled={isSendingEmail}
-          className="flex items-center justify-center gap-2 bg-transparent"
-        >
-          {isSendingEmail ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+        {/* Email Options */}
+        <div className="flex gap-2">
+          {/* Resend Email to Self (Always Available) */}
+          <Button
+            variant="outline"
+            onClick={sendEmail}
+            disabled={isSendingEmail}
+            className="flex items-center justify-center gap-2"
+          >
+            {isSendingEmail ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+            <span className="whitespace-nowrap">Email to Self</span>
+          </Button>
 
-          <span className="whitespace-nowrap">
-            {formData.scriptType === "email" ? "Send Script Email" : "Email"}
-          </span>
-        </Button>
+          {/* Gmail Client Email (Only if Gmail Connected and Email Script Type) */}
+          {isGmailConnected && formData.scriptType === "email" && (
+            <Button
+              variant="outline"
+              onClick={() => setIsEmailModalOpen(true)}
+              className="flex items-center justify-center gap-2"
+            >
+              <Mail className="h-4 w-4" />
+              <span className="whitespace-nowrap">Send to Client</span>
+            </Button>
+          )}
+        </div>
 
         <Button
           variant="outline"
