@@ -290,7 +290,7 @@ export function PropertyScriptGenerator({
     if (result?.script) {
       setIsSendingEmail(true)
       try {
-        const response = await fetch("/api/send-script-email-resend", {
+        const response = await fetch("/api/send-script-email", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -707,31 +707,31 @@ export function PropertyScriptGenerator({
                   <span className="whitespace-nowrap">Download</span>
                 </Button>
 
-                {/* Email Options */}
-                <div className="flex gap-2">
-                  {/* Resend Email to Self (Always Available) */}
-                  <Button
-                    variant="outline"
-                    onClick={sendEmail}
-                    disabled={isSendingEmail}
-                    className="flex items-center justify-center gap-2"
-                  >
-                    {isSendingEmail ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
-                    <span className="whitespace-nowrap">Email to Self</span>
-                  </Button>
+                                 {/* Email Options */}
+                 <div className="flex flex-col gap-2">
+                   {/* Resend Email to Self (Always Available) */}
+                   <Button
+                     variant="outline"
+                     onClick={sendEmail}
+                     disabled={isSendingEmail}
+                     className="flex items-center justify-center gap-2 w-full"
+                   >
+                     {isSendingEmail ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+                     <span className="whitespace-nowrap">Email to Self</span>
+                   </Button>
 
-                  {/* Gmail Client Email (Only if Gmail Connected and Email Delivery Method) */}
-                  {isGmailConnected && formData.deliveryMethod === "email" && (
-                    <Button
-                      variant="outline"
-                      onClick={() => setIsEmailModalOpen(true)}
-                      className="flex items-center justify-center gap-2"
-                    >
-                      <Mail className="h-4 w-4" />
-                      <span className="whitespace-nowrap">Send to Client</span>
-                    </Button>
-                  )}
-                </div>
+                   {/* Gmail Client Email (Only if Gmail Connected and Email Delivery Method) */}
+                   {isGmailConnected && formData.deliveryMethod === "email" && (
+                     <Button
+                       variant="outline"
+                       onClick={() => setIsEmailModalOpen(true)}
+                       className="flex items-center justify-center gap-2 w-full"
+                     >
+                       <Mail className="h-4 w-4" />
+                       <span className="whitespace-nowrap">Send to Client</span>
+                     </Button>
+                   )}
+                 </div>
 
                 <Button
                   variant="outline"

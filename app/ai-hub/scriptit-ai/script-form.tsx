@@ -449,7 +449,7 @@ export default function ScriptForm() {
       setIsSendingEmail(true)
 
       try {
-        const response = await fetch("/api/send-script-email-resend", {
+        const response = await fetch("/api/send-script-email", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -1015,13 +1015,13 @@ export default function ScriptForm() {
         </Button>
 
         {/* Email Options */}
-        <div className="flex flex-col sm:flex-row gap-2">
+        <div className="flex flex-col gap-2">
           {/* Resend Email to Self (Always Available) */}
           <Button
             variant="outline"
             onClick={sendEmail}
             disabled={isSendingEmail}
-            className="flex items-center justify-center gap-2"
+            className="flex items-center justify-center gap-2 w-full"
           >
             {isSendingEmail ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
             <span className="whitespace-nowrap">Email to Self</span>
@@ -1032,7 +1032,7 @@ export default function ScriptForm() {
             <Button
               variant="outline"
               onClick={() => setIsEmailModalOpen(true)}
-              className="flex items-center justify-center gap-2"
+              className="flex items-center justify-center gap-2 w-full"
             >
               <Mail className="h-4 w-4" />
               <span className="whitespace-nowrap">Send to Client</span>

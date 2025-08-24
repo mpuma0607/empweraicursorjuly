@@ -24,6 +24,7 @@ import {
   ChevronUp,
   AlertCircle,
   Hash,
+  X,
 } from "lucide-react"
 
 interface QuickCmaReportData {
