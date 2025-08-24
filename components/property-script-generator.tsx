@@ -290,7 +290,7 @@ export function PropertyScriptGenerator({
     if (result?.script) {
       setIsSendingEmail(true)
       try {
-        const response = await fetch("/api/send-script-email", {
+        const response = await fetch("/api/send-script-email-resend", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

@@ -449,20 +449,15 @@ export default function ScriptForm() {
       setIsSendingEmail(true)
 
       try {
-        const response = await fetch("/api/send-script-email", {
+        const response = await fetch("/api/send-script-email-resend", {
           method: "POST",
-
           headers: {
             "Content-Type": "application/json",
           },
-
           body: JSON.stringify({
             to: formData.agentEmail,
-
             name: formData.agentName,
-
             script: result.script,
-
             formData,
           }),
         })
@@ -472,7 +467,6 @@ export default function ScriptForm() {
         if (data.success) {
           toast({
             title: "Email Sent Successfully",
-
             description: "Check your inbox for your professional script!",
           })
         } else {
@@ -480,12 +474,9 @@ export default function ScriptForm() {
         }
       } catch (error) {
         console.error("Error sending email:", error)
-
         toast({
           title: "Email Sending Failed",
-
           description: error instanceof Error ? error.message : "Failed to send email. Please try again.",
-
           variant: "destructive",
         })
       } finally {
@@ -1004,11 +995,11 @@ export default function ScriptForm() {
         </TabsContent>
       </Tabs>
 
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Button
           variant="outline"
           onClick={copyToClipboard}
-          className="flex items-center justify-center gap-2 bg-transparent"
+          className="flex items-center justify-center gap-2"
         >
           <Copy className="h-4 w-4" /> <span className="whitespace-nowrap">Copy</span>
         </Button>
@@ -1017,15 +1008,14 @@ export default function ScriptForm() {
           variant="outline"
           onClick={downloadPDF}
           disabled={isGeneratingPDF}
-          className="flex items-center justify-center gap-2 bg-transparent"
+          className="flex items-center justify-center gap-2"
         >
           {isGeneratingPDF ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-
           <span className="whitespace-nowrap">Download</span>
         </Button>
 
         {/* Email Options */}
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           {/* Resend Email to Self (Always Available) */}
           <Button
             variant="outline"
@@ -1054,10 +1044,9 @@ export default function ScriptForm() {
           variant="outline"
           onClick={saveToProfile}
           disabled={isSaving || !isLoggedIn}
-          className="flex items-center justify-center gap-2 bg-transparent"
+          className="flex items-center justify-center gap-2"
         >
           {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-
           <span className="whitespace-nowrap">{!isLoggedIn ? "Login to Save" : "Save"}</span>
         </Button>
       </div>
