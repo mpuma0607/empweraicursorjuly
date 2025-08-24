@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import EmailCompositionModal from "@/components/email-composition-modal"
 import {
   Download,
   Mail,
@@ -96,10 +97,7 @@ const QuickCMAResults = ({ data }: QuickCMAResultsProps) => {
   const router = useRouter()
 
   const [isDownloading, setIsDownloading] = useState(false)
-  const [isSendingEmail, setIsSendingEmail] = useState(false)
-  const [emailSent, setEmailSent] = useState(false)
-  const [emailError, setEmailError] = useState<string | null>(null)
-  const [email, setEmail] = useState("")
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
   const [expandedComps, setExpandedComps] = useState<Set<number>>(new Set())
 
   // Get brand colors with fallback to black/white
@@ -306,43 +304,7 @@ const QuickCMAResults = ({ data }: QuickCMAResultsProps) => {
     }
   }
 
-  const handleSendEmail = async () => {
-    if (!email) {
-      setEmailError("Please enter your email address")
-      return
-    }
 
-    setIsSendingEmail(true)
-    setEmailError(null)
-
-    try {
-      const response = await fetch("/api/send-cma-email", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: email,
-          address: data.address,
-          analysisText: data.analysisText,
-          comparableData: data.comparableData,
-        }),
-      })
-
-      if (!response.ok) {
-        const errorText = await response.text()
-        throw new Error(errorText || "Failed to send email")
-      }
-
-      setEmailSent(true)
-      setEmail("")
-    } catch (error) {
-      console.error("Email error:", error)
-      setEmailError(error instanceof Error ? error.message : "Failed to send email")
-    } finally {
-      setIsSendingEmail(false)
-    }
-  }
 
   // Helper function to convert hex to RGB
   const hexToRgb = (hex: string) => {
@@ -354,6 +316,27 @@ const QuickCMAResults = ({ data }: QuickCMAResultsProps) => {
           b: Number.parseInt(result[3], 16),
         }
       : null
+  }
+
+  // Generate formatted CMA email content
+  const generateCMAEmailContent = () => {
+    const subjectProperty = data.address
+    const avgPrice = data.comparableData.summary.averagePrice
+    const totalComparables = data.comparableData.totalComparables
+    const priceRange = data.comparableData.summary.priceRange
+    
+    return `CMA Report for ${subjectProperty}
+
+Market Summary:
+• Average Price: $${avgPrice.toLocaleString()}
+• Price Range: $${priceRange.min.toLocaleString()} - $${priceRange.max.toLocaleString()}
+• Total Comparables Analyzed: ${totalComparables}
+
+${data.analysisText}
+
+This CMA report provides a comprehensive market analysis based on current comparable sales data. The analysis includes property characteristics, market trends, and pricing insights to help you make informed decisions.
+
+Please review the detailed comparables and market analysis below. If you have any questions or need additional information, feel free to reach out.`
   }
 
   // Check if we have data to display
@@ -388,48 +371,18 @@ const QuickCMAResults = ({ data }: QuickCMAResultsProps) => {
           )}
         </Button>
 
-        <div className="flex gap-2">
-          <Input
-            type="email"
-            placeholder="Enter your email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-64"
-          />
-          <Button onClick={handleSendEmail} disabled={isSendingEmail || emailSent} className="flex items-center gap-2">
-            {isSendingEmail ? (
-              <>
-                <img src="/images/empower-ai-portal-logo.png" alt="Empower AI" className="h-4 w-4 animate-spin" />
-                Sending...
-              </>
-            ) : emailSent ? (
-              <>
-                <Check className="h-4 w-4" />
-                Sent
-              </>
-            ) : (
-              <>
-                <Mail className="h-4 w-4" />
-                Email Report
-              </>
-            )}
-          </Button>
-        </div>
+                <Button 
+          onClick={() => setIsEmailModalOpen(true)} 
+          className="flex items-center gap-2 bg-transparent"
+        >
+          <Mail className="h-4 w-4" />
+          Email CMA Report
+        </Button>
       </div>
 
-      {emailError && (
-        <div className="p-4 bg-red-50 text-red-800 rounded-md flex items-center gap-2">
-          <AlertCircle className="h-4 w-4" />
-          {emailError}
-        </div>
-      )}
 
-      {emailSent && (
-        <div className="p-4 bg-green-50 text-green-800 rounded-md flex items-center gap-2">
-          <Check className="h-4 w-4" />
-          CMA report successfully sent to {email}
-        </div>
-      )}
+
+
 
       {/* Header with Dynamic Brand Colors */}
       <div
@@ -660,6 +613,16 @@ const QuickCMAResults = ({ data }: QuickCMAResultsProps) => {
         )}
         <p>Brand: {data.userBranding?.brand || "Independent"}</p>
       </div>
+
+      {/* Email Composition Modal */}
+      <EmailCompositionModal
+        isOpen={isEmailModalOpen}
+        onClose={() => setIsEmailModalOpen(false)}
+        scriptContent={generateCMAEmailContent()}
+        agentName={data.userBranding?.name || "Real Estate Agent"}
+        brokerageName={data.userBranding?.company || "Real Estate Company"}
+        contentType="cma"
+      />
     </div>
   )
 }

@@ -23,6 +23,7 @@ interface EmailCompositionModalProps {
   scriptContent: string
   agentName: string
   brokerageName: string
+  contentType?: 'script' | 'cma' // Add content type to determine which API to use
 }
 
 interface EmailConnectionStatus {
@@ -35,7 +36,8 @@ export default function EmailCompositionModal({
   onClose,
   scriptContent,
   agentName,
-  brokerageName
+  brokerageName,
+  contentType = 'script' // Default to script if not specified
 }: EmailCompositionModalProps) {
   const [connectionStatus, setConnectionStatus] = useState<EmailConnectionStatus | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -57,8 +59,12 @@ export default function EmailCompositionModal({
         checkConnectionStatus()
       }, 500)
       
-      // Set default subject and signature
-      setSubject(`Script from ${agentName} - ${brokerageName}`)
+      // Set default subject and signature based on content type
+      if (contentType === 'cma') {
+        setSubject(`CMA Report from ${agentName} - ${brokerageName}`)
+      } else {
+        setSubject(`Script from ${agentName} - ${brokerageName}`)
+      }
       setSignature(`Best regards,\n${agentName}\n${brokerageName}`)
       // Set email body to script content
       setEmailBody(scriptContent)
@@ -103,7 +109,10 @@ export default function EmailCompositionModal({
       setIsSending(true)
       setError(null)
       
-      const response = await fetch('/api/send-script-email', {
+      // Determine which API endpoint to use based on content type
+      const apiEndpoint = contentType === 'cma' ? '/api/send-cma-email-gmail' : '/api/send-script-email'
+      
+      const response = await fetch(apiEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -141,10 +150,10 @@ export default function EmailCompositionModal({
       <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <CardTitle className="flex items-center gap-2">
-              <Mail className="h-5 w-5" />
-              Send Script via Email
-            </CardTitle>
+                         <CardTitle className="flex items-center gap-2">
+               <Mail className="h-5 w-5" />
+               {contentType === 'cma' ? 'Send CMA Report via Email' : 'Send Script via Email'}
+             </CardTitle>
             <Button
               variant="ghost"
               size="sm"
