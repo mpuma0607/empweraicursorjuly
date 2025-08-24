@@ -101,7 +101,7 @@ export function PropertyScriptGenerator({
   onScriptGenerated
 }: PropertyScriptGeneratorProps) {
   const { toast } = useToast()
-  const { user, isLoading: isUserLoading } = useMemberSpaceUser()
+  const { user, loading: isUserLoading } = useMemberSpaceUser()
   const isLoggedIn = !!user && !isUserLoading
 
   const [isGenerating, setIsGenerating] = useState(false)
@@ -134,7 +134,7 @@ export function PropertyScriptGenerator({
         ...prev,
         agentName: prev.agentName || user.name || `${user.firstName || ""} ${user.lastName || ""}`.trim(),
         agentEmail: prev.agentEmail || user.email || "",
-        brokerageName: prev.brokerageName || user.brokerage || user.company || "",
+        brokerageName: prev.brokerageName || "",
       }))
     }
   }, [user, isUserLoading])
@@ -454,10 +454,10 @@ export function PropertyScriptGenerator({
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="agentName" className="flex items-center gap-2">
-                Your Name *
-                {user && <UserCheck className="h-4 w-4 text-green-600" title="Auto-filled from your profile" />}
-              </Label>
+                             <Label htmlFor="agentName" className="flex items-center gap-2">
+                 Your Name *
+                 {user && <UserCheck className="h-4 w-4 text-green-600" />}
+               </Label>
               <Input
                 id="agentName"
                 name="agentName"
@@ -469,10 +469,10 @@ export function PropertyScriptGenerator({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="brokerageName" className="flex items-center gap-2">
-                Brokerage Name *
-                {user && formData.brokerageName && <UserCheck className="h-4 w-4 text-green-600" title="Auto-filled from your brand profile" />}
-              </Label>
+                             <Label htmlFor="brokerageName" className="flex items-center gap-2">
+                 Brokerage Name *
+                 {user && formData.brokerageName && <UserCheck className="h-4 w-4 text-green-600" />}
+               </Label>
               <Input
                 id="brokerageName"
                 name="brokerageName"
@@ -575,10 +575,10 @@ export function PropertyScriptGenerator({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="agentEmail" className="flex items-center gap-2">
-                Your Email *
-                {user && <UserCheck className="h-4 w-4 text-green-600" title="Auto-filled from your profile" />}
-              </Label>
+                             <Label htmlFor="agentEmail" className="flex items-center gap-2">
+                 Your Email *
+                 {user && <UserCheck className="h-4 w-4 text-green-600" />}
+               </Label>
               <Input
                 id="agentEmail"
                 name="agentEmail"

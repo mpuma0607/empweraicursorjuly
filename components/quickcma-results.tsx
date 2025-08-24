@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import EmailCompositionModal from "@/components/email-composition-modal"
+import { useMemberSpaceUser } from "@/hooks/use-memberspace-user"
 import {
   Download,
   Mail,
@@ -97,6 +98,7 @@ interface QuickCMAResultsProps {
 
 const QuickCMAResults = ({ data }: QuickCMAResultsProps) => {
   const router = useRouter()
+  const { user, isLoading: isUserLoading } = useMemberSpaceUser()
 
   const [isDownloading, setIsDownloading] = useState(false)
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
@@ -105,7 +107,6 @@ const QuickCMAResults = ({ data }: QuickCMAResultsProps) => {
   const [expandedComps, setExpandedComps] = useState<Set<number>>(new Set())
   
   // Resend email state
-  const [email, setEmail] = useState("")
   const [isSendingEmail, setIsSendingEmail] = useState(false)
   const [emailSent, setEmailSent] = useState(false)
   const [emailError, setEmailError] = useState<string | null>(null)
@@ -188,8 +189,11 @@ const QuickCMAResults = ({ data }: QuickCMAResultsProps) => {
   }
 
   const handleSendResendEmail = async () => {
-    if (!email) {
-      setEmailError("Please enter your email address")
+    // Get user email from Memberspace user data
+    const userEmail = user?.email || formData?.agentEmail || ""
+    
+    if (!userEmail) {
+      setEmailError("No email address found. Please check your profile.")
       return
     }
 
@@ -203,7 +207,7 @@ const QuickCMAResults = ({ data }: QuickCMAResultsProps) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          email: email,
+          email: userEmail,
           address: data.address,
           analysisText: data.analysisText,
           comparableData: data.comparableData,
@@ -216,7 +220,6 @@ const QuickCMAResults = ({ data }: QuickCMAResultsProps) => {
       }
 
       setEmailSent(true)
-      setEmail("")
     } catch (error) {
       console.error("Email error:", error)
       setEmailError(error instanceof Error ? error.message : "Failed to send email")
@@ -479,25 +482,28 @@ Please review the detailed comparables and market analysis below. If you have an
               </Button>
             </div>
             
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="resendEmail">Your Email Address</Label>
-                <Input
-                  id="resendEmail"
-                  type="email"
-                  placeholder="your@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="mt-1"
-                />
-              </div>
+                         <div className="space-y-4">
+               <div>
+                 <Label htmlFor="resendEmail">Your Email Address</Label>
+                 <Input
+                   id="resendEmail"
+                   type="email"
+                   placeholder="your@email.com"
+                   value={user?.email || ""}
+                   readOnly
+                   className="mt-1 bg-gray-50"
+                 />
+                 <p className="text-xs text-gray-500 mt-1">
+                   {user?.email ? "✓ Using your profile email" : "No email found in profile"}
+                 </p>
+               </div>
               
               <div className="flex gap-2">
-                <Button
-                  onClick={handleSendResendEmail}
-                  disabled={isSendingEmail || !email}
-                  className="flex-1"
-                >
+                                 <Button
+                   onClick={handleSendResendEmail}
+                   disabled={isSendingEmail || !user?.email}
+                   className="flex-1"
+                 >
                   {isSendingEmail ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -526,11 +532,11 @@ Please review the detailed comparables and market analysis below. If you have an
                 </div>
               )}
               
-              {emailSent && (
-                <div className="p-3 bg-green-50 text-green-800 rounded-md text-sm">
-                  CMA report sent successfully to {email}
-                </div>
-              )}
+                             {emailSent && (
+                 <div className="p-3 bg-green-50 text-green-800 rounded-md text-sm">
+                   CMA report sent successfully to {user?.email}
+                 </div>
+               )}
             </div>
           </div>
         </div>

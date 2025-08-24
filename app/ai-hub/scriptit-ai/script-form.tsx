@@ -255,7 +255,7 @@ export default function ScriptForm() {
 
   const [result, setResult] = useState<ScriptResult | null>(null)
 
-  const { user, isLoading: isUserLoading } = useMemberSpaceUser()
+  const { user, loading: isUserLoading } = useMemberSpaceUser()
 
   const isLoggedIn = !!user && !isUserLoading
 
@@ -280,7 +280,7 @@ export default function ScriptForm() {
         agentName: prev.agentName || user.name || `${user.firstName || ""} ${user.lastName || ""}`.trim(),
         agentEmail: prev.agentEmail || user.email || "",
         // Auto-fill brokerage name from Memberspace user data if available
-        brokerageName: prev.brokerageName || user.brokerage || user.company || "",
+                 brokerageName: prev.brokerageName || "",
       }))
       
       hasLoadedBrokerageName.current = true
@@ -565,9 +565,9 @@ export default function ScriptForm() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
-          <Label htmlFor="agentName" className="flex items-center gap-2">
-            Your Name *{user && <UserCheck className="h-4 w-4 text-green-600" title="Auto-filled from your profile" />}
-          </Label>
+                     <Label htmlFor="agentName" className="flex items-center gap-2">
+             Your Name *{user && <UserCheck className="h-4 w-4 text-green-600" />}
+           </Label>
 
           <Input
             id="agentName"
@@ -584,10 +584,10 @@ export default function ScriptForm() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="brokerageName" className="flex items-center gap-2">
-            Brokerage Name *
-            {user && formData.brokerageName && <UserCheck className="h-4 w-4 text-green-600" title="Auto-filled from your brand profile" />}
-          </Label>
+                     <Label htmlFor="brokerageName" className="flex items-center gap-2">
+             Brokerage Name *
+             {user && formData.brokerageName && <UserCheck className="h-4 w-4 text-green-600" />}
+           </Label>
 
           <Input
             id="brokerageName"
@@ -792,10 +792,10 @@ export default function ScriptForm() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="agentEmail" className="flex items-center gap-2">
-          Your Email Address *
-          {user && <UserCheck className="h-4 w-4 text-green-600" title="Auto-filled from your profile" />}
-        </Label>
+                 <Label htmlFor="agentEmail" className="flex items-center gap-2">
+           Your Email Address *
+           {user && <UserCheck className="h-4 w-4 text-green-600" />}
+         </Label>
 
         <Input
           id="agentEmail"
