@@ -1,11 +1,40 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
+import { oauthTokens } from "@/lib/oauth-tokens"
 
-export async function GET() {
-  return NextResponse.json({
-    clientId: process.env.GOOGLE_OAUTH_CLIENT_ID ? `${process.env.GOOGLE_OAUTH_CLIENT_ID.substring(0, 10)}...` : 'NOT SET',
-    clientSecret: process.env.GOOGLE_OAUTH_CLIENT_SECRET ? `${process.env.GOOGLE_OAUTH_CLIENT_SECRET.substring(0, 10)}...` : 'NOT SET',
-    redirectUri: process.env.GOOGLE_OAUTH_REDIRECT_URI || 'https://getempowerai.com/api/auth/google/callback',
-    nodeEnv: process.env.NODE_ENV,
-    message: 'Check these values match your Google OAuth console configuration'
-  })
+export async function GET(request: NextRequest) {
+  try {
+    const allEmails = oauthTokens.getAllEmails()
+    const debugInfo = {
+      totalStoredEmails: allEmails.length,
+      emails: allEmails,
+      details: allEmails.map(email => {
+        const tokens = oauthTokens.get(email)
+        if (!tokens) return { email, status: 'no_tokens' }
+        
+        const now = new Date()
+        const isExpired = tokens.expiresAt < now
+        const isValid = oauthTokens.hasValidTokens(email)
+        
+        return {
+          email: tokens.email,
+          hasAccessToken: !!tokens.accessToken,
+          hasRefreshToken: !!tokens.refreshToken,
+          expiresAt: tokens.expiresAt,
+          isExpired,
+          isValid,
+          scopes: tokens.scopes,
+          createdAt: tokens.createdAt,
+          lastUsed: tokens.lastUsed
+        }
+      })
+    }
+    
+    return NextResponse.json(debugInfo)
+  } catch (error) {
+    console.error('Error in debug endpoint:', error)
+    return NextResponse.json(
+      { error: 'Failed to get debug info' },
+      { status: 500 }
+    )
+  }
 }

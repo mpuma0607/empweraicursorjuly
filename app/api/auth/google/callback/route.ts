@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { oauthTokens } from "@/lib/oauth-tokens"
 
 export async function GET(request: NextRequest) {
   try {
@@ -83,17 +84,28 @@ export async function GET(request: NextRequest) {
       )
     }
     
-    const userInfo = await userInfoResponse.json()
-    
-    // Store tokens securely (in production, encrypt and store in database)
-    // For now, we'll store in memory (not recommended for production)
-    // TODO: Implement secure token storage
-    
-    // Always redirect back to email integration page with success
-    // This ensures the main page gets the OAuth result regardless of popup/redirect
-    return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL || 'https://getempowerai.com'}/profile/email-integration?success=oauth_completed&email=${encodeURIComponent(userInfo.email)}`
-    )
+         const userInfo = await userInfoResponse.json()
+     
+     // Store tokens securely (in production, encrypt and store in database)
+     // For now, we'll store in memory using our utility
+     const expiresAt = new Date()
+     expiresAt.setHours(expiresAt.getHours() + 1) // Google tokens typically expire in 1 hour
+     
+     oauthTokens.store(userInfo.email, {
+       accessToken: tokenData.access_token,
+       refreshToken: tokenData.refresh_token,
+       expiresAt,
+       email: userInfo.email,
+       scopes: ['https://www.googleapis.com/auth/gmail.send']
+     })
+     
+     console.log(`OAuth completed successfully for ${userInfo.email}`)
+     
+     // Always redirect back to email integration page with success
+     // This ensures the main page gets the OAuth result regardless of popup/redirect
+     return NextResponse.redirect(
+       `${process.env.NEXT_PUBLIC_APP_URL || 'https://getempowerai.com'}/profile/email-integration?success=oauth_completed&email=${encodeURIComponent(userInfo.email)}`
+     )
     
   } catch (error) {
     console.error('Error in OAuth callback:', error)
