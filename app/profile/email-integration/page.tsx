@@ -59,73 +59,8 @@ export default function EmailIntegrationPage() {
       setIsConnecting(true)
       setError(null)
       
-      // Detect if we're on iOS Safari (popups are unreliable)
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
-      const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent)
-      
-      if (isIOS && isSafari) {
-        // iOS Safari: redirect to OAuth start
-        window.location.href = '/api/auth/google/start'
-      } else {
-        // Desktop: open popup
-        const popup = window.open(
-          '/api/auth/google/start',
-          'gmail-oauth',
-          'width=500,height=600,scrollbars=yes,resizable=yes'
-        )
-        
-        if (!popup) {
-          throw new Error('Popup blocked. Please allow popups for this site.')
-        }
-
-        // Listen for OAuth completion message
-        const messageListener = (event: MessageEvent) => {
-          if (event.origin !== window.location.origin) return
-          
-          if (event.data.type === 'OAUTH_SUCCESS') {
-            try {
-              popup.close()
-            } catch (e) {
-              // Ignore close errors
-            }
-            window.removeEventListener('message', messageListener)
-            setSuccess('Gmail connected successfully!')
-            checkConnectionStatus()
-          } else if (event.data.type === 'OAUTH_ERROR') {
-            try {
-              popup.close()
-            } catch (e) {
-              // Ignore close errors
-            }
-            window.removeEventListener('message', messageListener)
-            setError(event.data.error || 'Failed to connect Gmail')
-          }
-        }
-        
-        window.addEventListener('message', messageListener)
-        
-        // Fallback: check if popup was closed manually (with better error handling)
-        const checkClosed = setInterval(() => {
-          try {
-            if (popup.closed) {
-              clearInterval(checkClosed)
-              window.removeEventListener('message', messageListener)
-              // Don't show error immediately - give OAuth callback a chance
-              setTimeout(() => {
-                if (!connectionStatus?.connected) {
-                  setError('Connection was cancelled or timed out')
-                }
-              }, 2000)
-            }
-          } catch (e) {
-            // COOP policy blocked access - use alternative approach
-            clearInterval(checkClosed)
-            window.removeEventListener('message', messageListener)
-            // Try to detect OAuth completion via URL params or polling
-            checkOAuthCompletion()
-          }
-        }, 1000)
-      }
+      // Always redirect to OAuth start - simpler and more reliable
+      window.location.href = '/api/auth/google/start'
     } catch (error) {
       console.error('Error connecting Gmail:', error)
       setError(error instanceof Error ? error.message : 'Failed to connect Gmail')
@@ -134,7 +69,7 @@ export default function EmailIntegrationPage() {
     }
   }
 
-  // Alternative method to check OAuth completion when popup communication fails
+  // Check OAuth completion from URL parameters
   const checkOAuthCompletion = async () => {
     try {
       // Check if we have OAuth success/error in URL params
@@ -152,11 +87,6 @@ export default function EmailIntegrationPage() {
         setError(`OAuth error: ${error}`)
         // Clean up URL
         window.history.replaceState({}, document.title, window.location.pathname)
-      } else {
-        // Poll for connection status
-        setTimeout(async () => {
-          await checkConnectionStatus()
-        }, 1000)
       }
     } catch (e) {
       console.error('Error checking OAuth completion:', e)
