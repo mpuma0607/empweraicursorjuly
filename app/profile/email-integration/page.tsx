@@ -30,9 +30,10 @@ export default function EmailIntegrationPage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
 
-  // Check connection status on page load
+  // Check connection status and OAuth completion on page load
   useEffect(() => {
     checkConnectionStatus()
+    checkOAuthCompletion()
   }, [])
 
   const checkConnectionStatus = async () => {
@@ -82,12 +83,20 @@ export default function EmailIntegrationPage() {
           if (event.origin !== window.location.origin) return
           
           if (event.data.type === 'OAUTH_SUCCESS') {
-            popup.close()
+            try {
+              popup.close()
+            } catch (e) {
+              // Ignore close errors
+            }
             window.removeEventListener('message', messageListener)
             setSuccess('Gmail connected successfully!')
             checkConnectionStatus()
           } else if (event.data.type === 'OAUTH_ERROR') {
-            popup.close()
+            try {
+              popup.close()
+            } catch (e) {
+              // Ignore close errors
+            }
             window.removeEventListener('message', messageListener)
             setError(event.data.error || 'Failed to connect Gmail')
           }
@@ -95,12 +104,25 @@ export default function EmailIntegrationPage() {
         
         window.addEventListener('message', messageListener)
         
-        // Fallback: check if popup was closed manually
+        // Fallback: check if popup was closed manually (with better error handling)
         const checkClosed = setInterval(() => {
-          if (popup.closed) {
+          try {
+            if (popup.closed) {
+              clearInterval(checkClosed)
+              window.removeEventListener('message', messageListener)
+              // Don't show error immediately - give OAuth callback a chance
+              setTimeout(() => {
+                if (!connectionStatus?.connected) {
+                  setError('Connection was cancelled or timed out')
+                }
+              }, 2000)
+            }
+          } catch (e) {
+            // COOP policy blocked access - use alternative approach
             clearInterval(checkClosed)
             window.removeEventListener('message', messageListener)
-            setError('Connection was cancelled')
+            // Try to detect OAuth completion via URL params or polling
+            checkOAuthCompletion()
           }
         }, 1000)
       }
@@ -109,6 +131,35 @@ export default function EmailIntegrationPage() {
       setError(error instanceof Error ? error.message : 'Failed to connect Gmail')
     } finally {
       setIsConnecting(false)
+    }
+  }
+
+  // Alternative method to check OAuth completion when popup communication fails
+  const checkOAuthCompletion = async () => {
+    try {
+      // Check if we have OAuth success/error in URL params
+      const urlParams = new URLSearchParams(window.location.search)
+      const success = urlParams.get('success')
+      const error = urlParams.get('error')
+      const email = urlParams.get('email')
+      
+      if (success === 'oauth_completed' && email) {
+        setSuccess(`Gmail connected successfully! Email: ${email}`)
+        checkConnectionStatus()
+        // Clean up URL
+        window.history.replaceState({}, document.title, window.location.pathname)
+      } else if (error) {
+        setError(`OAuth error: ${error}`)
+        // Clean up URL
+        window.history.replaceState({}, document.title, window.location.pathname)
+      } else {
+        // Poll for connection status
+        setTimeout(async () => {
+          await checkConnectionStatus()
+        }, 1000)
+      }
+    } catch (e) {
+      console.error('Error checking OAuth completion:', e)
     }
   }
 

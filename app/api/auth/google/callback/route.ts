@@ -89,49 +89,11 @@ export async function GET(request: NextRequest) {
     // For now, we'll store in memory (not recommended for production)
     // TODO: Implement secure token storage
     
-    // Check if this is a popup or redirect
-    const userAgent = request.headers.get('user-agent') || ''
-    const isPopup = userAgent.includes('popup') || request.headers.get('sec-fetch-dest') === 'document'
-    
-    if (isPopup) {
-      // Return HTML that posts message to parent and closes popup
-      const html = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>OAuth Complete</title>
-        </head>
-        <body>
-          <script>
-            try {
-              window.opener.postMessage({
-                type: 'OAUTH_SUCCESS',
-                data: {
-                  email: '${userInfo.email}',
-                  accessToken: '${tokenData.access_token}',
-                  refreshToken: '${tokenData.refresh_token}',
-                  expiresIn: ${tokenData.expires_in}
-                }
-              }, '${process.env.NEXT_PUBLIC_APP_URL || 'https://getempowerai.com'}');
-              window.close();
-            } catch (error) {
-              console.error('Error posting message:', error);
-              window.close();
-            }
-          </script>
-          <p>OAuth completed successfully. This window will close automatically.</p>
-        </body>
-        </html>
-      `
-      return new NextResponse(html, {
-        headers: { 'Content-Type': 'text/html' }
-      })
-    } else {
-      // Redirect back to email integration page with success
-      return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || 'https://getempowerai.com'}/profile/email-integration?success=oauth_completed&email=${encodeURIComponent(userInfo.email)}`
-      )
-    }
+    // Always redirect back to email integration page with success
+    // This ensures the main page gets the OAuth result regardless of popup/redirect
+    return NextResponse.redirect(
+      `${process.env.NEXT_PUBLIC_APP_URL || 'https://getempowerai.com'}/profile/email-integration?success=oauth_completed&email=${encodeURIComponent(userInfo.email)}`
+    )
     
   } catch (error) {
     console.error('Error in OAuth callback:', error)
