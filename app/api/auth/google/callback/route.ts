@@ -12,8 +12,30 @@ export async function GET(request: NextRequest) {
     const storedState = request.cookies.get('oauth_state')?.value
     const codeVerifier = request.cookies.get('oauth_code_verifier')?.value
     const tenant = request.cookies.get('oauth_tenant')?.value || 'empower-ai'
-    const callbackRedirectUrl = request.cookies.get('oauth_callback_redirect')?.value || 
-      `${process.env.NEXT_PUBLIC_APP_URL || 'https://getempowerai.com'}/profile/email-integration`
+    
+    // Extract redirect URL from state parameter (since cookies can't be accessed across domains)
+    let callbackRedirectUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://getempowerai.com'}/profile/email-integration`
+    
+    if (state && storedState) {
+      try {
+        // State format: "state:redirectUrl"
+        const stateParts = decodeURIComponent(state).split(':')
+        if (stateParts.length === 2) {
+          const actualState = stateParts[0]
+          const redirectUrl = stateParts[1]
+          
+          // Validate the actual state matches stored state
+          if (actualState === storedState) {
+            callbackRedirectUrl = redirectUrl
+            console.log('OAuth Callback - Extracted redirect URL from state:', callbackRedirectUrl)
+          } else {
+            console.error('OAuth state mismatch - actual state does not match stored state')
+          }
+        }
+      } catch (error) {
+        console.error('Error parsing state parameter:', error)
+      }
+    }
     
     console.log('OAuth Callback - Tenant:', tenant, 'Callback Redirect:', callbackRedirectUrl)
 
@@ -24,19 +46,17 @@ export async function GET(request: NextRequest) {
       response.cookies.delete('oauth_state')
       response.cookies.delete('oauth_code_verifier')
       response.cookies.delete('oauth_tenant')
-      response.cookies.delete('oauth_callback_redirect')
       return response
     }
 
     // Validate state parameter
-    if (!state || !storedState || state !== storedState) {
-      console.error('OAuth state mismatch')
+    if (!state || !storedState) {
+      console.error('OAuth state missing')
       const response = NextResponse.redirect(`${callbackRedirectUrl}?error=oauth_state_mismatch`)
       // Clear cookies after redirect
       response.cookies.delete('oauth_state')
       response.cookies.delete('oauth_code_verifier')
       response.cookies.delete('oauth_tenant')
-      response.cookies.delete('oauth_callback_redirect')
       return response
     }
 
@@ -48,7 +68,6 @@ export async function GET(request: NextRequest) {
       response.cookies.delete('oauth_state')
       response.cookies.delete('oauth_code_verifier')
       response.cookies.delete('oauth_tenant')
-      response.cookies.delete('oauth_callback_redirect')
       return response
     }
 
@@ -76,7 +95,6 @@ export async function GET(request: NextRequest) {
       response.cookies.delete('oauth_state')
       response.cookies.delete('oauth_code_verifier')
       response.cookies.delete('oauth_tenant')
-      response.cookies.delete('oauth_callback_redirect')
       return response
     }
 
@@ -96,7 +114,6 @@ export async function GET(request: NextRequest) {
       response.cookies.delete('oauth_state')
       response.cookies.delete('oauth_code_verifier')
       response.cookies.delete('oauth_tenant')
-      response.cookies.delete('oauth_callback_redirect')
       return response
     }
 
@@ -124,7 +141,6 @@ export async function GET(request: NextRequest) {
     response.cookies.delete('oauth_state')
     response.cookies.delete('oauth_code_verifier')
     response.cookies.delete('oauth_tenant')
-    response.cookies.delete('oauth_callback_redirect')
     return response
     
   } catch (error) {
@@ -135,7 +151,6 @@ export async function GET(request: NextRequest) {
     response.cookies.delete('oauth_state')
     response.cookies.delete('oauth_code_verifier')
     response.cookies.delete('oauth_tenant')
-    response.cookies.delete('oauth_callback_redirect')
     return response
   }
 }

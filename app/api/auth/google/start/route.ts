@@ -28,8 +28,9 @@ export async function GET(request: NextRequest) {
     const codeVerifier = randomBytes(32).toString('base64url')
     const codeChallenge = codeVerifier // Using plain PKCE for now
     
-    // Generate state for CSRF protection
+    // Generate state for CSRF protection - include redirect URL in state
     const state = randomBytes(16).toString('hex')
+    const stateWithRedirect = `${state}:${encodeURIComponent(callbackRedirectUrl)}`
     
     // Build OAuth URL - ALWAYS use Empower AI's OAuth
     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest) {
       `&scope=${encodeURIComponent('https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/userinfo.email')}` +
       `&access_type=offline` +
       `&prompt=consent` +
-      `&state=${state}` +
+      `&state=${encodeURIComponent(stateWithRedirect)}` +
       `&code_challenge=${codeChallenge}` +
       `&code_challenge_method=plain` +
       `&include_granted_scopes=true`
@@ -51,14 +52,6 @@ export async function GET(request: NextRequest) {
     
     // Store tenant info in cookies for the callback (only for final redirect)
     response.cookies.set('oauth_tenant', host.includes('beggins') ? 'century21-beggins' : 'empower-ai', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 600, // 10 minutes
-      path: '/'
-    })
-    
-    response.cookies.set('oauth_callback_redirect', callbackRedirectUrl, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
