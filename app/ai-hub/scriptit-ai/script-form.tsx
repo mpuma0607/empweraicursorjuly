@@ -268,10 +268,6 @@ export default function ScriptForm() {
   // Debug user data
   useEffect(() => {
     console.log("User data changed:", { user, isUserLoading, isLoggedIn })
-    // Reset the brokerage name loading flag when user changes
-    if (!user) {
-      hasLoadedBrokerageName.current = false
-    }
   }, [user, isUserLoading, isLoggedIn])
 
   // Fetch user branding profile
@@ -295,11 +291,10 @@ export default function ScriptForm() {
   }, [user?.id, tenantConfig?.id])
 
   const resultsRef = useRef<HTMLDivElement>(null)
-  const hasLoadedBrokerageName = useRef(false)
 
   // Auto-populate user data and brokerage name when available
   useEffect(() => {
-    if (user && !isUserLoading && !hasLoadedBrokerageName.current) {
+    if (user && !isUserLoading) {
       console.log("Setting user data - current formData:", formData)
       console.log("User data available:", { 
         name: user.name, 
@@ -316,8 +311,6 @@ export default function ScriptForm() {
         // Use brokerage name from branding profile if available
         brokerageName: prev.brokerageName || userBranding?.brokerage || "",
       }))
-      
-      hasLoadedBrokerageName.current = true
     }
   }, [user, isUserLoading, userBranding])
 
