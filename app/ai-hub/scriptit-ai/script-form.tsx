@@ -445,43 +445,82 @@ export default function ScriptForm() {
   }
 
   const sendEmail = async () => {
-    if (result?.script) {
-      setIsSendingEmail(true)
+    if (!result?.script) {
+      toast({
+        title: "No Script Available",
+        description: "Please generate a script first.",
+        variant: "destructive",
+      })
+      return
+    }
 
-      try {
-        const response = await fetch("/api/send-script-email", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            to: formData.agentEmail,
-            name: formData.agentName,
-            script: result.script,
-            formData,
-          }),
-        })
+    if (!formData.agentEmail) {
+      toast({
+        title: "Email Required",
+        description: "Please enter your email address.",
+        variant: "destructive",
+      })
+      return
+    }
 
-        const data = await response.json()
+    if (!formData.agentName) {
+      toast({
+        title: "Name Required",
+        description: "Please enter your name.",
+        variant: "destructive",
+      })
+      return
+    }
 
-        if (data.success) {
-          toast({
-            title: "Email Sent Successfully",
-            description: "Check your inbox for your professional script!",
-          })
-        } else {
-          throw new Error(data.error || "Failed to send email")
-        }
-      } catch (error) {
-        console.error("Error sending email:", error)
-        toast({
-          title: "Email Sending Failed",
-          description: error instanceof Error ? error.message : "Failed to send email. Please try again.",
-          variant: "destructive",
-        })
-      } finally {
-        setIsSendingEmail(false)
+    setIsSendingEmail(true)
+
+    try {
+      console.log("Sending email with data:", {
+        to: formData.agentEmail,
+        name: formData.agentName,
+        scriptLength: result.script.length,
+        formData
+      })
+
+      const response = await fetch("/api/send-script-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          to: formData.agentEmail,
+          name: formData.agentName,
+          script: result.script,
+          formData,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error("API response error:", response.status, errorText)
+        throw new Error(errorText || `HTTP ${response.status}: ${response.statusText}`)
       }
+
+      const data = await response.json()
+      console.log("Email API response:", data)
+
+      if (data.success) {
+        toast({
+          title: "Email Sent Successfully",
+          description: "Check your inbox for your professional script!",
+        })
+      } else {
+        throw new Error(data.error || "Failed to send email")
+      }
+    } catch (error) {
+      console.error("Error sending email:", error)
+      toast({
+        title: "Email Sending Failed",
+        description: error instanceof Error ? error.message : "Failed to send email. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSendingEmail(false)
     }
   }
 
@@ -1020,12 +1059,19 @@ export default function ScriptForm() {
           <Button
             variant="outline"
             onClick={sendEmail}
-            disabled={isSendingEmail}
+            disabled={isSendingEmail || !result?.script || !formData.agentEmail || !formData.agentName}
             className="flex items-center justify-center gap-2 w-full"
           >
             {isSendingEmail ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
             <span className="whitespace-nowrap">Email to Self</span>
           </Button>
+          {(!result?.script || !formData.agentEmail || !formData.agentName) && (
+            <p className="text-xs text-gray-500 text-center">
+              {!result?.script ? "Generate a script first" : 
+               !formData.agentEmail ? "Enter your email address" : 
+               !formData.agentName ? "Enter your name" : ""}
+            </p>
+          )}
 
           {/* Gmail Client Email (Only if Gmail Connected and Email Script Type) */}
           {isGmailConnected && formData.scriptType === "email" && (

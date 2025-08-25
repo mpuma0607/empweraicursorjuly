@@ -287,48 +287,88 @@ export function PropertyScriptGenerator({
   }
 
   const sendEmail = async () => {
-    if (result?.script) {
-      setIsSendingEmail(true)
-      try {
-        const response = await fetch("/api/send-script-email", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            to: formData.agentEmail,
-            name: formData.agentName,
-            script: result.script,
-            formData: {
-              ...formData,
-              propertyAddress,
-              ownerNames,
-              propertyType,
-              estimatedValue,
-              propertyDetails,
-            },
-          }),
-        })
+    if (!result?.script) {
+      toast({
+        title: "No Script Available",
+        description: "Please generate a script first.",
+        variant: "destructive",
+      })
+      return
+    }
 
-        const data = await response.json()
-        if (data.success) {
-          toast({
-            title: "Email Sent Successfully",
-            description: "Check your inbox for your personalized property script!",
-          })
-        } else {
-          throw new Error(data.error || "Failed to send email")
-        }
-      } catch (error) {
-        console.error("Error sending email:", error)
-        toast({
-          title: "Email Sending Failed",
-          description: error instanceof Error ? error.message : "Failed to send email. Please try again.",
-          variant: "destructive",
-        })
-      } finally {
-        setIsSendingEmail(false)
+    if (!formData.agentEmail) {
+      toast({
+        title: "Email Required",
+        description: "Please enter your email address.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (!formData.agentName) {
+      toast({
+        title: "Name Required",
+        description: "Please enter your name.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsSendingEmail(true)
+    try {
+      console.log("Sending property script email with data:", {
+        to: formData.agentEmail,
+        name: formData.agentName,
+        scriptLength: result.script.length,
+        formData
+      })
+
+      const response = await fetch("/api/send-script-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          to: formData.agentEmail,
+          name: formData.agentName,
+          script: result.script,
+          formData: {
+            ...formData,
+            propertyAddress,
+            ownerNames,
+            propertyType,
+            estimatedValue,
+            propertyDetails,
+          },
+        }),
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error("API response error:", response.status, errorText)
+        throw new Error(errorText || `HTTP ${response.status}: ${response.statusText}`)
       }
+
+      const data = await response.json()
+      console.log("Property script email API response:", data)
+
+      if (data.success) {
+        toast({
+          title: "Email Sent Successfully",
+          description: "Check your inbox for your personalized property script!",
+        })
+      } else {
+        throw new Error(data.error || "Failed to send email")
+      }
+    } catch (error) {
+      console.error("Error sending email:", error)
+      toast({
+        title: "Email Sending Failed",
+        description: error instanceof Error ? error.message : "Failed to send email. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSendingEmail(false)
     }
   }
 
@@ -709,16 +749,23 @@ export function PropertyScriptGenerator({
 
                                  {/* Email Options */}
                  <div className="flex flex-col gap-2">
-                   {/* Resend Email to Self (Always Available) */}
-                   <Button
-                     variant="outline"
-                     onClick={sendEmail}
-                     disabled={isSendingEmail}
-                     className="flex items-center justify-center gap-2 w-full"
-                   >
-                     {isSendingEmail ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
-                     <span className="whitespace-nowrap">Email to Self</span>
-                   </Button>
+                                                 {/* Resend Email to Self (Always Available) */}
+                              <Button
+                                variant="outline"
+                                onClick={sendEmail}
+                                disabled={isSendingEmail || !result?.script || !formData.agentEmail || !formData.agentName}
+                                className="flex items-center justify-center gap-2 w-full"
+                              >
+                                {isSendingEmail ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+                                <span className="whitespace-nowrap">Email to Self</span>
+                              </Button>
+                              {(!result?.script || !formData.agentEmail || !formData.agentName) && (
+                                <p className="text-xs text-gray-500 text-center">
+                                  {!result?.script ? "Generate a script first" : 
+                                   !formData.agentEmail ? "Enter your email address" : 
+                                   !formData.agentName ? "Enter your name" : ""}
+                                </p>
+                              )}
 
                    {/* Gmail Client Email (Only if Gmail Connected and Email Delivery Method) */}
                    {isGmailConnected && formData.deliveryMethod === "email" && (
