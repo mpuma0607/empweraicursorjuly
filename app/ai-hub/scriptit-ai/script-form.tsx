@@ -323,7 +323,12 @@ export default function ScriptForm() {
   useEffect(() => {
     const checkGmailStatus = async () => {
       try {
-        const response = await fetch('/api/auth/google/status')
+        // Use tenant-specific OAuth endpoint
+        const endpoint = tenantConfig?.id === 'century21-beggins' 
+          ? '/api/beggins/auth/google/status' 
+          : '/api/auth/google/status'
+        
+        const response = await fetch(endpoint)
         if (response.ok) {
           const data = await response.json()
           setIsGmailConnected(data.status.connected)
@@ -334,8 +339,10 @@ export default function ScriptForm() {
       }
     }
     
-    checkGmailStatus()
-  }, [])
+    if (tenantConfig?.id) {
+      checkGmailStatus()
+    }
+  }, [tenantConfig?.id])
 
   // Auto-scroll to results when they're generated
 

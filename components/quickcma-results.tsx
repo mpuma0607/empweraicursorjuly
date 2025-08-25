@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import EmailCompositionModal from "@/components/email-composition-modal"
 import { useMemberSpaceUser } from "@/hooks/use-memberspace-user"
+import { useTenant } from "@/contexts/tenant-context"
 import {
   Download,
   Mail,
@@ -98,7 +99,8 @@ interface QuickCMAResultsProps {
 
 const QuickCMAResults = ({ data }: QuickCMAResultsProps) => {
   const router = useRouter()
-  const { user, isLoading: isUserLoading } = useMemberSpaceUser()
+  const { user, loading: isUserLoading } = useMemberSpaceUser()
+  const { config: tenantConfig } = useTenant()
 
   const [isDownloading, setIsDownloading] = useState(false)
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
@@ -124,7 +126,12 @@ const QuickCMAResults = ({ data }: QuickCMAResultsProps) => {
   useEffect(() => {
     const checkGmailStatus = async () => {
       try {
-        const response = await fetch('/api/auth/google/status')
+        // Use tenant-specific OAuth endpoint
+        const endpoint = tenantConfig?.id === 'century21-beggins' 
+          ? '/api/beggins/auth/google/status' 
+          : '/api/auth/google/status'
+        
+        const response = await fetch(endpoint)
         if (response.ok) {
           const data = await response.json()
           setIsGmailConnected(data.status.connected)
@@ -135,8 +142,10 @@ const QuickCMAResults = ({ data }: QuickCMAResultsProps) => {
       }
     }
     
-    checkGmailStatus()
-  }, [])
+    if (tenantConfig?.id) {
+      checkGmailStatus()
+    }
+  }, [tenantConfig?.id])
 
   // Get brand logo with fallback logic
   const brandLogo = useMemo(() => {

@@ -185,7 +185,7 @@ export default function IdeaHubBegginsForm() {
         ...prev,
         name: prev.name || user.name || `${user.firstName || ""} ${user.lastName || ""}`.trim(),
         email: prev.email || user.email || "",
-        phone: prev.phone || user.phone || "",
+        phone: prev.phone || "", // Remove user.phone reference since it doesn't exist
       }))
     }
   }, [user, userLoading])

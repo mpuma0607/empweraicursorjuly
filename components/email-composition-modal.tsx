@@ -16,6 +16,8 @@ import {
   Loader2,
   RefreshCw
 } from "lucide-react"
+import { useMemberSpaceUser } from "@/hooks/use-memberspace-user"
+import { useTenant } from "@/contexts/tenant-context"
 
 interface EmailCompositionModalProps {
   isOpen: boolean
@@ -31,14 +33,16 @@ interface EmailConnectionStatus {
   email?: string
 }
 
-export default function EmailCompositionModal({
-  isOpen,
-  onClose,
+export default function EmailCompositionModal({ 
+  isOpen, 
+  onClose, 
   scriptContent,
   agentName,
   brokerageName,
-  contentType = 'script' // Default to script if not specified
+  contentType = 'script'
 }: EmailCompositionModalProps) {
+  const { user } = useMemberSpaceUser()
+  const { config: tenantConfig } = useTenant()
   const [connectionStatus, setConnectionStatus] = useState<EmailConnectionStatus | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSending, setIsSending] = useState(false)
@@ -75,7 +79,13 @@ export default function EmailCompositionModal({
     try {
       setIsLoading(true)
       console.log('Email modal: Checking OAuth status...')
-      const response = await fetch('/api/auth/google/status')
+      
+      // Use tenant-specific OAuth endpoint
+      const endpoint = tenantConfig?.id === 'century21-beggins' 
+        ? '/api/beggins/auth/google/status' 
+        : '/api/auth/google/status'
+      
+      const response = await fetch(endpoint)
       console.log('Email modal: Status response:', response.status, response.ok)
       
       if (response.ok) {
@@ -109,8 +119,15 @@ export default function EmailCompositionModal({
       setIsSending(true)
       setError(null)
       
-      // Determine which API endpoint to use based on content type
-      const apiEndpoint = contentType === 'cma' ? '/api/send-cma-email-gmail' : '/api/send-script-email'
+      // Determine which API endpoint to use based on content type and tenant
+      let apiEndpoint: string
+      if (tenantConfig?.id === 'century21-beggins') {
+        // Use Beggins-specific endpoints
+        apiEndpoint = contentType === 'cma' ? '/api/beggins/send-cma-email-gmail' : '/api/beggins/send-script-email-gmail'
+      } else {
+        // Use default Empower endpoints
+        apiEndpoint = contentType === 'cma' ? '/api/send-cma-email-gmail' : '/api/send-script-email'
+      }
       
       const response = await fetch(apiEndpoint, {
         method: 'POST',

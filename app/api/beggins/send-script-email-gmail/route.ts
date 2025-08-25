@@ -1,0 +1,84 @@
+import { NextRequest, NextResponse } from "next/server"
+import { oauthTokens } from "@/lib/oauth-tokens"
+
+export async function POST(request: NextRequest) {
+  try {
+    const { to, subject, body, from } = await request.json()
+
+    // Validate required fields
+    if (!to || !subject || !body || !from) {
+      return NextResponse.json(
+        { error: 'Missing required fields: to, subject, body, from' },
+        { status: 400 }
+      )
+    }
+
+    // Check if user has valid tokens for Beggins tenant
+    if (!(await oauthTokens.hasValidTokens(from, "century21-beggins"))) {
+      return NextResponse.json(
+        { error: 'Gmail account not connected or tokens expired' },
+        { status: 401 }
+      )
+    }
+
+    const tokens = await oauthTokens.get(from, "century21-beggins")
+    if (!tokens) {
+      return NextResponse.json(
+        { error: 'Gmail account not connected or tokens expired' },
+        { status: 401 }
+      )
+    }
+    
+    // Create the email message
+    const message = [
+      `To: ${to}`,
+      `From: ${from}`,
+      `Subject: ${subject}`,
+      '',
+      body
+    ].join('\n')
+
+    // Encode the message in base64
+    const encodedMessage = Buffer.from(message).toString('base64')
+    const encodedMessageUrlSafe = encodedMessage.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
+
+    // Send email using Gmail API
+    const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${tokens.accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        raw: encodedMessageUrlSafe
+      })
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      console.error('Gmail API error:', errorData)
+      throw new Error(`Gmail API error: ${errorData.error?.message || 'Unknown error'}`)
+    }
+
+    const result = await response.json()
+    
+    // Update last used time
+    await oauthTokens.updateLastUsed(from, "century21-beggins")
+    
+    console.log('Beggins script email sent successfully via Gmail:', result.id)
+    
+    return NextResponse.json({ 
+      success: true, 
+      messageId: result.id,
+      message: 'Script sent successfully via Gmail',
+      tenant: 'century21-beggins'
+    })
+
+  } catch (error) {
+    console.error('Error sending Beggins script email via Gmail:', error)
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Failed to send email' },
+      { status: 500 }
+    )
+  }
+}
