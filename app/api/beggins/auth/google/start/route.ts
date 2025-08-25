@@ -4,15 +4,21 @@ import { randomBytes } from "crypto"
 export async function GET(request: NextRequest) {
   try {
     const clientId = process.env.BEGGINS_GOOGLE_CLIENT_ID
-    const redirectUri = process.env.BEGGINS_GOOGLE_REDIRECT_URI
 
-    if (!clientId || !redirectUri) {
-      console.error("Missing Beggins Google OAuth environment variables")
+    if (!clientId) {
+      console.error("Missing Beggins Google OAuth client ID")
       return NextResponse.json(
         { error: "OAuth configuration missing" },
         { status: 500 }
       )
     }
+
+    // Determine the correct redirect domain based on the request
+    const host = request.headers.get('host') || ''
+    const protocol = request.headers.get('x-forwarded-proto') || 'https'
+    const redirectUri = `${protocol}://${host}/api/beggins/auth/google/callback`
+    
+    console.log("Beggins OAuth start - using redirect URI:", redirectUri)
 
     // Generate PKCE challenge and verifier (using same method as Empower)
     const codeVerifier = randomBytes(32).toString('base64url')

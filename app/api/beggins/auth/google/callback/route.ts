@@ -52,9 +52,11 @@ export async function GET(request: NextRequest) {
 
     const clientId = process.env.BEGGINS_GOOGLE_CLIENT_ID
     const clientSecret = process.env.BEGGINS_GOOGLE_CLIENT_SECRET
-    const redirectUri = process.env.BEGGINS_GOOGLE_REDIRECT_URI
+    
+    // Use the same dynamic redirect URI logic as the start endpoint
+    const redirectUri = `${baseUrl}/api/beggins/auth/google/callback`
 
-    if (!clientId || !clientSecret || !redirectUri) {
+    if (!clientId || !clientSecret) {
       console.error("Missing Beggins Google OAuth environment variables")
       return NextResponse.redirect(
         `${baseUrl}/beggins-home/email-integration?error=config_missing`
