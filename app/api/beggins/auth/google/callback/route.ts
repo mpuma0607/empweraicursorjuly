@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from "next/server"
 import { oauthTokens } from "@/lib/oauth-tokens"
 
 export async function GET(request: NextRequest) {
+  // Determine the correct redirect domain based on the request
+  const host = request.headers.get('host') || ''
+  const protocol = request.headers.get('x-forwarded-proto') || 'https'
+  const baseUrl = `${protocol}://${host}`
+  
+  console.log("Beggins OAuth callback - redirecting to:", `${baseUrl}/beggins-home/email-integration`)
+  
   try {
     const searchParams = request.nextUrl.searchParams
     const code = searchParams.get("code")
@@ -14,7 +21,7 @@ export async function GET(request: NextRequest) {
     
     // Clear OAuth cookies
     const response = NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/beggins-home/email-integration`
+      `${baseUrl}/beggins-home/email-integration`
     )
     
     response.cookies.delete('beggins_oauth_state')
@@ -23,7 +30,7 @@ export async function GET(request: NextRequest) {
     if (error) {
       console.error("OAuth error:", error)
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/beggins-home/email-integration?error=oauth_denied`
+        `${baseUrl}/beggins-home/email-integration?error=oauth_denied`
       )
     }
 
@@ -31,7 +38,7 @@ export async function GET(request: NextRequest) {
     if (!state || !storedState || state !== storedState) {
       console.error("OAuth state mismatch")
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/beggins-home/email-integration?error=oauth_state_mismatch`
+        `${baseUrl}/beggins-home/email-integration?error=oauth_state_mismatch`
       )
     }
 
@@ -39,7 +46,7 @@ export async function GET(request: NextRequest) {
     if (!code || !codeVerifier) {
       console.error("Missing OAuth code or verifier")
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/beggins-home/email-integration?error=oauth_invalid_request`
+        `${baseUrl}/beggins-home/email-integration?error=oauth_invalid_request`
       )
     }
 
@@ -50,7 +57,7 @@ export async function GET(request: NextRequest) {
     if (!clientId || !clientSecret || !redirectUri) {
       console.error("Missing Beggins Google OAuth environment variables")
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/beggins-home/email-integration?error=config_missing`
+        `${baseUrl}/beggins-home/email-integration?error=config_missing`
       )
     }
 
@@ -74,7 +81,7 @@ export async function GET(request: NextRequest) {
       const errorText = await tokenResponse.text()
       console.error("Token exchange failed:", errorText)
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/beggins-home/email-integration?error=token_exchange_failed`
+        `${baseUrl}/beggins-home/email-integration?error=token_exchange_failed`
       )
     }
 
@@ -96,7 +103,7 @@ export async function GET(request: NextRequest) {
     if (!userInfoResponse.ok) {
       console.error("Failed to get user info")
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/beggins-home/email-integration?error=user_info_failed`
+        `${baseUrl}/beggins-home/email-integration?error=user_info_failed`
       )
     }
 
@@ -104,32 +111,26 @@ export async function GET(request: NextRequest) {
     console.log("Beggins user info:", userInfo)
 
     // Store tokens in database with Beggins tenant identifier
-    const tokenStoreResult = await oauthTokens.store(
-      userInfo.email,
-      "century21-beggins", // Beggins tenant ID
-      tokenData.access_token,
-      tokenData.refresh_token,
-      tokenData.expires_in,
-      tokenData.scope
-    )
-
-    if (!tokenStoreResult.success) {
-      console.error("Failed to store Beggins OAuth tokens:", tokenStoreResult.error)
-      return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/beggins-home/email-integration?error=token_storage_failed`
-      )
-    }
+    const expiresAt = new Date()
+    expiresAt.setHours(expiresAt.getHours() + 1) // Google tokens typically expire in 1 hour
+    
+    await oauthTokens.store(userInfo.email, {
+      accessToken: tokenData.access_token,
+      refreshToken: tokenData.refresh_token,
+      expiresAt,
+      scopes: ['https://www.googleapis.com/auth/gmail.send']
+    })
 
     console.log("Beggins OAuth tokens stored successfully for user:", userInfo.email)
 
     // Redirect to success page
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/beggins-home/email-integration?success=oauth_completed&email=${encodeURIComponent(userInfo.email)}`
+      `${baseUrl}/beggins-home/email-integration?success=oauth_completed&email=${encodeURIComponent(userInfo.email)}`
     )
   } catch (error) {
     console.error("Error in Beggins Google OAuth callback:", error)
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/beggins-home/email-integration?error=callback_error`
+      `${baseUrl}/beggins-home/email-integration?error=callback_error`
     )
   }
 }
