@@ -339,9 +339,14 @@ export default function ScriptForm() {
     const checkGmailStatus = async () => {
       try {
         // Use tenant-specific OAuth endpoint
-        const endpoint = tenantConfig?.id === 'century21-beggins' 
-          ? '/api/beggins/auth/google/status' 
-          : '/api/auth/google/status'
+        let endpoint: string
+        if (tenantConfig?.id === 'century21-beggins') {
+          // Beggins endpoint requires email parameter
+          endpoint = `/api/beggins/auth/google/status?email=${encodeURIComponent(user?.email || '')}`
+        } else {
+          // Empower endpoint works without email
+          endpoint = '/api/auth/google/status'
+        }
         
         console.log('ScriptIt: Checking Gmail status for tenant:', tenantConfig?.id, 'using endpoint:', endpoint)
         
@@ -363,13 +368,13 @@ export default function ScriptForm() {
       }
     }
     
-    if (tenantConfig?.id) {
-      console.log('ScriptIt: Tenant config found, checking Gmail status...')
+    if (tenantConfig?.id && user?.email) {
+      console.log('ScriptIt: Tenant config and user email found, checking Gmail status...')
       checkGmailStatus()
     } else {
-      console.log('ScriptIt: No tenant config yet')
+      console.log('ScriptIt: No tenant config or user email yet')
     }
-  }, [tenantConfig?.id])
+  }, [tenantConfig?.id, user?.email])
 
   // Auto-scroll to results when they're generated
 
