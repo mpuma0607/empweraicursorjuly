@@ -7,18 +7,39 @@ export async function GET(request: NextRequest) {
     const code = searchParams.get("code")
     const state = searchParams.get("state")
     const error = searchParams.get("error")
+    
+    // Get stored OAuth data from cookies
+    const storedState = request.cookies.get('beggins_oauth_state')?.value
+    const codeVerifier = request.cookies.get('beggins_oauth_code_verifier')?.value
+    
+    // Clear OAuth cookies
+    const response = NextResponse.redirect(
+      `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/beggins-home/email-integration`
+    )
+    
+    response.cookies.delete('beggins_oauth_state')
+    response.cookies.delete('beggins_oauth_code_verifier')
 
     if (error) {
       console.error("OAuth error:", error)
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/oauth-error?error=${error}`
+        `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/beggins-home/email-integration?error=oauth_denied`
       )
     }
 
-    if (!code) {
-      console.error("No authorization code received")
+    // Validate state parameter
+    if (!state || !storedState || state !== storedState) {
+      console.error("OAuth state mismatch")
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/oauth-error?error=no_code`
+        `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/beggins-home/email-integration?error=oauth_state_mismatch`
+      )
+    }
+
+    // Validate code and code verifier
+    if (!code || !codeVerifier) {
+      console.error("Missing OAuth code or verifier")
+      return NextResponse.redirect(
+        `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/beggins-home/email-integration?error=oauth_invalid_request`
       )
     }
 
@@ -29,7 +50,7 @@ export async function GET(request: NextRequest) {
     if (!clientId || !clientSecret || !redirectUri) {
       console.error("Missing Beggins Google OAuth environment variables")
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/oauth-error?error=config_missing`
+        `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/beggins-home/email-integration?error=config_missing`
       )
     }
 
@@ -43,6 +64,7 @@ export async function GET(request: NextRequest) {
         client_id: clientId,
         client_secret: clientSecret,
         code: code,
+        code_verifier: codeVerifier,
         grant_type: "authorization_code",
         redirect_uri: redirectUri,
       }),
@@ -52,7 +74,7 @@ export async function GET(request: NextRequest) {
       const errorText = await tokenResponse.text()
       console.error("Token exchange failed:", errorText)
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/oauth-error?error=token_exchange_failed`
+        `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/beggins-home/email-integration?error=token_exchange_failed`
       )
     }
 
@@ -74,7 +96,7 @@ export async function GET(request: NextRequest) {
     if (!userInfoResponse.ok) {
       console.error("Failed to get user info")
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/oauth-error?error=user_info_failed`
+        `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/beggins-home/email-integration?error=user_info_failed`
       )
     }
 
@@ -94,7 +116,7 @@ export async function GET(request: NextRequest) {
     if (!tokenStoreResult.success) {
       console.error("Failed to store Beggins OAuth tokens:", tokenStoreResult.error)
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/oauth-error?error=token_storage_failed`
+        `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/beggins-home/email-integration?error=token_storage_failed`
       )
     }
 
@@ -102,12 +124,12 @@ export async function GET(request: NextRequest) {
 
     // Redirect to success page
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/oauth-success?provider=google&tenant=beggins`
+      `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/beggins-home/email-integration?success=oauth_completed&email=${encodeURIComponent(userInfo.email)}`
     )
   } catch (error) {
     console.error("Error in Beggins Google OAuth callback:", error)
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/oauth-error?error=callback_error`
+      `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/beggins-home/email-integration?error=callback_error`
     )
   }
 }

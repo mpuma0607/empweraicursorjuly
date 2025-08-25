@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { randomBytes } from "crypto"
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,31 +14,48 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Generate PKCE challenge
-    const codeVerifier = generateCodeVerifier()
-    const codeChallenge = await generateCodeChallenge(codeVerifier)
-
-    // Store code verifier in session or temporary storage
-    // For now, we'll use a simple approach - in production you might want to use a more secure method
-    const state = Math.random().toString(36).substring(7)
+    // Generate PKCE challenge and verifier (using same method as Empower)
+    const codeVerifier = randomBytes(32).toString('base64url')
+    const codeChallenge = codeVerifier // Using plain PKCE for now (can upgrade to S256 later)
     
-    // Store the code verifier and state (you might want to use a more secure method)
-    // For now, we'll pass them as URL parameters to the callback
+    // Generate state for CSRF protection
+    const state = randomBytes(16).toString('hex')
     
-    const authUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth")
-    authUrl.searchParams.set("client_id", clientId)
-    authUrl.searchParams.set("redirect_uri", redirectUri)
-    authUrl.searchParams.set("response_type", "code")
-    authUrl.searchParams.set("scope", "https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/userinfo.email")
-    authUrl.searchParams.set("code_challenge", codeChallenge)
-    authUrl.searchParams.set("code_challenge_method", "S256")
-    authUrl.searchParams.set("state", state)
-    authUrl.searchParams.set("access_type", "offline")
-    authUrl.searchParams.set("prompt", "consent")
+    // Build OAuth URL
+    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+      `client_id=${clientId}` +
+      `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+      `&response_type=code` +
+      `&scope=${encodeURIComponent('https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/userinfo.email')}` +
+      `&access_type=offline` +
+      `&prompt=consent` +
+      `&state=${state}` +
+      `&code_challenge=${codeChallenge}` +
+      `&code_challenge_method=plain` +
+      `&include_granted_scopes=true`
 
-    console.log("Beggins Google OAuth URL generated:", authUrl.toString())
+    console.log("Beggins Google OAuth URL generated:", authUrl)
 
-    return NextResponse.redirect(authUrl.toString())
+    // Set secure cookies for PKCE and state (same as Empower implementation)
+    const response = NextResponse.redirect(authUrl)
+    
+    response.cookies.set('beggins_oauth_code_verifier', codeVerifier, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 600, // 10 minutes
+      path: '/'
+    })
+    
+    response.cookies.set('beggins_oauth_state', state, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 600, // 10 minutes
+      path: '/'
+    })
+    
+    return response
   } catch (error) {
     console.error("Error starting Beggins Google OAuth:", error)
     return NextResponse.json(
@@ -45,24 +63,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
-
-function generateCodeVerifier(): string {
-  const array = new Uint8Array(32)
-  crypto.getRandomValues(array)
-  return base64URLEncode(array)
-}
-
-async function generateCodeChallenge(codeVerifier: string): Promise<string> {
-  const encoder = new TextEncoder()
-  const data = encoder.encode(codeVerifier)
-  const digest = await crypto.subtle.digest("SHA-256", data)
-  return base64URLEncode(new Uint8Array(digest))
-}
-
-function base64URLEncode(buffer: Uint8Array): string {
-  return btoa(String.fromCharCode(...buffer))
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=/g, "")
 }

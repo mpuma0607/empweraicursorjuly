@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Mail, CheckCircle, XCircle, RefreshCw } from "lucide-react"
 import { useMemberSpaceUser } from "@/hooks/use-memberspace-user"
 import { useToast } from "@/hooks/use-toast"
+import { useSearchParams } from "next/navigation"
 
 export default function BegginsEmailIntegrationPage() {
   const [isGmailConnected, setIsGmailConnected] = useState(false)
@@ -14,6 +15,7 @@ export default function BegginsEmailIntegrationPage() {
   const [isConnecting, setIsConnecting] = useState(false)
   const { user, loading: isUserLoading } = useMemberSpaceUser()
   const { toast } = useToast()
+  const searchParams = useSearchParams()
 
   // Check Gmail connection status when component mounts
   useEffect(() => {
@@ -21,6 +23,58 @@ export default function BegginsEmailIntegrationPage() {
       checkGmailStatus()
     }
   }, [user?.email])
+
+  // Handle OAuth callback results
+  useEffect(() => {
+    const success = searchParams.get('success')
+    const error = searchParams.get('error')
+    const email = searchParams.get('email')
+
+    if (success === 'oauth_completed' && email) {
+      toast({
+        title: "Gmail Connected Successfully!",
+        description: `Your Gmail account (${email}) is now connected and ready to use.`,
+      })
+      // Refresh the connection status
+      if (user?.email) {
+        checkGmailStatus()
+      }
+    } else if (error) {
+      let errorMessage = "An error occurred during OAuth connection."
+      switch (error) {
+        case 'oauth_denied':
+          errorMessage = "OAuth connection was denied or cancelled."
+          break
+        case 'oauth_state_mismatch':
+          errorMessage = "OAuth security validation failed. Please try again."
+          break
+        case 'oauth_invalid_request':
+          errorMessage = "Invalid OAuth request. Please try again."
+          break
+        case 'token_exchange_failed':
+          errorMessage = "Failed to exchange authorization code for tokens. Please try again."
+          break
+        case 'user_info_failed':
+          errorMessage = "Failed to retrieve user information from Google. Please try again."
+          break
+        case 'token_storage_failed':
+          errorMessage = "Failed to store OAuth tokens. Please try again."
+          break
+        case 'callback_error':
+          errorMessage = "An error occurred during OAuth callback. Please try again."
+          break
+        case 'config_missing':
+          errorMessage = "OAuth configuration is missing. Please contact support."
+          break
+      }
+      
+      toast({
+        title: "OAuth Connection Failed",
+        description: errorMessage,
+        variant: "destructive",
+      })
+    }
+  }, [searchParams, user?.email, toast])
 
   const checkGmailStatus = async () => {
     if (!user?.email) return
