@@ -9,22 +9,31 @@ type ListingFormData = {
   bedrooms: string
   bathrooms: string
   squareFootage: string
-  feature1: string
-  feature2: string
-  feature3: string
-  feature4: string
-  feature5: string
+  propertyDescription: string
   agentName: string
   agentEmail: string
 }
 
 export async function generateListingDescription(formData: ListingFormData) {
   try {
+    console.log("ListIt: Generating listing description with data:", formData)
+    
     const prompt = `
 You are ${formData.agentName}, a top real estate agent. Write a captivating MLS-style property description for ${formData.propertyAddress}. 
-Details: Price ${formData.listingPrice}, ${formData.bedrooms} bedrooms, ${formData.bathrooms} bathrooms, ${formData.squareFootage} sq ft. Key features: ${formData.feature1}, ${formData.feature2}, ${formData.feature3}, ${formData.feature4}, ${formData.feature5}.
 
-Make the copy flow like a natural story, not a sterile list. 
+IMPORTANT: Use ONLY the specific property details and features provided below. Do NOT make up or invent any features, amenities, or details that are not explicitly mentioned.
+
+Property Details:
+- Address: ${formData.propertyAddress}
+- Price: ${formData.listingPrice}
+- Bedrooms: ${formData.bedrooms}
+- Bathrooms: ${formData.bathrooms}
+- Square Footage: ${formData.squareFootage}
+
+Property Features (Use ONLY these specific features):
+${formData.propertyDescription}
+
+Make the copy flow like a natural story, incorporating the EXACT features provided above. 
 Use sensory language:
 - Visual: "Sunlight pours through tall windows…" 
 - Auditory: "The quiet street hums with peaceful evenings…" 
@@ -32,6 +41,8 @@ Use sensory language:
 
 Include embedded commands like "Imagine enjoying coffee here every morning…" 
 Appeal to all DISC types: facts for analytical, confidence for drivers, warmth for supportive, inspiration for influencers.
+
+CRITICAL: Do not add any features, amenities, or details that are not explicitly mentioned in the property description above. Stick to what was provided.
 
 Important:
 - Entire output must stay under 3,500 characters. 
@@ -157,11 +168,7 @@ export async function generateListingHTML(formData: ListingFormData, description
       <div class="divider"></div>
       
       <div class="details-title">KEY FEATURES</div>
-      <div class="details">• ${formData.feature1}</div>
-      <div class="details">• ${formData.feature2}</div>
-      <div class="details">• ${formData.feature3}</div>
-      <div class="details">• ${formData.feature4}</div>
-      <div class="details">• ${formData.feature5}</div>
+      <div class="description">${formData.propertyDescription}</div>
       
       <div class="footer">
         <p>© 2024 The Next Level U - Empowering Real Estate Professionals</p>

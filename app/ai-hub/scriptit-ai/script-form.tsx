@@ -328,19 +328,31 @@ export default function ScriptForm() {
           ? '/api/beggins/auth/google/status' 
           : '/api/auth/google/status'
         
+        console.log('ScriptIt: Checking Gmail status for tenant:', tenantConfig?.id, 'using endpoint:', endpoint)
+        
         const response = await fetch(endpoint)
+        console.log('ScriptIt: Gmail status response:', response.status, response.ok)
+        
         if (response.ok) {
           const data = await response.json()
+          console.log('ScriptIt: Gmail status data:', data)
           setIsGmailConnected(data.status.connected)
+          console.log('ScriptIt: isGmailConnected set to:', data.status.connected)
+        } else {
+          console.log('ScriptIt: Gmail status response not ok')
+          setIsGmailConnected(false)
         }
       } catch (error) {
-        console.error('Error checking Gmail status:', error)
+        console.error('ScriptIt: Error checking Gmail status:', error)
         setIsGmailConnected(false)
       }
     }
     
     if (tenantConfig?.id) {
+      console.log('ScriptIt: Tenant config found, checking Gmail status...')
       checkGmailStatus()
+    } else {
+      console.log('ScriptIt: No tenant config yet')
     }
   }, [tenantConfig?.id])
 
