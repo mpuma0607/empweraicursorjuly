@@ -4,6 +4,13 @@ import { randomBytes } from "crypto"
 export async function GET(request: NextRequest) {
   try {
     const clientId = process.env.BEGGINS_GOOGLE_CLIENT_ID
+    
+    // Debug: Log environment variables
+    console.log("Beggins OAuth Start - Environment variables:")
+    console.log("BEGGINS_GOOGLE_CLIENT_ID:", clientId ? "SET" : "NOT SET")
+    console.log("BEGGINS_GOOGLE_CLIENT_SECRET:", process.env.BEGGINS_GOOGLE_CLIENT_SECRET ? "SET" : "NOT SET")
+    console.log("BEGGINS_GOOGLE_REDIRECT_URI:", process.env.BEGGINS_GOOGLE_REDIRECT_URI ? "SET" : "NOT SET")
+    console.log("GOOGLE_OAUTH_CLIENT_ID (Empower):", process.env.GOOGLE_OAUTH_CLIENT_ID ? "SET" : "NOT SET")
 
     if (!clientId) {
       console.error("Missing Beggins Google OAuth client ID")

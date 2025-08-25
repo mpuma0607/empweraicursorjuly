@@ -55,6 +55,14 @@ export async function GET(request: NextRequest) {
     
     // Use the same dynamic redirect URI logic as the start endpoint
     const redirectUri = `${baseUrl}/api/beggins/auth/google/callback`
+    
+    // Debug: Log environment variables
+    console.log("Beggins OAuth Callback - Environment variables:")
+    console.log("BEGGINS_GOOGLE_CLIENT_ID:", clientId ? "SET" : "NOT SET")
+    console.log("BEGGINS_GOOGLE_CLIENT_SECRET:", clientSecret ? "SET" : "NOT SET")
+    console.log("Dynamic redirectUri:", redirectUri)
+    console.log("BEGGINS_GOOGLE_REDIRECT_URI (env):", process.env.BEGGINS_GOOGLE_REDIRECT_URI ? "SET" : "NOT SET")
+    console.log("GOOGLE_OAUTH_CLIENT_ID (Empower):", process.env.GOOGLE_OAUTH_CLIENT_ID ? "SET" : "NOT SET")
 
     if (!clientId || !clientSecret) {
       console.error("Missing Beggins Google OAuth environment variables")
