@@ -16,36 +16,40 @@ export async function GET(request: NextRequest) {
       `${process.env.NEXT_PUBLIC_APP_URL || 'https://getempowerai.com'}/profile/email-integration`
     
     console.log('OAuth Callback - Tenant:', tenant, 'Callback Redirect:', callbackRedirectUrl)
-    
-    // Clear OAuth cookies
-    const response = NextResponse.redirect(callbackRedirectUrl)
-    
-    response.cookies.delete('oauth_state')
-    response.cookies.delete('oauth_code_verifier')
-    response.cookies.delete('oauth_tenant')
-    response.cookies.delete('oauth_callback_redirect')
 
     if (error) {
       console.error('OAuth error:', error)
-      return NextResponse.redirect(
-        `${callbackRedirectUrl}?error=oauth_denied`
-      )
+      const response = NextResponse.redirect(`${callbackRedirectUrl}?error=oauth_denied`)
+      // Clear cookies after redirect
+      response.cookies.delete('oauth_state')
+      response.cookies.delete('oauth_code_verifier')
+      response.cookies.delete('oauth_tenant')
+      response.cookies.delete('oauth_callback_redirect')
+      return response
     }
 
     // Validate state parameter
     if (!state || !storedState || state !== storedState) {
       console.error('OAuth state mismatch')
-      return NextResponse.redirect(
-        `${callbackRedirectUrl}?error=oauth_state_mismatch`
-      )
+      const response = NextResponse.redirect(`${callbackRedirectUrl}?error=oauth_state_mismatch`)
+      // Clear cookies after redirect
+      response.cookies.delete('oauth_state')
+      response.cookies.delete('oauth_code_verifier')
+      response.cookies.delete('oauth_tenant')
+      response.cookies.delete('oauth_callback_redirect')
+      return response
     }
 
     // Validate code and code verifier
     if (!code || !codeVerifier) {
       console.error('Missing OAuth code or verifier')
-      return NextResponse.redirect(
-        `${callbackRedirectUrl}?error=oauth_invalid_request`
-      )
+      const response = NextResponse.redirect(`${callbackRedirectUrl}?error=oauth_invalid_request`)
+      // Clear cookies after redirect
+      response.cookies.delete('oauth_state')
+      response.cookies.delete('oauth_code_verifier')
+      response.cookies.delete('oauth_tenant')
+      response.cookies.delete('oauth_callback_redirect')
+      return response
     }
 
     // Exchange code for tokens - ALWAYS use Empower AI's redirect URI
@@ -67,9 +71,13 @@ export async function GET(request: NextRequest) {
     if (!tokenResponse.ok) {
       const errorData = await tokenResponse.text()
       console.error('Token exchange failed:', errorData)
-      return NextResponse.redirect(
-        `${callbackRedirectUrl}?error=token_exchange_failed`
-      )
+      const response = NextResponse.redirect(`${callbackRedirectUrl}?error=token_exchange_failed`)
+      // Clear cookies after redirect
+      response.cookies.delete('oauth_state')
+      response.cookies.delete('oauth_code_verifier')
+      response.cookies.delete('oauth_tenant')
+      response.cookies.delete('oauth_callback_redirect')
+      return response
     }
 
     const tokenData = await tokenResponse.json()
@@ -83,9 +91,13 @@ export async function GET(request: NextRequest) {
 
     if (!userInfoResponse.ok) {
       console.error('Failed to get user info')
-      return NextResponse.redirect(
-        `${callbackRedirectUrl}?error=user_info_failed`
-      )
+      const response = NextResponse.redirect(`${callbackRedirectUrl}?error=user_info_failed`)
+      // Clear cookies after redirect
+      response.cookies.delete('oauth_state')
+      response.cookies.delete('oauth_code_verifier')
+      response.cookies.delete('oauth_tenant')
+      response.cookies.delete('oauth_callback_redirect')
+      return response
     }
 
     const userInfo = await userInfoResponse.json()
@@ -105,14 +117,25 @@ export async function GET(request: NextRequest) {
     console.log(`OAuth completed successfully for ${userInfo.email} on tenant: ${tenant}`)
     
     // Always redirect back to the appropriate tenant's email integration page
-    return NextResponse.redirect(
+    const response = NextResponse.redirect(
       `${callbackRedirectUrl}?success=oauth_completed&email=${encodeURIComponent(userInfo.email)}`
     )
+    // Clear cookies after redirect
+    response.cookies.delete('oauth_state')
+    response.cookies.delete('oauth_code_verifier')
+    response.cookies.delete('oauth_tenant')
+    response.cookies.delete('oauth_callback_redirect')
+    return response
     
   } catch (error) {
     console.error('Error in OAuth callback:', error)
-    return NextResponse.redirect(
-      `${callbackRedirectUrl || `${process.env.NEXT_PUBLIC_APP_URL || 'https://getempowerai.com'}/profile/email-integration`}?error=oauth_callback_failed`
-    )
+    const fallbackUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://getempowerai.com'}/profile/email-integration`
+    const response = NextResponse.redirect(`${fallbackUrl}?error=oauth_callback_failed`)
+    // Clear cookies after redirect
+    response.cookies.delete('oauth_state')
+    response.cookies.delete('oauth_code_verifier')
+    response.cookies.delete('oauth_tenant')
+    response.cookies.delete('oauth_callback_redirect')
+    return response
   }
 }
