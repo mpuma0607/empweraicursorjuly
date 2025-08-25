@@ -3,16 +3,17 @@ import { randomBytes } from "crypto"
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('Empower AI OAuth Start - Using Empower-specific OAuth credentials')
+    console.log('Beggins OAuth Start - Using Beggins-specific OAuth credentials')
     
-    // Use Empower AI's OAuth flow and redirect URI
-    const redirectUri = process.env.GOOGLE_OAUTH_REDIRECT_URI || 'https://getempowerai.com/api/auth/google/callback'
+    // Use Beggins-specific OAuth credentials
+    const clientId = process.env.BEGGINS_GOOGLE_OAUTH_CLIENT_ID
+    const redirectUri = process.env.BEGGINS_GOOGLE_OAUTH_REDIRECT_URI || 'https://begginsuniversity.com/api/beggins/auth/google/callback'
     
-    // Empower tenant - redirect to Empower email integration page
-    const callbackRedirectUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://getempowerai.com'}/profile/email-integration`
+    if (!clientId) {
+      console.error('BEGGINS_GOOGLE_OAUTH_CLIENT_ID not configured')
+      return NextResponse.json({ error: 'OAuth not configured' }, { status: 500 })
+    }
     
-    console.log('OAuth Start - OAuth Redirect URI:', redirectUri, 'Final Destination:', callbackRedirectUrl)
-
     // Generate PKCE challenge and verifier
     const codeVerifier = randomBytes(32).toString('base64url')
     const codeChallenge = codeVerifier
@@ -20,9 +21,9 @@ export async function GET(request: NextRequest) {
     // Generate state for CSRF protection
     const state = randomBytes(16).toString('hex')
     
-    // Build OAuth URL for Empower AI
+    // Build OAuth URL for Beggins
     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
-      `client_id=${process.env.GOOGLE_OAUTH_CLIENT_ID}` +
+      `client_id=${clientId}` +
       `&redirect_uri=${encodeURIComponent(redirectUri)}` +
       `&response_type=code` +
       `&scope=${encodeURIComponent('https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/userinfo.email')}` +
@@ -33,12 +34,12 @@ export async function GET(request: NextRequest) {
       `&code_challenge_method=plain` +
       `&include_granted_scopes=true`
 
-    console.log('Google OAuth URL generated (Empower AI):', authUrl)
+    console.log('Beggins Google OAuth URL generated:', authUrl)
 
     // Set secure cookies for PKCE and state
     const response = NextResponse.redirect(authUrl)
     
-    response.cookies.set('oauth_code_verifier', codeVerifier, {
+    response.cookies.set('beggins_oauth_code_verifier', codeVerifier, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
@@ -46,7 +47,7 @@ export async function GET(request: NextRequest) {
       path: '/'
     })
     
-    response.cookies.set('oauth_state', state, {
+    response.cookies.set('beggins_oauth_state', state, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
@@ -56,7 +57,7 @@ export async function GET(request: NextRequest) {
     
     return response
   } catch (error) {
-    console.error('Error starting Google OAuth:', error)
+    console.error('Error starting Beggins Google OAuth:', error)
     return NextResponse.json(
       { error: 'Failed to start OAuth flow' },
       { status: 500 }

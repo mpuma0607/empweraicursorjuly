@@ -76,79 +76,62 @@ export default function BegginsEmailIntegrationPage() {
     }
   }, [searchParams, user?.email, toast])
 
-  const checkGmailStatus = async () => {
-    if (!user?.email) return
-    
-    setIsChecking(true)
+  const connectGmail = async () => {
+    setIsConnecting(true)
     try {
-      // Use unified OAuth status endpoint (will detect tenant automatically)
-      const response = await fetch(`/api/auth/google/status?email=${encodeURIComponent(user.email)}`)
-      if (response.ok) {
-        const data = await response.json()
-        setIsGmailConnected(data.status.connected)
-      } else {
-        setIsGmailConnected(false)
-      }
+      // Use Beggins-specific OAuth start endpoint
+      window.location.href = '/api/beggins/auth/google/start'
     } catch (error) {
-      console.error('Error checking Gmail status:', error)
-      setIsGmailConnected(false)
+      console.error('Error connecting Gmail:', error)
+      toast({
+        title: "Error",
+        description: "Failed to connect Gmail account",
+        variant: "destructive",
+      })
     } finally {
-      setIsChecking(false)
+      setIsConnecting(false)
     }
   }
 
-  const connectGmail = async () => {
-    if (!user?.email) {
-      toast({
-        title: "Login Required",
-        description: "Please log in to connect your Gmail account.",
-        variant: "destructive",
-      })
-      return
-    }
-
-    setIsConnecting(true)
+  const checkGmailStatus = async () => {
+    if (!user?.email) return
+    
     try {
-      // Redirect to unified Google OAuth start (always uses Empower AI OAuth, final destination is tenant-aware)
-      window.location.href = '/api/auth/google/start'
+      // Use Beggins-specific OAuth status endpoint
+      const response = await fetch(`/api/beggins/auth/google/status?email=${encodeURIComponent(user.email)}`)
+      if (response.ok) {
+        const data = await response.json()
+        setIsGmailConnected(data.connected)
+        console.log('Gmail status:', data)
+      }
     } catch (error) {
-      console.error('Error starting Gmail connection:', error)
-      toast({
-        title: "Connection Failed",
-        description: "Failed to start Gmail connection. Please try again.",
-        variant: "destructive",
-      })
-      setIsConnecting(false)
+      console.error('Error checking Gmail status:', error)
     }
   }
 
   const disconnectGmail = async () => {
     if (!user?.email) return
-
+    
     try {
-      // Use unified OAuth disconnect endpoint (will detect tenant automatically)
-      const response = await fetch('/api/auth/google/disconnect', {
+      // Use Beggins-specific OAuth disconnect endpoint
+      const response = await fetch('/api/beggins/auth/google/disconnect', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: user.email }),
       })
-
+      
       if (response.ok) {
         setIsGmailConnected(false)
         toast({
-          title: "Gmail Disconnected",
-          description: "Your Gmail account has been disconnected successfully.",
+          title: "Success",
+          description: "Gmail account disconnected successfully",
         })
-      } else {
-        throw new Error('Failed to disconnect')
       }
     } catch (error) {
       console.error('Error disconnecting Gmail:', error)
       toast({
-        title: "Disconnect Failed",
-        description: "Failed to disconnect Gmail account. Please try again.",
+        title: "Error",
+        description: "Failed to disconnect Gmail account",
         variant: "destructive",
       })
     }

@@ -11,52 +11,28 @@ export async function GET(request: NextRequest) {
     // Get stored OAuth data from cookies
     const storedState = request.cookies.get('oauth_state')?.value
     const codeVerifier = request.cookies.get('oauth_code_verifier')?.value
-    const tenant = request.cookies.get('oauth_tenant')?.value || 'empower-ai'
     
-    // Extract redirect URL from state parameter (since cookies can't be accessed across domains)
-    let callbackRedirectUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://getempowerai.com'}/profile/email-integration`
+    console.log('Empower AI OAuth Callback - State:', state, 'Stored State:', storedState)
     
-    if (state && storedState) {
-      try {
-        // State format: "state:redirectUrl"
-        const stateParts = decodeURIComponent(state).split(':')
-        if (stateParts.length === 2) {
-          const actualState = stateParts[0]
-          const redirectUrl = stateParts[1]
-          
-          // Validate the actual state matches stored state
-          if (actualState === storedState) {
-            callbackRedirectUrl = redirectUrl
-            console.log('OAuth Callback - Extracted redirect URL from state:', callbackRedirectUrl)
-          } else {
-            console.error('OAuth state mismatch - actual state does not match stored state')
-          }
-        }
-      } catch (error) {
-        console.error('Error parsing state parameter:', error)
-      }
-    }
+    // Default redirect for Empower AI
+    const callbackRedirectUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://getempowerai.com'}/profile/email-integration`
     
-    console.log('OAuth Callback - Tenant:', tenant, 'Callback Redirect:', callbackRedirectUrl)
-
     if (error) {
       console.error('OAuth error:', error)
       const response = NextResponse.redirect(`${callbackRedirectUrl}?error=oauth_denied`)
       // Clear cookies after redirect
       response.cookies.delete('oauth_state')
       response.cookies.delete('oauth_code_verifier')
-      response.cookies.delete('oauth_tenant')
       return response
     }
 
     // Validate state parameter
-    if (!state || !storedState) {
-      console.error('OAuth state missing')
+    if (!state || !storedState || state !== storedState) {
+      console.error('OAuth state mismatch')
       const response = NextResponse.redirect(`${callbackRedirectUrl}?error=oauth_state_mismatch`)
       // Clear cookies after redirect
       response.cookies.delete('oauth_state')
       response.cookies.delete('oauth_code_verifier')
-      response.cookies.delete('oauth_tenant')
       return response
     }
 
@@ -67,11 +43,10 @@ export async function GET(request: NextRequest) {
       // Clear cookies after redirect
       response.cookies.delete('oauth_state')
       response.cookies.delete('oauth_code_verifier')
-      response.cookies.delete('oauth_tenant')
       return response
     }
 
-    // Exchange code for tokens - ALWAYS use Empower AI's redirect URI
+    // Exchange code for tokens using Empower AI OAuth credentials
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: {
@@ -83,7 +58,7 @@ export async function GET(request: NextRequest) {
         code,
         code_verifier: codeVerifier,
         grant_type: 'authorization_code',
-        redirect_uri: process.env.GOOGLE_OAUTH_REDIRECT_URI || 'https://getempowerai.com/api/auth/google/callback', // ALWAYS Empower AI
+        redirect_uri: process.env.GOOGLE_OAUTH_REDIRECT_URI || 'https://getempowerai.com/api/auth/google/callback',
       }),
     })
 
@@ -94,7 +69,6 @@ export async function GET(request: NextRequest) {
       // Clear cookies after redirect
       response.cookies.delete('oauth_state')
       response.cookies.delete('oauth_code_verifier')
-      response.cookies.delete('oauth_tenant')
       return response
     }
 
@@ -113,34 +87,32 @@ export async function GET(request: NextRequest) {
       // Clear cookies after redirect
       response.cookies.delete('oauth_state')
       response.cookies.delete('oauth_code_verifier')
-      response.cookies.delete('oauth_tenant')
       return response
     }
 
     const userInfo = await userInfoResponse.json()
     
-    // Store tokens securely in database with tenant context
+    // Store tokens securely in database with Empower AI tenant context
     const expiresAt = new Date()
-    expiresAt.setHours(expiresAt.getHours() + 1) // Google tokens typically expire in 1 hour
+    expiresAt.setHours(expiresAt.getHours() + 1)
     
     await oauthTokens.store(userInfo.email, {
       accessToken: tokenData.access_token,
       refreshToken: tokenData.refresh_token,
       expiresAt,
       scopes: ['https://www.googleapis.com/auth/gmail.send'],
-      tenant: tenant // Store tenant context
+      tenant: 'empower-ai' // Always Empower AI tenant
     })
     
-    console.log(`OAuth completed successfully for ${userInfo.email} on tenant: ${tenant}`)
+    console.log(`OAuth completed successfully for ${userInfo.email} on Empower AI tenant`)
     
-    // Always redirect back to the appropriate tenant's email integration page
+    // Redirect back to Empower AI email integration page
     const response = NextResponse.redirect(
       `${callbackRedirectUrl}?success=oauth_completed&email=${encodeURIComponent(userInfo.email)}`
     )
     // Clear cookies after redirect
     response.cookies.delete('oauth_state')
     response.cookies.delete('oauth_code_verifier')
-    response.cookies.delete('oauth_tenant')
     return response
     
   } catch (error) {
@@ -150,7 +122,6 @@ export async function GET(request: NextRequest) {
     // Clear cookies after redirect
     response.cookies.delete('oauth_state')
     response.cookies.delete('oauth_code_verifier')
-    response.cookies.delete('oauth_tenant')
     return response
   }
 }

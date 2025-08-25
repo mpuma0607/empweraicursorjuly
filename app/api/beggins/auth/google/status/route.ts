@@ -13,20 +13,20 @@ export async function GET(request: NextRequest) {
       )
     }
     
-    console.log('Empower AI OAuth Status Check - Email:', email)
+    console.log('Beggins OAuth Status Check - Email:', email)
     
-    // Check for valid tokens for Empower AI tenant
-    const hasValidTokens = await oauthTokens.hasValidTokens(email, 'google', 'empower-ai')
+    // Check for valid tokens for Beggins tenant
+    const hasValidTokens = await oauthTokens.hasValidTokens(email, 'google', 'century21-beggins')
     
-    console.log('Empower AI OAuth Status - Has valid tokens:', hasValidTokens)
+    console.log('Beggins OAuth Status - Has valid tokens:', hasValidTokens)
     
     return NextResponse.json({
       connected: hasValidTokens,
-      tenant: 'empower-ai'
+      tenant: 'century21-beggins'
     })
     
   } catch (error) {
-    console.error('Error checking Empower AI OAuth status:', error)
+    console.error('Error checking Beggins OAuth status:', error)
     return NextResponse.json(
       { error: 'Failed to check OAuth status' },
       { status: 500 }
