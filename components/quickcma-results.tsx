@@ -27,6 +27,7 @@ import {
   AlertCircle,
   Hash,
   X,
+  Loader2,
 } from "lucide-react"
 
 interface QuickCmaReportData {
@@ -199,7 +200,7 @@ const QuickCMAResults = ({ data }: QuickCMAResultsProps) => {
 
   const handleSendResendEmail = async () => {
     // Get user email from Memberspace user data
-    const userEmail = user?.email || formData?.agentEmail || ""
+    const userEmail = user?.email || ""
     
     if (!userEmail) {
       setEmailError("No email address found. Please check your profile.")
