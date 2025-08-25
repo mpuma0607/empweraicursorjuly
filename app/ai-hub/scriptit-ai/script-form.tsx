@@ -26,6 +26,10 @@ import { useToast } from "@/hooks/use-toast"
 
 import { useMemberSpaceUser } from "@/hooks/use-memberspace-user"
 
+import { useTenant } from "@/contexts/tenant-context"
+
+import { getUserBrandingProfile } from "@/app/profile/branding/actions"
+
 import { saveUserCreation, generateCreationTitle } from "@/lib/auto-save-creation"
 import EmailCompositionModal from "@/components/email-composition-modal"
 
@@ -256,6 +260,8 @@ export default function ScriptForm() {
   const [result, setResult] = useState<ScriptResult | null>(null)
 
   const { user, loading: isUserLoading } = useMemberSpaceUser()
+  const { config: tenantConfig } = useTenant()
+  const [userBranding, setUserBranding] = useState<any>(null)
 
   const isLoggedIn = !!user && !isUserLoading
 
@@ -268,6 +274,26 @@ export default function ScriptForm() {
     }
   }, [user, isUserLoading, isLoggedIn])
 
+  // Fetch user branding profile
+  useEffect(() => {
+    const fetchUserBranding = async () => {
+      if (!user?.id || !tenantConfig?.id) return
+
+      try {
+        const brandingProfile = await getUserBrandingProfile(user.id.toString(), tenantConfig.id)
+        if (brandingProfile) {
+          setUserBranding(brandingProfile)
+          console.log("Loaded user branding profile:", brandingProfile)
+        }
+      } catch (error) {
+        console.error("Error fetching user branding:", error)
+        // Continue without branding - will use default styling
+      }
+    }
+
+    fetchUserBranding()
+  }, [user?.id, tenantConfig?.id])
+
   const resultsRef = useRef<HTMLDivElement>(null)
   const hasLoadedBrokerageName = useRef(false)
 
@@ -275,17 +301,25 @@ export default function ScriptForm() {
   useEffect(() => {
     if (user && !isUserLoading && !hasLoadedBrokerageName.current) {
       console.log("Setting user data - current formData:", formData)
+      console.log("User data available:", { 
+        name: user.name, 
+        firstName: user.firstName, 
+        lastName: user.lastName, 
+        email: user.email,
+        userBranding: userBranding
+      })
+      
       setFormData((prev) => ({
         ...prev,
         agentName: prev.agentName || user.name || `${user.firstName || ""} ${user.lastName || ""}`.trim(),
         agentEmail: prev.agentEmail || user.email || "",
-        // Auto-fill brokerage name from Memberspace user data if available
-                 brokerageName: prev.brokerageName || "",
+        // Use brokerage name from branding profile if available
+        brokerageName: prev.brokerageName || userBranding?.brokerage || "",
       }))
       
       hasLoadedBrokerageName.current = true
     }
-  }, [user, isUserLoading])
+  }, [user, isUserLoading, userBranding])
 
   // Debug form data changes
   useEffect(() => {
@@ -638,10 +672,10 @@ export default function ScriptForm() {
           />
 
           {user && formData.brokerageName && (
-            <p className="text-xs text-green-600">✓ Auto-filled from your brand profile</p>
+            <p className="text-xs text-green-600">✓ Auto-filled from your branding profile</p>
           )}
           {user && !formData.brokerageName && (
-            <p className="text-xs text-gray-500">💡 Set up your brand profile to auto-fill this field</p>
+            <p className="text-xs text-gray-500">💡 Set up your branding profile to auto-fill this field</p>
           )}
         </div>
       </div>

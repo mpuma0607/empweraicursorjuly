@@ -11,6 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, Copy, Mail, User, Download, FileText, Save, UserCheck, Mic, MicOff } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useMemberSpaceUser } from "@/hooks/use-memberspace-user"
+import { useTenant } from "@/contexts/tenant-context"
+import { getUserBrandingProfile } from "@/app/profile/branding/actions"
 import { saveUserCreation, generateCreationTitle } from "@/lib/auto-save-creation"
 import { generateAgentBio } from "../lib/realbio-actions"
 
@@ -58,7 +60,9 @@ export default function RealBioForm() {
     email: "",
   })
   const [result, setResult] = useState<BioResult | null>(null)
-  const { user, isLoading: userLoading } = useMemberSpaceUser()
+  const { user, loading: userLoading } = useMemberSpaceUser()
+  const { config: tenantConfig } = useTenant()
+  const [userBranding, setUserBranding] = useState<any>(null)
 
   // Auto-populate user data when available
   useEffect(() => {
@@ -67,10 +71,31 @@ export default function RealBioForm() {
         ...prev,
         name: prev.name || user.name || `${user.firstName || ""} ${user.lastName || ""}`.trim(),
         email: prev.email || user.email || "",
-        brokerage: prev.brokerage || user.brokerage || user.company || "",
+        // Use brokerage name from branding profile if available
+        brokerage: prev.brokerage || userBranding?.brokerage || "",
       }))
     }
-  }, [user, userLoading])
+  }, [user, userLoading, userBranding])
+
+  // Fetch user branding profile
+  useEffect(() => {
+    const fetchUserBranding = async () => {
+      if (!user?.id || !tenantConfig?.id) return
+
+      try {
+        const brandingProfile = await getUserBrandingProfile(user.id.toString(), tenantConfig.id)
+        if (brandingProfile) {
+          setUserBranding(brandingProfile)
+          console.log("Loaded user branding profile:", brandingProfile)
+        }
+      } catch (error) {
+        console.error("Error fetching user branding:", error)
+        // Continue without branding - will use default styling
+      }
+    }
+
+    fetchUserBranding()
+  }, [user?.id, tenantConfig?.id])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -404,10 +429,10 @@ export default function RealBioForm() {
             required
           />
           {user && formData.brokerage && (
-            <p className="text-xs text-green-600">✓ Auto-filled from your profile</p>
+            <p className="text-xs text-green-600">✓ Auto-filled from your branding profile</p>
           )}
           {user && !formData.brokerage && (
-            <p className="text-xs text-gray-500">Add your brokerage name to your brand profile to auto-fill this field</p>
+            <p className="text-xs text-gray-500">Add your brokerage name to your branding profile to auto-fill this field</p>
           )}
         </div>
       </div>

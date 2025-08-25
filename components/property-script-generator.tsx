@@ -26,6 +26,8 @@ import {
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useMemberSpaceUser } from "@/hooks/use-memberspace-user"
+import { useTenant } from "@/contexts/tenant-context"
+import { getUserBrandingProfile } from "@/app/profile/branding/actions"
 import { saveUserCreation, generateCreationTitle } from "@/lib/auto-save-creation"
 import EmailCompositionModal from "@/components/email-composition-modal"
 
@@ -102,6 +104,8 @@ export function PropertyScriptGenerator({
 }: PropertyScriptGeneratorProps) {
   const { toast } = useToast()
   const { user, loading: isUserLoading } = useMemberSpaceUser()
+  const { config: tenantConfig } = useTenant()
+  const [userBranding, setUserBranding] = useState<any>(null)
   const isLoggedIn = !!user && !isUserLoading
 
   const [isGenerating, setIsGenerating] = useState(false)
@@ -134,10 +138,31 @@ export function PropertyScriptGenerator({
         ...prev,
         agentName: prev.agentName || user.name || `${user.firstName || ""} ${user.lastName || ""}`.trim(),
         agentEmail: prev.agentEmail || user.email || "",
-        brokerageName: prev.brokerageName || "",
+        // Use brokerage name from branding profile if available
+        brokerageName: prev.brokerageName || userBranding?.brokerage || "",
       }))
     }
-  }, [user, isUserLoading])
+  }, [user, isUserLoading, userBranding])
+
+  // Fetch user branding profile
+  useEffect(() => {
+    const fetchUserBranding = async () => {
+      if (!user?.id || !tenantConfig?.id) return
+
+      try {
+        const brandingProfile = await getUserBrandingProfile(user.id.toString(), tenantConfig.id)
+        if (brandingProfile) {
+          setUserBranding(brandingProfile)
+          console.log("Loaded user branding profile:", brandingProfile)
+        }
+      } catch (error) {
+        console.error("Error fetching user branding:", error)
+        // Continue without branding - will use default styling
+      }
+    }
+
+    fetchUserBranding()
+  }, [user?.id, tenantConfig?.id])
 
   // Check Gmail connection status
   useEffect(() => {
@@ -525,7 +550,7 @@ export function PropertyScriptGenerator({
                 <p className="text-xs text-green-600">✓ Auto-filled from your profile</p>
               )}
               {user && !formData.brokerageName && (
-                <p className="text-xs text-gray-500">Add your brokerage name to your brand profile to auto-fill this field</p>
+                <p className="text-xs text-gray-500">Add your brokerage name to your branding profile to auto-fill this field</p>
               )}
             </div>
           </div>
