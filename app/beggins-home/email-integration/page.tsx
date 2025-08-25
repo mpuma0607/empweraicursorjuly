@@ -81,7 +81,8 @@ export default function BegginsEmailIntegrationPage() {
     
     setIsChecking(true)
     try {
-      const response = await fetch(`/api/beggins/auth/google/status?email=${encodeURIComponent(user.email)}`)
+      // Use unified OAuth status endpoint (will detect tenant automatically)
+      const response = await fetch(`/api/auth/google/status?email=${encodeURIComponent(user.email)}`)
       if (response.ok) {
         const data = await response.json()
         setIsGmailConnected(data.status.connected)
@@ -108,8 +109,8 @@ export default function BegginsEmailIntegrationPage() {
 
     setIsConnecting(true)
     try {
-      // Redirect to Beggins Google OAuth start
-      window.location.href = '/api/beggins/auth/google/start'
+      // Redirect to unified Google OAuth start (will detect tenant automatically)
+      window.location.href = '/api/auth/google/start'
     } catch (error) {
       console.error('Error starting Gmail connection:', error)
       toast({
@@ -125,7 +126,8 @@ export default function BegginsEmailIntegrationPage() {
     if (!user?.email) return
 
     try {
-      const response = await fetch('/api/beggins/auth/google/disconnect', {
+      // Use unified OAuth disconnect endpoint (will detect tenant automatically)
+      const response = await fetch('/api/auth/google/disconnect', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

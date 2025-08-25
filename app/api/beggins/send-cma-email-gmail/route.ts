@@ -21,7 +21,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const tokens = await oauthTokens.get(from, "century21-beggins")
+    // Get OAuth tokens for the user on Beggins tenant
+    const tokens = await oauthTokens.get(from, 'google', 'century21-beggins')
     if (!tokens) {
       return NextResponse.json(
         { error: 'Gmail account not connected or tokens expired' },

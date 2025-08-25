@@ -7,6 +7,7 @@ interface OAuthTokens {
   id: number
   userEmail: string
   provider: string
+  tenant?: string
   accessToken: string
   refreshToken?: string
   expiresAt: Date
@@ -17,18 +18,20 @@ interface OAuthTokens {
 }
 
 export const oauthTokens = {
-  // Store tokens for a user
+  // Store tokens for a user with tenant context
   async store(email: string, tokens: {
     accessToken: string
     refreshToken?: string
     expiresAt: Date
     scopes: string[]
     provider?: string
+    tenant?: string
   }): Promise<void> {
     try {
       const provider = tokens.provider || 'google'
+      const tenant = tokens.tenant || 'empower-ai'
       
-      // First, try to update existing tokens
+      // First, try to update existing tokens for this tenant
       const updateResult = await sql`
         UPDATE oauth_tokens 
         SET 
@@ -38,7 +41,7 @@ export const oauthTokens = {
           scopes = ${tokens.scopes},
           last_used = CURRENT_TIMESTAMP,
           is_active = true
-        WHERE user_email = ${email} AND provider = ${provider}
+        WHERE user_email = ${email} AND provider = ${provider} AND tenant = ${tenant}
         RETURNING id
       `
 
@@ -46,32 +49,32 @@ export const oauthTokens = {
       if (updateResult.length === 0) {
         await sql`
           INSERT INTO oauth_tokens (
-            user_email, provider, access_token, refresh_token, 
+            user_email, provider, tenant, access_token, refresh_token, 
             expires_at, scopes, created_at, last_used, is_active
           ) VALUES (
-            ${email}, ${provider}, ${tokens.accessToken}, 
+            ${email}, ${provider}, ${tenant}, ${tokens.accessToken}, 
             ${tokens.refreshToken || null}, ${tokens.expiresAt}, 
             ${tokens.scopes}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, true
           )
         `
       }
 
-      console.log(`Stored OAuth tokens for ${email} (${provider})`)
+      console.log(`Stored OAuth tokens for ${email} (${provider}) on tenant ${tenant}`)
     } catch (error) {
       console.error('Error storing OAuth tokens:', error)
       throw new Error('Failed to store OAuth tokens')
     }
   },
 
-  // Get tokens for a user
-  async get(email: string, provider: string = 'google'): Promise<OAuthTokens | null> {
+  // Get tokens for a user on a specific tenant
+  async get(email: string, provider: string = 'google', tenant: string = 'empower-ai'): Promise<OAuthTokens | null> {
     try {
       const result = await sql`
         SELECT 
-          id, user_email, provider, access_token, refresh_token,
+          id, user_email, provider, tenant, access_token, refresh_token,
           expires_at, scopes, created_at, last_used, is_active
         FROM oauth_tokens 
-        WHERE user_email = ${email} AND provider = ${provider} AND is_active = true
+        WHERE user_email = ${email} AND provider = ${provider} AND tenant = ${tenant} AND is_active = true
         ORDER BY created_at DESC 
         LIMIT 1
       `
@@ -83,6 +86,7 @@ export const oauthTokens = {
         id: row.id,
         userEmail: row.user_email,
         provider: row.provider,
+        tenant: row.tenant,
         accessToken: row.access_token,
         refreshToken: row.refresh_token,
         expiresAt: new Date(row.expires_at),
@@ -97,44 +101,48 @@ export const oauthTokens = {
     }
   },
 
-  // Check if user has valid tokens
-  async hasValidTokens(email: string, provider: string = 'google'): Promise<boolean> {
+  // Check if user has valid tokens on a specific tenant
+  async hasValidTokens(email: string, provider: string = 'google', tenant: string = 'empower-ai'): Promise<{ success: boolean; hasValid: boolean; error?: string }> {
     try {
-      const tokens = await this.get(email, provider)
-      if (!tokens) return false
+      const tokens = await this.get(email, provider, tenant)
+      if (!tokens) {
+        return { success: true, hasValid: false }
+      }
 
       // Check if token is expired (with 5 minute buffer)
       const now = new Date()
       const bufferTime = 5 * 60 * 1000 // 5 minutes in milliseconds
-      return tokens.expiresAt.getTime() > (now.getTime() + bufferTime)
+      const isValid = tokens.expiresAt.getTime() > (now.getTime() + bufferTime)
+      
+      return { success: true, hasValid: isValid }
     } catch (error) {
       console.error('Error checking OAuth token validity:', error)
-      return false
+      return { success: false, hasValid: false, error: error instanceof Error ? error.message : 'Unknown error' }
     }
   },
 
-  // Update last used time
-  async updateLastUsed(email: string, provider: string = 'google'): Promise<void> {
+  // Update last used time for a specific tenant
+  async updateLastUsed(email: string, provider: string = 'google', tenant: string = 'empower-ai'): Promise<void> {
     try {
       await sql`
         UPDATE oauth_tokens 
         SET last_used = CURRENT_TIMESTAMP 
-        WHERE user_email = ${email} AND provider = ${provider} AND is_active = true
+        WHERE user_email = ${email} AND provider = ${provider} AND tenant = ${tenant} AND is_active = true
       `
     } catch (error) {
       console.error('Error updating OAuth token last used time:', error)
     }
   },
 
-  // Remove tokens for a user (soft delete)
-  async remove(email: string, provider: string = 'google'): Promise<void> {
+  // Remove tokens for a user on a specific tenant (soft delete)
+  async remove(email: string, provider: string = 'google', tenant: string = 'empower-ai'): Promise<void> {
     try {
       await sql`
         UPDATE oauth_tokens 
         SET is_active = false 
-        WHERE user_email = ${email} AND provider = ${provider}
+        WHERE user_email = ${email} AND provider = ${provider} AND tenant = ${tenant}
       `
-      console.log(`Removed OAuth tokens for ${email} (${provider})`)
+      console.log(`Removed OAuth tokens for ${email} (${provider}) on tenant ${tenant}`)
     } catch (error) {
       console.error('Error removing OAuth tokens:', error)
       throw new Error('Failed to remove OAuth tokens')

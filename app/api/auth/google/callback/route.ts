@@ -11,39 +11,43 @@ export async function GET(request: NextRequest) {
     // Get stored OAuth data from cookies
     const storedState = request.cookies.get('oauth_state')?.value
     const codeVerifier = request.cookies.get('oauth_code_verifier')?.value
+    const tenant = request.cookies.get('oauth_tenant')?.value || 'empower-ai'
+    const callbackRedirectUrl = request.cookies.get('oauth_callback_redirect')?.value || 
+      `${process.env.NEXT_PUBLIC_APP_URL || 'https://getempowerai.com'}/profile/email-integration`
+    
+    console.log('OAuth Callback - Tenant:', tenant, 'Callback Redirect:', callbackRedirectUrl)
     
     // Clear OAuth cookies
-    const response = NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL || 'https://getempowerai.com'}/profile/email-integration`
-    )
+    const response = NextResponse.redirect(callbackRedirectUrl)
     
     response.cookies.delete('oauth_state')
     response.cookies.delete('oauth_code_verifier')
-    
-    // Handle OAuth errors
+    response.cookies.delete('oauth_tenant')
+    response.cookies.delete('oauth_callback_redirect')
+
     if (error) {
       console.error('OAuth error:', error)
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || 'https://getempowerai.com'}/profile/email-integration?error=oauth_denied`
+        `${callbackRedirectUrl}?error=oauth_denied`
       )
     }
-    
+
     // Validate state parameter
     if (!state || !storedState || state !== storedState) {
       console.error('OAuth state mismatch')
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || 'https://getempowerai.com'}/profile/email-integration?error=oauth_state_mismatch`
+        `${callbackRedirectUrl}?error=oauth_state_mismatch`
       )
     }
-    
+
     // Validate code and code verifier
     if (!code || !codeVerifier) {
       console.error('Missing OAuth code or verifier')
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || 'https://getempowerai.com'}/profile/email-integration?error=oauth_invalid_request`
+        `${callbackRedirectUrl}?error=oauth_invalid_request`
       )
     }
-    
+
     // Exchange code for tokens
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
@@ -56,18 +60,20 @@ export async function GET(request: NextRequest) {
         code,
         code_verifier: codeVerifier,
         grant_type: 'authorization_code',
-        redirect_uri: process.env.GOOGLE_OAUTH_REDIRECT_URI || 'https://getempowerai.com/api/auth/google/callback',
+        redirect_uri: tenant === 'century21-beggins' 
+          ? 'https://begginsuniversity.com/api/auth/google/callback'
+          : (process.env.GOOGLE_OAUTH_REDIRECT_URI || 'https://getempowerai.com/api/auth/google/callback'),
       }),
     })
-    
+
     if (!tokenResponse.ok) {
       const errorData = await tokenResponse.text()
       console.error('Token exchange failed:', errorData)
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || 'https://getempowerai.com'}/profile/email-integration?error=token_exchange_failed`
+        `${callbackRedirectUrl}?error=token_exchange_failed`
       )
     }
-    
+
     const tokenData = await tokenResponse.json()
     
     // Get user info from Google
@@ -76,39 +82,39 @@ export async function GET(request: NextRequest) {
         Authorization: `Bearer ${tokenData.access_token}`,
       },
     })
-    
+
     if (!userInfoResponse.ok) {
       console.error('Failed to get user info')
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || 'https://getempowerai.com'}/profile/email-integration?error=user_info_failed`
+        `${callbackRedirectUrl}?error=user_info_failed`
       )
     }
+
+    const userInfo = await userInfoResponse.json()
     
-         const userInfo = await userInfoResponse.json()
-     
-     // Store tokens securely in database
-     const expiresAt = new Date()
-     expiresAt.setHours(expiresAt.getHours() + 1) // Google tokens typically expire in 1 hour
-     
-     await oauthTokens.store(userInfo.email, {
-       accessToken: tokenData.access_token,
-       refreshToken: tokenData.refresh_token,
-       expiresAt,
-       scopes: ['https://www.googleapis.com/auth/gmail.send']
-     })
-     
-     console.log(`OAuth completed successfully for ${userInfo.email}`)
-     
-     // Always redirect back to email integration page with success
-     // This ensures the main page gets the OAuth result regardless of popup/redirect
-     return NextResponse.redirect(
-       `${process.env.NEXT_PUBLIC_APP_URL || 'https://getempowerai.com'}/profile/email-integration?success=oauth_completed&email=${encodeURIComponent(userInfo.email)}`
-     )
+    // Store tokens securely in database with tenant context
+    const expiresAt = new Date()
+    expiresAt.setHours(expiresAt.getHours() + 1) // Google tokens typically expire in 1 hour
+    
+    await oauthTokens.store(userInfo.email, {
+      accessToken: tokenData.access_token,
+      refreshToken: tokenData.refresh_token,
+      expiresAt,
+      scopes: ['https://www.googleapis.com/auth/gmail.send'],
+      tenant: tenant // Store tenant context
+    })
+    
+    console.log(`OAuth completed successfully for ${userInfo.email} on tenant: ${tenant}`)
+    
+    // Always redirect back to the appropriate tenant's email integration page
+    return NextResponse.redirect(
+      `${callbackRedirectUrl}?success=oauth_completed&email=${encodeURIComponent(userInfo.email)}`
+    )
     
   } catch (error) {
     console.error('Error in OAuth callback:', error)
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL || 'https://getempowerai.com'}/profile/email-integration?error=oauth_callback_failed`
+      `${callbackRedirectUrl || `${process.env.NEXT_PUBLIC_APP_URL || 'https://getempowerai.com'}/profile/email-integration`}?error=oauth_callback_failed`
     )
   }
 }

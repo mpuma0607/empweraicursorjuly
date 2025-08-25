@@ -14,8 +14,8 @@ export async function POST(request: NextRequest) {
 
     console.log("Sending Beggins Gmail email:", { to, subject, fromEmail })
 
-    // Get valid OAuth tokens for the sender (Beggins tenant)
-    const tokens = await oauthTokens.get(fromEmail, "century21-beggins")
+    // Get OAuth tokens for the user on Beggins tenant
+    const tokens = await oauthTokens.get(fromEmail, 'google', 'century21-beggins')
 
     if (!tokens.success || !tokens.tokens) {
       console.error("No valid OAuth tokens found for Beggins user:", fromEmail)
