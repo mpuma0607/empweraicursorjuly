@@ -270,6 +270,21 @@ export default function ScriptForm() {
     console.log("User data changed:", { user, isUserLoading, isLoggedIn })
   }, [user, isUserLoading, isLoggedIn])
 
+  // Debug tenant context
+  useEffect(() => {
+    console.log("ScriptIt: Tenant context changed:", { 
+      tenantConfig, 
+      tenantId: tenantConfig?.id,
+      isBeggins: tenantConfig?.id === 'century21-beggins'
+    })
+    
+    // Also log the current domain
+    if (typeof window !== 'undefined') {
+      console.log("ScriptIt: Current domain:", window.location.hostname)
+      console.log("ScriptIt: Current URL:", window.location.href)
+    }
+  }, [tenantConfig])
+
   // Fetch user branding profile
   useEffect(() => {
     const fetchUserBranding = async () => {
@@ -1130,6 +1145,11 @@ export default function ScriptForm() {
               <span className="whitespace-nowrap">Send to Client</span>
             </Button>
           )}
+          
+          {/* Temporary debug button - remove after testing */}
+          <div className="text-xs text-gray-500 text-center mt-2">
+            Debug: isGmailConnected={isGmailConnected.toString()}, scriptType={formData.scriptType}, tenant={tenantConfig?.id}
+          </div>
         </div>
 
         <Button
