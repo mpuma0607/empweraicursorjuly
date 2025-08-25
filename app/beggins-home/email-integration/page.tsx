@@ -109,7 +109,7 @@ export default function BegginsEmailIntegrationPage() {
 
     setIsConnecting(true)
     try {
-      // Redirect to unified Google OAuth start (will detect tenant automatically)
+      // Redirect to unified Google OAuth start (always uses Empower AI OAuth, final destination is tenant-aware)
       window.location.href = '/api/auth/google/start'
     } catch (error) {
       console.error('Error starting Gmail connection:', error)

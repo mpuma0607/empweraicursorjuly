@@ -5,26 +5,24 @@ export async function GET(request: NextRequest) {
   try {
     // Determine the current tenant from the request hostname
     const host = request.headers.get('host') || ''
-    const protocol = request.headers.get('x-forwarded-proto') || 'https'
-    const currentDomain = `${protocol}://${host}`
     
-    // Determine tenant and redirect URI based on domain
-    let redirectUri: string
+    // ALWAYS use Empower AI's OAuth flow and redirect URI
+    const redirectUri = process.env.GOOGLE_OAUTH_REDIRECT_URI || 'https://getempowerai.com/api/auth/google/callback'
+    
+    // Only the final destination after OAuth is tenant-aware
     let callbackRedirectUrl: string
     
     if (host.includes('beggins') || host.includes('begginsuniversity')) {
-      // Beggins tenant
-      redirectUri = 'https://begginsuniversity.com/api/auth/google/callback'
+      // Beggins tenant - redirect to Beggins email integration page
       callbackRedirectUrl = 'https://begginsuniversity.com/beggins-home/email-integration'
-      console.log('OAuth Start: Using Beggins tenant configuration')
+      console.log('OAuth Start: Using Beggins tenant (final destination)')
     } else {
-      // Empower tenant (default)
-      redirectUri = process.env.GOOGLE_OAUTH_REDIRECT_URI || 'https://getempowerai.com/api/auth/google/callback'
+      // Empower tenant - redirect to Empower email integration page
       callbackRedirectUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://getempowerai.com'}/profile/email-integration`
-      console.log('OAuth Start: Using Empower tenant configuration')
+      console.log('OAuth Start: Using Empower tenant (final destination)')
     }
     
-    console.log('OAuth Start - Domain:', host, 'Redirect URI:', redirectUri, 'Callback Redirect:', callbackRedirectUrl)
+    console.log('OAuth Start - Domain:', host, 'OAuth Redirect URI:', redirectUri, 'Final Destination:', callbackRedirectUrl)
 
     // Generate PKCE challenge and verifier
     const codeVerifier = randomBytes(32).toString('base64url')
@@ -33,7 +31,7 @@ export async function GET(request: NextRequest) {
     // Generate state for CSRF protection
     const state = randomBytes(16).toString('hex')
     
-    // Build OAuth URL
+    // Build OAuth URL - ALWAYS use Empower AI's OAuth
     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
       `client_id=${process.env.GOOGLE_OAUTH_CLIENT_ID}` +
       `&redirect_uri=${encodeURIComponent(redirectUri)}` +
@@ -46,12 +44,12 @@ export async function GET(request: NextRequest) {
       `&code_challenge_method=plain` +
       `&include_granted_scopes=true`
 
-    console.log('Google OAuth URL generated:', authUrl)
+    console.log('Google OAuth URL generated (using Empower AI OAuth):', authUrl)
 
     // Set secure cookies for PKCE and state
     const response = NextResponse.redirect(authUrl)
     
-    // Store tenant info in cookies for the callback
+    // Store tenant info in cookies for the callback (only for final redirect)
     response.cookies.set('oauth_tenant', host.includes('beggins') ? 'century21-beggins' : 'empower-ai', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

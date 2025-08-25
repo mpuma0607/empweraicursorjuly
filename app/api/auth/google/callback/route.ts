@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Exchange code for tokens
+    // Exchange code for tokens - ALWAYS use Empower AI's redirect URI
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: {
@@ -60,9 +60,7 @@ export async function GET(request: NextRequest) {
         code,
         code_verifier: codeVerifier,
         grant_type: 'authorization_code',
-        redirect_uri: tenant === 'century21-beggins' 
-          ? 'https://begginsuniversity.com/api/auth/google/callback'
-          : (process.env.GOOGLE_OAUTH_REDIRECT_URI || 'https://getempowerai.com/api/auth/google/callback'),
+        redirect_uri: process.env.GOOGLE_OAUTH_REDIRECT_URI || 'https://getempowerai.com/api/auth/google/callback', // ALWAYS Empower AI
       }),
     })
 
