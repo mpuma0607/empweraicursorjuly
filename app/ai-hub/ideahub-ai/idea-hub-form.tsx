@@ -15,6 +15,7 @@ import { Loader2, Copy, Download, Mail, Mic, MicOff, Save } from "lucide-react"
 import Image from "next/image"
 import { useMemberSpaceUser } from "@/hooks/use-memberspace-user"
 import { saveUserCreation, generateCreationTitle } from "@/lib/auto-save-creation"
+import EmailCompositionModal from "@/components/email-composition-modal"
 
 const topicOptions = [
   "The benefits of working with a real estate agent",
@@ -387,6 +388,7 @@ export default function IdeaHubForm() {
   const [isSendingEmail, setIsSendingEmail] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [isListening, setIsListening] = useState(false)
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
   const resultsRef = useRef<HTMLDivElement>(null)
   const recognitionRef = useRef<any>(null)
   const { user, loading: userLoading } = useMemberSpaceUser()
@@ -518,6 +520,13 @@ export default function IdeaHubForm() {
   }
 
   const sendEmail = async () => {
+    // If Email content type is selected, use the Gmail modal
+    if (formData.contentType === "Email") {
+      setIsEmailModalOpen(true)
+      return
+    }
+
+    // For other content types, use the existing email functionality
     if (result?.text && result?.imageUrl) {
       setIsSendingEmail(true)
       try {
@@ -832,7 +841,9 @@ export default function IdeaHubForm() {
           className="flex items-center justify-center gap-2 bg-transparent"
         >
           {isSendingEmail ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
-          <span className="whitespace-nowrap">Email</span>
+          <span className="whitespace-nowrap">
+            {formData.contentType === "Email" ? "Send Email To Client" : "Email"}
+          </span>
         </Button>
         <Button
           variant="outline"
@@ -863,6 +874,16 @@ export default function IdeaHubForm() {
       >
         Create New Content
       </Button>
+
+      {/* Email Composition Modal */}
+      <EmailCompositionModal
+        isOpen={isEmailModalOpen}
+        onClose={() => setIsEmailModalOpen(false)}
+        scriptContent={result?.text || ""}
+        agentName={formData.name}
+        brokerageName=""
+        contentType="ideahub"
+      />
     </div>
   )
 

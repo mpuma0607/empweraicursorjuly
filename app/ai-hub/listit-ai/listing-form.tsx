@@ -13,6 +13,7 @@ import { Loader2, Copy, Download, Mail, FileText, Save, Check, Mic, MicOff } fro
 import { useToast } from "@/hooks/use-toast"
 import { useMemberSpaceUser } from "@/hooks/use-memberspace-user"
 import { saveUserCreation, generateCreationTitle } from "@/lib/auto-save-creation"
+import EmailCompositionModal from "@/components/email-composition-modal"
 
 type FormState = {
   propertyAddress: string
@@ -37,6 +38,7 @@ export default function ListingForm() {
   const [isSendingEmail, setIsSendingEmail] = useState(false)
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false)
   const [isListeningDescription, setIsListeningDescription] = useState(false)
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
   const [formData, setFormData] = useState<FormState>({
     propertyAddress: "",
     listingPrice: "",
@@ -308,49 +310,8 @@ export default function ListingForm() {
   }
 
   const sendEmail = async () => {
-    if (result?.description) {
-      setIsSendingEmail(true)
-      try {
-        // Generate HTML for email
-        const listingHTML = await generateListingHTML(formData, result.description)
-
-        // Send email via API route
-        const response = await fetch("/api/send-listing-email", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            to: formData.agentEmail,
-            name: formData.agentName,
-            description: result.description,
-            propertyAddress: formData.propertyAddress,
-            listingPrice: formData.listingPrice,
-            listingHTML: listingHTML,
-          }),
-        })
-
-        const data = await response.json()
-
-        if (data.success) {
-          toast({
-            title: "Email Sent Successfully",
-            description: "Check your inbox for your professional listing description!",
-          })
-        } else {
-          throw new Error(data.error || "Failed to send email")
-        }
-      } catch (error) {
-        console.error("Error sending email:", error)
-        toast({
-          title: "Email Sending Failed",
-          description: error instanceof Error ? error.message : "Failed to send email. Please try again.",
-          variant: "destructive",
-        })
-      } finally {
-        setIsSendingEmail(false)
-      }
-    }
+    // Use Gmail modal for sending listing to someone else
+    setIsEmailModalOpen(true)
   }
 
   const saveToProfile = async () => {
@@ -705,7 +666,7 @@ export default function ListingForm() {
           className="flex items-center justify-center gap-2 bg-transparent"
         >
           {isSendingEmail ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
-          <span className="whitespace-nowrap">Email</span>
+          <span className="whitespace-nowrap">Email To Someone Else</span>
         </Button>
         <Button
           variant="outline"
@@ -797,6 +758,16 @@ export default function ListingForm() {
         {step === 2 && renderStepTwo()}
         {step === 3 && renderStepThree()}
       </form>
+
+      {/* Email Composition Modal */}
+      <EmailCompositionModal
+        isOpen={isEmailModalOpen}
+        onClose={() => setIsEmailModalOpen(false)}
+        scriptContent={result?.description || ""}
+        agentName={formData.agentName}
+        brokerageName=""
+        contentType="listit"
+      />
     </div>
   )
 }

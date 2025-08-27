@@ -23,7 +23,7 @@ interface EmailCompositionModalProps {
   scriptContent: string
   agentName: string
   brokerageName: string
-  contentType?: 'script' | 'cma' // Add content type to determine which API to use
+  contentType?: 'script' | 'cma' | 'ideahub' | 'realbio' | 'listit' // Add content type to determine which API to use
 }
 
 interface EmailConnectionStatus {
@@ -193,7 +193,18 @@ export default function EmailCompositionModal({
       setError(null)
       
       // Determine which API endpoint to use based on content type
-      const apiEndpoint = contentType === 'cma' ? '/api/send-cma-email-gmail' : '/api/send-script-email-gmail'
+      let apiEndpoint = '/api/send-script-email-gmail' // default
+      if (contentType === 'cma') {
+        apiEndpoint = '/api/send-cma-email-gmail'
+      } else if (contentType === 'script') {
+        apiEndpoint = '/api/send-script-email-gmail'
+      } else if (contentType === 'ideahub') {
+        apiEndpoint = '/api/send-ideahub-email-gmail'
+      } else if (contentType === 'realbio') {
+        apiEndpoint = '/api/send-realbio-email-gmail'
+      } else if (contentType === 'listit') {
+        apiEndpoint = '/api/send-listit-email-gmail'
+      }
       
       const response = await fetch(apiEndpoint, {
         method: 'POST',
@@ -235,7 +246,11 @@ export default function EmailCompositionModal({
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
                          <CardTitle className="flex items-center gap-2">
                <Mail className="h-5 w-5" />
-               {contentType === 'cma' ? 'Send CMA Report to Client' : 'Send Script to Client'}
+               {contentType === 'cma' ? 'Send CMA Report to Client' : 
+                contentType === 'ideahub' ? 'Send Content to Client' :
+                contentType === 'realbio' ? 'Email To Someone Else' :
+                contentType === 'listit' ? 'Email To Someone Else' :
+                'Send Script to Client'}
              </CardTitle>
             <Button
               variant="ghost"

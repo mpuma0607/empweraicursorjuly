@@ -15,6 +15,7 @@ import { useTenant } from "@/contexts/tenant-context"
 import { getUserBrandingProfile } from "@/app/profile/branding/actions"
 import { saveUserCreation, generateCreationTitle } from "@/lib/auto-save-creation"
 import { generateAgentBio } from "../lib/realbio-actions"
+import EmailCompositionModal from "@/components/email-composition-modal"
 
 type BioFormState = {
   name: string
@@ -47,6 +48,7 @@ export default function RealBioForm() {
   const [isSendingEmail, setIsSendingEmail] = useState(false)
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
   const [isListeningOrigin, setIsListeningOrigin] = useState(false)
   const [isListeningAreas, setIsListeningAreas] = useState(false)
   const [isListeningHobbies, setIsListeningHobbies] = useState(false)
@@ -307,47 +309,8 @@ export default function RealBioForm() {
   }
 
   const sendEmail = async () => {
-    if (result?.bio) {
-      setIsSendingEmail(true)
-      try {
-        const response = await fetch("/api/realbio", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            action: "send-email",
-            formData,
-            bio: result.bio,
-          }),
-        })
-
-        const data = await response.json()
-        console.log("Email response:", data) // Add this for debugging
-
-        if (!response.ok) {
-          throw new Error(data.error || "Failed to send email")
-        }
-
-        if (data.success) {
-          toast({
-            title: "Email Sent Successfully",
-            description: "Check your inbox for your professional bio!",
-          })
-        } else {
-          throw new Error(data.error || "Failed to send email")
-        }
-      } catch (error) {
-        console.error("Error sending email:", error)
-        toast({
-          title: "Email Sending Failed",
-          description: error instanceof Error ? error.message : "Failed to send email. Please try again.",
-          variant: "destructive",
-        })
-      } finally {
-        setIsSendingEmail(false)
-      }
-    }
+    // Use Gmail modal for sending bio to someone else
+    setIsEmailModalOpen(true)
   }
 
   const saveToProfile = async () => {
@@ -358,7 +321,7 @@ export default function RealBioForm() {
       const title = generateCreationTitle("realbio", { agentName: formData.name })
 
       const success = await saveUserCreation({
-        userId: user.id,
+        userId: user.id.toString(),
         userEmail: user.email || "",
         toolType: "realbio",
         title,
@@ -400,7 +363,7 @@ export default function RealBioForm() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
           <Label htmlFor="name" className="flex items-center gap-2">
-            Your Name *{user && <UserCheck className="h-4 w-4 text-green-600" title="Auto-filled from your profile" />}
+            Your Name *{user && <UserCheck className="h-4 w-4 text-green-600" />}
           </Label>
           <Input
             id="name"
@@ -418,7 +381,7 @@ export default function RealBioForm() {
         <div className="space-y-2">
           <Label htmlFor="brokerage" className="flex items-center gap-2">
             Brokerage Name *
-            {user && formData.brokerage && <UserCheck className="h-4 w-4 text-green-600" title="Auto-filled from your brand profile" />}
+            {user && formData.brokerage && <UserCheck className="h-4 w-4 text-green-600" />}
           </Label>
           <Input
             id="brokerage"
@@ -574,7 +537,7 @@ export default function RealBioForm() {
       <div className="space-y-2">
         <Label htmlFor="email" className="flex items-center gap-2">
           Your Email Address *
-          {user && <UserCheck className="h-4 w-4 text-green-600" title="Auto-filled from your profile" />}
+          {user && <UserCheck className="h-4 w-4 text-green-600" />}
         </Label>
         <Input
           id="email"
@@ -710,7 +673,7 @@ export default function RealBioForm() {
           className="flex items-center justify-center gap-2 bg-transparent"
         >
           {isSendingEmail ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
-          <span className="whitespace-nowrap">Email</span>
+          <span className="whitespace-nowrap">Email To Someone Else</span>
         </Button>
         <Button
           variant="outline"
@@ -793,6 +756,16 @@ export default function RealBioForm() {
         {step === 2 && renderStepTwo()}
         {step === 3 && renderStepThree()}
       </form>
+
+      {/* Email Composition Modal */}
+      <EmailCompositionModal
+        isOpen={isEmailModalOpen}
+        onClose={() => setIsEmailModalOpen(false)}
+        scriptContent={result?.bio || ""}
+        agentName={formData.name}
+        brokerageName={formData.brokerage}
+        contentType="realbio"
+      />
     </div>
   )
 }

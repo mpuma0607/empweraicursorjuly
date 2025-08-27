@@ -75,6 +75,7 @@ export async function generateScript(formData: ScriptFormData) {
     const prompt = `You are a world-class real estate agent creating a ${formData.scriptTypeCategory} script. 
 Topic: ${topicToUse}${formData.customTopic ? ` (${formData.customTopic})` : ""}. 
 Tone: ${formData.tonality}.
+${topicContext ? `Context: ${topicContext}` : ""}
 ${formData.difficultConversationType ? `This is a difficult conversation type: ${formData.difficultConversationType}. Show empathy, acknowledge concerns, and provide a calm, confident path forward.` : ""}
 
 Always use language that helps the client see what's possible, hear reassurance, and feel confident in the next step.
