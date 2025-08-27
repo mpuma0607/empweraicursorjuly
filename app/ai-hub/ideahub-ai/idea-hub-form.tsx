@@ -838,17 +838,15 @@ export default function IdeaHubForm() {
           <span className="whitespace-nowrap">Email To Self</span>
         </Button>
         
-        {/* Show Send Email to Client button only when Email content type is selected */}
-        {formData.contentType === "Email" && (
-          <Button
-            variant="outline"
-            onClick={() => setIsEmailModalOpen(true)}
-            className="flex items-center justify-center gap-2 bg-transparent"
-          >
-            <Mail className="h-4 w-4" />
-            <span className="whitespace-nowrap">Send Email To Client</span>
-          </Button>
-        )}
+        {/* Always show Send Email to Client button */}
+        <Button
+          variant="outline"
+          onClick={() => setIsEmailModalOpen(true)}
+          className="flex items-center justify-center gap-2 bg-transparent"
+        >
+          <Mail className="h-4 w-4" />
+          <span className="whitespace-nowrap">Send Email To Client</span>
+        </Button>
         <Button
           variant="outline"
           onClick={saveToProfile}
