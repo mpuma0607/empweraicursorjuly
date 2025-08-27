@@ -34,24 +34,46 @@ async function fetchAdditionalContactInfo(url: string, apiKey: string) {
   return null
 }
 
-// Helper function to extract URLs from any object
-function extractUrls(obj: any): { url: string; description: string }[] {
+// Helper function to extract and validate URLs from any object
+function extractUrls(obj: any, ownerName?: string, address?: string): { url: string; description: string }[] {
   const links: { url: string; description: string }[] = []
   
   const traverse = (item: any, path: string = '') => {
     if (typeof item === 'string') {
-      // Check if this string contains a URL
-      const urlMatch = item.match(/(https?:\/\/[^\s)]+)/g)
+      // Check if this string contains a URL (including URLs in parentheses)
+      const urlMatch = item.match(/(https?:\/\/[^\s)]+)|(\(https?:\/\/[^\s)]+\))|(\([^)]*truepeoplesearch\.com[^)]*\))/g)
       if (urlMatch) {
         urlMatch.forEach(url => {
-          let description = 'Public Profile'
-          if (url.includes('truepeoplesearch.com')) description = 'TruePeopleSearch Profile'
-          else if (url.includes('whitepages.com')) description = 'Whitepages Profile'
-          else if (url.includes('spokeo.com')) description = 'Spokeo Profile'
-          else if (url.includes('beenverified.com')) description = 'BeenVerified Profile'
-          else if (url.includes('peoplefinder.com')) description = 'PeopleFinder Profile'
+          // Clean and validate the URL - remove parentheses and trailing punctuation
+          let cleanUrl = url.replace(/^\(|\)$/g, '') // Remove surrounding parentheses
+          cleanUrl = cleanUrl.replace(/[.,;!?]+$/, '') // Remove trailing punctuation
           
-          links.push({ url, description })
+          // Ensure it starts with http/https
+          if (!cleanUrl.startsWith('http')) {
+            cleanUrl = 'https://' + cleanUrl
+          }
+          
+          let description = 'Public Profile'
+          let validatedUrl = cleanUrl
+          
+          if (cleanUrl.includes('truepeoplesearch.com')) {
+            description = 'TruePeopleSearch Profile'
+            // Validate and potentially fix TruePeopleSearch URL
+            validatedUrl = validateTruePeopleSearchUrl(cleanUrl, ownerName, address)
+          } else if (cleanUrl.includes('whitepages.com')) {
+            description = 'Whitepages Profile'
+          } else if (cleanUrl.includes('spokeo.com')) {
+            description = 'Spokeo Profile'
+          } else if (cleanUrl.includes('beenverified.com')) {
+            description = 'BeenVerified Profile'
+          } else if (cleanUrl.includes('peoplefinder.com')) {
+            description = 'PeopleFinder Profile'
+          }
+          
+          // Only add valid URLs
+          if (isValidUrl(validatedUrl)) {
+            links.push({ url: validatedUrl, description })
+          }
         })
       }
     } else if (typeof item === 'object' && item !== null) {
@@ -67,6 +89,50 @@ function extractUrls(obj: any): { url: string; description: string }[] {
   
   traverse(obj)
   return links
+}
+
+// Validate and fix TruePeopleSearch URLs
+function validateTruePeopleSearchUrl(url: string, ownerName?: string, address?: string): string {
+  try {
+    const urlObj = new URL(url)
+    
+    // If it's a valid TruePeopleSearch URL, return as-is
+    if (urlObj.hostname === 'www.truepeoplesearch.com' && urlObj.pathname && urlObj.search) {
+      return url
+    }
+    
+    // If we have owner name and address, generate a proper search URL
+    if (ownerName && address) {
+      const nameParts = ownerName.trim().split(' ')
+      const firstName = nameParts[0] || ''
+      const lastName = nameParts.slice(1).join(' ') || ''
+      
+      if (firstName && lastName) {
+        const searchParams = new URLSearchParams({
+          name: firstName,
+          lastname: lastName,
+          citystatezip: address
+        })
+        return `https://www.truepeoplesearch.com/results?${searchParams.toString()}`
+      }
+    }
+    
+    // Fallback to basic search page
+    return 'https://www.truepeoplesearch.com/'
+  } catch (error) {
+    // If URL parsing fails, return a basic search page
+    return 'https://www.truepeoplesearch.com/'
+  }
+}
+
+// Validate if URL is properly formatted
+function isValidUrl(url: string): boolean {
+  try {
+    new URL(url)
+    return true
+  } catch {
+    return false
+  }
 }
 
 // Structured data extraction function for consistent results
@@ -170,7 +236,7 @@ function extractStructuredData(skipTraceData: any, additionalContactData: any, f
     structuredData.associatedIndividuals = associated
 
     // Extract public profile links from the data
-    structuredData.publicProfileLinks = extractUrls(skipTraceData)
+    structuredData.publicProfileLinks = extractUrls(skipTraceData, structuredData.primaryOwner, fullAddress)
   }
 
   // Extract from additional contact data
@@ -192,7 +258,7 @@ function extractStructuredData(skipTraceData: any, additionalContactData: any, f
     }
 
     // Add any additional public profile links
-    const additionalLinks = extractUrls(additionalContactData)
+    const additionalLinks = extractUrls(additionalContactData, structuredData.primaryOwner, fullAddress)
     structuredData.publicProfileLinks.push(...additionalLinks)
   }
 
