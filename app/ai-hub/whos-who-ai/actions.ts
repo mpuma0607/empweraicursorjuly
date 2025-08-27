@@ -269,6 +269,7 @@ function extractStructuredData(skipTraceData: any, additionalContactData: any, f
   structuredData.publicProfileLinks = uniqueLinks
 
   console.log("Extracted structured data:", JSON.stringify(structuredData, null, 2))
+  console.log("Public profile links extracted:", structuredData.publicProfileLinks)
   return structuredData
 }
 
@@ -403,7 +404,9 @@ ANALYSIS INSTRUCTIONS:
 ## CONTACT INFORMATION (Current Owners Only)
 - Phone Numbers: [List phone numbers for current owners]
 - Email Addresses: [List email addresses for current owners]
-- Public Profile Links: [Include TruePeopleSearch and other public data links specifically for the current owners]
+- Public Profile Links: ${structuredData.publicProfileLinks.length > 0 ? structuredData.publicProfileLinks.map(link => `• ${link.description}: ${link.url}`).join('\n') : 'No public profile links available'}
+
+IMPORTANT: When displaying URLs, use the exact URLs provided above. Do not add parentheses or modify the URLs in any way.
 
 ## PROPERTY CHARACTERISTICS
 - Bedrooms: ${structuredData.bedrooms || 'Not Available'}
