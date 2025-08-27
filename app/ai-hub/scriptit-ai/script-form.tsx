@@ -1092,24 +1092,26 @@ export default function ScriptForm() {
             {isSendingEmail ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
             <span className="whitespace-nowrap">Email to Self</span>
           </Button>
+          
+          {/* Gmail Client Email (Only if Gmail Connected) */}
+          {isGmailConnected && (
+            <Button
+              variant="outline"
+              onClick={() => setIsEmailModalOpen(true)}
+              disabled={!result?.script || !formData.agentName || !formData.brokerageName}
+              className="flex items-center justify-center gap-2 w-full"
+            >
+              <Mail className="h-4 w-4" />
+              <span className="whitespace-nowrap">Send to Client</span>
+            </Button>
+          )}
+          
           {(!result?.script || !formData.agentEmail || !formData.agentName) && (
             <p className="text-xs text-gray-500 text-center">
               {!result?.script ? "Generate a script first" : 
                !formData.agentEmail ? "Enter your email address" : 
                !formData.agentName ? "Enter your name" : ""}
             </p>
-          )}
-
-          {/* Gmail Client Email (Only if Gmail Connected and Email Script Type) */}
-          {isGmailConnected && formData.scriptType === "email" && (
-            <Button
-              variant="outline"
-              onClick={() => setIsEmailModalOpen(true)}
-              className="flex items-center justify-center gap-2 w-full"
-            >
-              <Mail className="h-4 w-4" />
-              <span className="whitespace-nowrap">Send to Client</span>
-            </Button>
           )}
         </div>
 

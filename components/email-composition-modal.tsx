@@ -110,7 +110,7 @@ export default function EmailCompositionModal({
       setError(null)
       
       // Determine which API endpoint to use based on content type
-      const apiEndpoint = contentType === 'cma' ? '/api/send-cma-email-gmail' : '/api/send-script-email'
+      const apiEndpoint = contentType === 'cma' ? '/api/send-cma-email-gmail' : '/api/send-script-email-gmail'
       
       const response = await fetch(apiEndpoint, {
         method: 'POST',
