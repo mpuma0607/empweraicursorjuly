@@ -520,13 +520,7 @@ export default function IdeaHubForm() {
   }
 
   const sendEmail = async () => {
-    // If Email content type is selected, use the Gmail modal
-    if (formData.contentType === "Email") {
-      setIsEmailModalOpen(true)
-      return
-    }
-
-    // For other content types, use the existing email functionality
+    // Always use Resend email functionality (Email to Self)
     if (result?.text && result?.imageUrl) {
       setIsSendingEmail(true)
       try {
@@ -841,10 +835,20 @@ export default function IdeaHubForm() {
           className="flex items-center justify-center gap-2 bg-transparent"
         >
           {isSendingEmail ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
-          <span className="whitespace-nowrap">
-            {formData.contentType === "Email" ? "Send Email To Client" : "Email"}
-          </span>
+          <span className="whitespace-nowrap">Email To Self</span>
         </Button>
+        
+        {/* Show Send Email to Client button only when Email content type is selected */}
+        {formData.contentType === "Email" && (
+          <Button
+            variant="outline"
+            onClick={() => setIsEmailModalOpen(true)}
+            className="flex items-center justify-center gap-2 bg-transparent"
+          >
+            <Mail className="h-4 w-4" />
+            <span className="whitespace-nowrap">Send Email To Client</span>
+          </Button>
+        )}
         <Button
           variant="outline"
           onClick={saveToProfile}

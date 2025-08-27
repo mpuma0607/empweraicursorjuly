@@ -65,6 +65,12 @@ export default function EmailCompositionModal({
       // Set default subject and signature based on content type
       if (contentType === 'cma') {
         setSubject(extractedSubject || `CMA Report from ${agentName} - ${brokerageName}`)
+      } else if (contentType === 'listit') {
+        setSubject(extractedSubject || `Listing Description from ${agentName} - ${brokerageName}`)
+      } else if (contentType === 'realbio') {
+        setSubject(extractedSubject || `Agent Bio from ${agentName} - ${brokerageName}`)
+      } else if (contentType === 'ideahub') {
+        setSubject(extractedSubject || `Content from ${agentName} - ${brokerageName}`)
       } else {
         setSubject(extractedSubject || `Script from ${agentName} - ${brokerageName}`)
       }

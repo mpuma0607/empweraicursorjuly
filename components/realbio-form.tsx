@@ -309,6 +309,51 @@ export default function RealBioForm() {
   }
 
   const sendEmail = async () => {
+    // Use Resend email functionality (Email to Self)
+    if (result?.bio) {
+      setIsSendingEmail(true)
+      try {
+        const response = await fetch("/api/realbio", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            action: "send-email",
+            formData,
+            bio: result.bio,
+          }),
+        })
+
+        const data = await response.json()
+        console.log("Email response:", data) // Add this for debugging
+
+        if (!response.ok) {
+          throw new Error(data.error || "Failed to send email")
+        }
+
+        if (data.success) {
+          toast({
+            title: "Email Sent Successfully",
+            description: "Check your inbox for your professional bio!",
+          })
+        } else {
+          throw new Error(data.error || "Failed to send email")
+        }
+      } catch (error) {
+        console.error("Error sending email:", error)
+        toast({
+          title: "Email Sending Failed",
+          description: error instanceof Error ? error.message : "Failed to send email. Please try again.",
+          variant: "destructive",
+        })
+      } finally {
+        setIsSendingEmail(false)
+      }
+    }
+  }
+
+  const sendEmailToClient = async () => {
     // Use Gmail modal for sending bio to someone else
     setIsEmailModalOpen(true)
   }
@@ -673,6 +718,14 @@ export default function RealBioForm() {
           className="flex items-center justify-center gap-2 bg-transparent"
         >
           {isSendingEmail ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+          <span className="whitespace-nowrap">Email To Self</span>
+        </Button>
+        <Button
+          variant="outline"
+          onClick={sendEmailToClient}
+          className="flex items-center justify-center gap-2 bg-transparent"
+        >
+          <Mail className="h-4 w-4" />
           <span className="whitespace-nowrap">Email To Someone Else</span>
         </Button>
         <Button

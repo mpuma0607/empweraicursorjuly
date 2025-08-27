@@ -310,6 +310,53 @@ export default function ListingForm() {
   }
 
   const sendEmail = async () => {
+    // Use Resend email functionality (Email to Self)
+    if (result?.description) {
+      setIsSendingEmail(true)
+      try {
+        // Generate HTML for email
+        const listingHTML = await generateListingHTML(formData, result.description)
+
+        // Send email via API route
+        const response = await fetch("/api/send-listing-email", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            to: formData.agentEmail,
+            name: formData.agentName,
+            description: result.description,
+            propertyAddress: formData.propertyAddress,
+            listingPrice: formData.listingPrice,
+            listingHTML: listingHTML,
+          }),
+        })
+
+        const data = await response.json()
+
+        if (data.success) {
+          toast({
+            title: "Email Sent Successfully",
+            description: "Check your inbox for your professional listing description!",
+          })
+        } else {
+          throw new Error(data.error || "Failed to send email")
+        }
+      } catch (error) {
+        console.error("Error sending email:", error)
+        toast({
+          title: "Email Sending Failed",
+          description: error instanceof Error ? error.message : "Failed to send email. Please try again.",
+          variant: "destructive",
+        })
+      } finally {
+        setIsSendingEmail(false)
+      }
+    }
+  }
+
+  const sendEmailToClient = async () => {
     // Use Gmail modal for sending listing to someone else
     setIsEmailModalOpen(true)
   }
@@ -666,6 +713,14 @@ export default function ListingForm() {
           className="flex items-center justify-center gap-2 bg-transparent"
         >
           {isSendingEmail ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+          <span className="whitespace-nowrap">Email To Self</span>
+        </Button>
+        <Button
+          variant="outline"
+          onClick={sendEmailToClient}
+          className="flex items-center justify-center gap-2 bg-transparent"
+        >
+          <Mail className="h-4 w-4" />
           <span className="whitespace-nowrap">Email To Someone Else</span>
         </Button>
         <Button
