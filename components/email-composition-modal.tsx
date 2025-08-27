@@ -59,17 +59,84 @@ export default function EmailCompositionModal({
         checkConnectionStatus()
       }, 500)
       
+      // Parse the script content to extract subject and clean up content
+      const { extractedSubject, cleanedContent } = parseScriptContent(scriptContent)
+      
       // Set default subject and signature based on content type
       if (contentType === 'cma') {
-        setSubject(`CMA Report from ${agentName} - ${brokerageName}`)
+        setSubject(extractedSubject || `CMA Report from ${agentName} - ${brokerageName}`)
       } else {
-        setSubject(`Script from ${agentName} - ${brokerageName}`)
+        setSubject(extractedSubject || `Script from ${agentName} - ${brokerageName}`)
       }
       setSignature(`Best regards,\n${agentName}\n${brokerageName}`)
-      // Set email body to script content
-      setEmailBody(scriptContent)
+      // Set email body to cleaned script content
+      setEmailBody(cleanedContent)
     }
   }, [isOpen, agentName, brokerageName, scriptContent])
+
+  // Function to parse script content and extract subject/remove placeholders
+  const parseScriptContent = (content: string) => {
+    let extractedSubject = ''
+    let cleanedContent = content
+
+    // Extract subject line (look for patterns like "Subject:", "SUBJECT:", etc.)
+    const subjectMatch = content.match(/^(?:Subject|SUBJECT):\s*(.+)$/m)
+    if (subjectMatch) {
+      extractedSubject = subjectMatch[1].trim()
+      // Remove the subject line from content
+      cleanedContent = cleanedContent.replace(/^(?:Subject|SUBJECT):\s*.+$/m, '').trim()
+    }
+
+    // Remove signature placeholders (common patterns)
+    const signaturePatterns = [
+      /---+\s*Signature\s*---+/gi,
+      /---+\s*Sign\s*---+/gi,
+      /---+\s*---+/g,
+      /_{3,}/g,
+      /-{3,}/g,
+      /Signature:\s*$/gm,
+      /Sign:\s*$/gm,
+      /Best regards,?\s*$/gm,
+      /Sincerely,?\s*$/gm,
+      /Thank you,?\s*$/gm
+    ]
+
+    signaturePatterns.forEach(pattern => {
+      cleanedContent = cleanedContent.replace(pattern, '')
+    })
+
+    // Clean up extra whitespace and line breaks
+    cleanedContent = cleanedContent
+      .replace(/\n\s*\n\s*\n/g, '\n\n') // Replace multiple line breaks with double
+      .replace(/^\s+|\s+$/g, '') // Trim start and end
+      .replace(/\s+$/gm, '') // Trim end of each line
+
+    return { extractedSubject, cleanedContent }
+  }
+
+  // Function to wrap long lines for better mobile formatting
+  const wrapLongLines = (text: string, maxLength: number = 72) => {
+    return text.split('\n').map(line => {
+      if (line.length <= maxLength) return line
+      
+      // Split long lines at word boundaries
+      const words = line.split(' ')
+      const wrappedLines = []
+      let currentLine = ''
+      
+      for (const word of words) {
+        if ((currentLine + word).length <= maxLength) {
+          currentLine += (currentLine ? ' ' : '') + word
+        } else {
+          if (currentLine) wrappedLines.push(currentLine)
+          currentLine = word
+        }
+      }
+      
+      if (currentLine) wrappedLines.push(currentLine)
+      return wrappedLines.join('\n')
+    }).join('\n')
+  }
 
   const checkConnectionStatus = async () => {
     try {
@@ -120,7 +187,7 @@ export default function EmailCompositionModal({
         body: JSON.stringify({
           to: toEmail,
           subject,
-          body: emailBody + '\n\n' + signature,
+          body: wrapLongLines(emailBody + '\n\n' + signature),
           from: connectionStatus.email
         }),
       })
