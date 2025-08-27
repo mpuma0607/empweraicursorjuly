@@ -34,6 +34,41 @@ async function fetchAdditionalContactInfo(url: string, apiKey: string) {
   return null
 }
 
+// Helper function to extract URLs from any object
+function extractUrls(obj: any): { url: string; description: string }[] {
+  const links: { url: string; description: string }[] = []
+  
+  const traverse = (item: any, path: string = '') => {
+    if (typeof item === 'string') {
+      // Check if this string contains a URL
+      const urlMatch = item.match(/(https?:\/\/[^\s)]+)/g)
+      if (urlMatch) {
+        urlMatch.forEach(url => {
+          let description = 'Public Profile'
+          if (url.includes('truepeoplesearch.com')) description = 'TruePeopleSearch Profile'
+          else if (url.includes('whitepages.com')) description = 'Whitepages Profile'
+          else if (url.includes('spokeo.com')) description = 'Spokeo Profile'
+          else if (url.includes('beenverified.com')) description = 'BeenVerified Profile'
+          else if (url.includes('peoplefinder.com')) description = 'PeopleFinder Profile'
+          
+          links.push({ url, description })
+        })
+      }
+    } else if (typeof item === 'object' && item !== null) {
+      Object.entries(item).forEach(([key, value]) => {
+        traverse(value, `${path}.${key}`)
+      })
+    } else if (Array.isArray(item)) {
+      item.forEach((value, index) => {
+        traverse(value, `${path}[${index}]`)
+      })
+    }
+  }
+  
+  traverse(obj)
+  return links
+}
+
 // Structured data extraction function for consistent results
 function extractStructuredData(skipTraceData: any, additionalContactData: any, fullAddress: string) {
   const structuredData = {
@@ -135,40 +170,6 @@ function extractStructuredData(skipTraceData: any, additionalContactData: any, f
     structuredData.associatedIndividuals = associated
 
     // Extract public profile links from the data
-    const extractUrls = (obj: any): { url: string; description: string }[] => {
-      const links: { url: string; description: string }[] = []
-      
-      const traverse = (item: any, path: string = '') => {
-        if (typeof item === 'string') {
-          // Check if this string contains a URL
-          const urlMatch = item.match(/(https?:\/\/[^\s)]+)/g)
-          if (urlMatch) {
-            urlMatch.forEach(url => {
-              let description = 'Public Profile'
-              if (url.includes('truepeoplesearch.com')) description = 'TruePeopleSearch Profile'
-              else if (url.includes('whitepages.com')) description = 'Whitepages Profile'
-              else if (url.includes('spokeo.com')) description = 'Spokeo Profile'
-              else if (url.includes('beenverified.com')) description = 'BeenVerified Profile'
-              else if (url.includes('peoplefinder.com')) description = 'PeopleFinder Profile'
-              
-              links.push({ url, description })
-            })
-          }
-        } else if (typeof item === 'object' && item !== null) {
-          Object.entries(item).forEach(([key, value]) => {
-            traverse(value, `${path}.${key}`)
-          })
-        } else if (Array.isArray(item)) {
-          item.forEach((value, index) => {
-            traverse(value, `${path}[${index}]`)
-          })
-        }
-      }
-      
-      traverse(obj)
-      return links
-    }
-
     structuredData.publicProfileLinks = extractUrls(skipTraceData)
   }
 
