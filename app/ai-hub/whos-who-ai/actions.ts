@@ -34,6 +34,181 @@ async function fetchAdditionalContactInfo(url: string, apiKey: string) {
   return null
 }
 
+// Structured data extraction function for consistent results
+function extractStructuredData(skipTraceData: any, additionalContactData: any, fullAddress: string) {
+  const structuredData = {
+    propertyType: '',
+    estimatedValue: '',
+    primaryOwner: '',
+    associatedIndividuals: [] as string[],
+    mailingAddress: '',
+    ownershipDuration: '',
+    phoneNumbers: [] as string[],
+    emailAddresses: [] as string[],
+    publicProfileLinks: [] as { url: string; description: string }[],
+    bedrooms: '',
+    bathrooms: '',
+    squareFeet: '',
+    lotSize: '',
+    yearBuilt: ''
+  }
+
+  // Helper function to safely extract nested values
+  const safeExtract = (obj: any, path: string): string => {
+    const keys = path.split('.')
+    let current = obj
+    for (const key of keys) {
+      if (current && typeof current === 'object' && key in current) {
+        current = current[key]
+      } else {
+        return ''
+      }
+    }
+    return current ? String(current).trim() : ''
+  }
+
+  // Helper function to extract arrays
+  const safeExtractArray = (obj: any, path: string): string[] => {
+    const value = safeExtract(obj, path)
+    if (Array.isArray(value)) {
+      return value.map(String).filter(v => v.trim())
+    }
+    return value ? [value] : []
+  }
+
+  // Extract from skip trace data
+  if (skipTraceData) {
+    // Extract current owners (prioritize current ownership data)
+    structuredData.primaryOwner = safeExtract(skipTraceData, 'current_owner') ||
+                                 safeExtract(skipTraceData, 'owner_name') || 
+                                 safeExtract(skipTraceData, 'owner') ||
+                                 safeExtract(skipTraceData, 'property_owner') ||
+                                 safeExtract(skipTraceData, 'name')
+    
+    structuredData.mailingAddress = safeExtract(skipTraceData, 'mailing_address') ||
+                                   safeExtract(skipTraceData, 'owner_address') ||
+                                   safeExtract(skipTraceData, 'current_address')
+    
+    structuredData.phoneNumbers = safeExtractArray(skipTraceData, 'phone_numbers') ||
+                                 safeExtractArray(skipTraceData, 'phones') ||
+                                 safeExtractArray(skipTraceData, 'phone') ||
+                                 safeExtractArray(skipTraceData, 'current_phone')
+    
+    structuredData.emailAddresses = safeExtractArray(skipTraceData, 'email_addresses') ||
+                                   safeExtractArray(skipTraceData, 'emails') ||
+                                   safeExtractArray(skipTraceData, 'email') ||
+                                   safeExtractArray(skipTraceData, 'current_email')
+    
+    structuredData.propertyType = safeExtract(skipTraceData, 'property_type') ||
+                                 safeExtract(skipTraceData, 'type')
+    
+    structuredData.estimatedValue = safeExtract(skipTraceData, 'estimated_value') ||
+                                   safeExtract(skipTraceData, 'value') ||
+                                   safeExtract(skipTraceData, 'price')
+    
+    structuredData.bedrooms = safeExtract(skipTraceData, 'bedrooms') ||
+                             safeExtract(skipTraceData, 'beds')
+    
+    structuredData.bathrooms = safeExtract(skipTraceData, 'bathrooms') ||
+                              safeExtract(skipTraceData, 'baths')
+    
+    structuredData.squareFeet = safeExtract(skipTraceData, 'square_feet') ||
+                               safeExtract(skipTraceData, 'sqft') ||
+                               safeExtract(skipTraceData, 'size')
+    
+    structuredData.lotSize = safeExtract(skipTraceData, 'lot_size') ||
+                            safeExtract(skipTraceData, 'lot')
+    
+    structuredData.yearBuilt = safeExtract(skipTraceData, 'year_built') ||
+                              safeExtract(skipTraceData, 'built')
+    
+    // Extract ownership duration/status
+    structuredData.ownershipDuration = safeExtract(skipTraceData, 'ownership_duration') ||
+                                      safeExtract(skipTraceData, 'owned_since') ||
+                                      safeExtract(skipTraceData, 'purchase_date')
+    
+    // Extract associated individuals (but prioritize current owners)
+    const associated = safeExtractArray(skipTraceData, 'associated_individuals') ||
+                      safeExtractArray(skipTraceData, 'associated_people') ||
+                      safeExtractArray(skipTraceData, 'residents') ||
+                      safeExtractArray(skipTraceData, 'co_owners')
+    structuredData.associatedIndividuals = associated
+
+    // Extract public profile links from the data
+    const extractUrls = (obj: any): { url: string; description: string }[] => {
+      const links: { url: string; description: string }[] = []
+      
+      const traverse = (item: any, path: string = '') => {
+        if (typeof item === 'string') {
+          // Check if this string contains a URL
+          const urlMatch = item.match(/(https?:\/\/[^\s)]+)/g)
+          if (urlMatch) {
+            urlMatch.forEach(url => {
+              let description = 'Public Profile'
+              if (url.includes('truepeoplesearch.com')) description = 'TruePeopleSearch Profile'
+              else if (url.includes('whitepages.com')) description = 'Whitepages Profile'
+              else if (url.includes('spokeo.com')) description = 'Spokeo Profile'
+              else if (url.includes('beenverified.com')) description = 'BeenVerified Profile'
+              else if (url.includes('peoplefinder.com')) description = 'PeopleFinder Profile'
+              
+              links.push({ url, description })
+            })
+          }
+        } else if (typeof item === 'object' && item !== null) {
+          Object.entries(item).forEach(([key, value]) => {
+            traverse(value, `${path}.${key}`)
+          })
+        } else if (Array.isArray(item)) {
+          item.forEach((value, index) => {
+            traverse(value, `${path}[${index}]`)
+          })
+        }
+      }
+      
+      traverse(obj)
+      return links
+    }
+
+    structuredData.publicProfileLinks = extractUrls(skipTraceData)
+  }
+
+  // Extract from additional contact data
+  if (additionalContactData) {
+    // Merge additional data, prioritizing skip trace data
+    if (!structuredData.primaryOwner) {
+      structuredData.primaryOwner = safeExtract(additionalContactData, 'owner_name') ||
+                                   safeExtract(additionalContactData, 'owner')
+    }
+    
+    if (structuredData.phoneNumbers.length === 0) {
+      structuredData.phoneNumbers = safeExtractArray(additionalContactData, 'phone_numbers') ||
+                                   safeExtractArray(additionalContactData, 'phones')
+    }
+    
+    if (structuredData.emailAddresses.length === 0) {
+      structuredData.emailAddresses = safeExtractArray(additionalContactData, 'email_addresses') ||
+                                     safeExtractArray(additionalContactData, 'emails')
+    }
+
+    // Add any additional public profile links
+    const additionalLinks = extractUrls(additionalContactData)
+    structuredData.publicProfileLinks.push(...additionalLinks)
+  }
+
+  // Remove duplicate URLs
+  const uniqueLinks = structuredData.publicProfileLinks.filter((link, index, self) => 
+    index === self.findIndex(l => l.url === link.url)
+  )
+  structuredData.publicProfileLinks = uniqueLinks
+
+  console.log("Extracted structured data:", JSON.stringify(structuredData, null, 2))
+  return structuredData
+}
+
+// Simple in-memory cache for results (in production, use Redis or database)
+const resultCache = new Map<string, { data: any; timestamp: number }>()
+const CACHE_DURATION = 24 * 60 * 60 * 1000 // 24 hours
+
 export async function skipTraceProperty(formData: SkipTraceFormData) {
   try {
     const apiKey = process.env.RAPIDAPI_ZILLOW_KEY
@@ -42,6 +217,21 @@ export async function skipTraceProperty(formData: SkipTraceFormData) {
       return {
         success: false,
         error: "API key not configured. Please contact administrator.",
+      }
+    }
+
+    // Create cache key from address
+    const fullAddress = `${formData.street}, ${formData.city}, ${formData.state} ${formData.zip}`
+    const cacheKey = fullAddress.toLowerCase().replace(/[^a-z0-9]/g, '')
+    
+    // Check cache first
+    const cached = resultCache.get(cacheKey)
+    if (cached && (Date.now() - cached.timestamp) < CACHE_DURATION) {
+      console.log("Returning cached result for:", fullAddress)
+      return {
+        success: true,
+        data: cached.data,
+        cached: true
       }
     }
 
@@ -107,41 +297,59 @@ export async function skipTraceProperty(formData: SkipTraceFormData) {
       }
     }
 
-    // Generate AI summary with all available data
+    // Generate structured summary with consistent data extraction
     const fullAddress = `${formData.street}, ${formData.city}, ${formData.state} ${formData.zip}`
 
+    // Extract structured data from API response
+    const structuredData = extractStructuredData(skipTraceData, additionalContactData, fullAddress)
+
     const prompt = `
-Generate: Professional property owner report
-Structure: 6 sections with clear headers
-Style: Actionable insights, professional tone
-Data: Include URLs in CONTACT DETAILS
+You are a professional real estate skip tracing analyst. Analyze the provided data to answer these CORE QUESTIONS:
+
+1. WHO ARE THE CURRENT OWNERS? (Identify the 2 most likely current homeowners)
+2. WHAT IS THEIR CONTACT INFO? (Focus on the current owners' contact details and public profile links)
 
 Property: ${fullAddress}
-Skip Trace: ${JSON.stringify(skipTraceData, null, 2)}
-Additional: ${additionalContactData ? JSON.stringify(additionalContactData, null, 2) : "None"}
+
+AVAILABLE DATA:
+${JSON.stringify(structuredData, null, 2)}
+
+RAW API DATA (for additional context):
+${JSON.stringify(skipTraceData, null, 2)}
+
+ANALYSIS INSTRUCTIONS:
+- Focus ONLY on the most likely CURRENT owners (not past owners, tenants, or associated people)
+- Prioritize the 2 most relevant individuals who likely own this property
+- Extract and organize their contact information professionally
+- Include public profile links specifically for the current owners
+- Be factual and professional - no speculation beyond what the data suggests
 
 ## PROPERTY OVERVIEW
-- Address, type, characteristics, value info
+- Address: ${fullAddress}
+- Property Type: ${structuredData.propertyType || 'Not Available'}
+- Estimated Value: ${structuredData.estimatedValue || 'Not Available'}
 
-## OWNER INFORMATION  
-- Primary owner names and associated individuals
-- Mailing address, demographics, ownership history
+## CURRENT OWNERS (Primary Focus)
+- Owner 1: [Name and relationship to property]
+- Owner 2: [Name and relationship to property if applicable]
+- Ownership Status: [Current ownership details]
+- Mailing Address: [Current mailing address if different from property]
 
-## CONTACT DETAILS
-- Phone numbers with type, emails, social media
-- Public record links: TruePeopleSearch.com, Whitepages, Spokeo, etc.
-- Include specific URLs like "https://www.truepeoplesearch.com/find-person?name=[NAME]&citystatezip=[LOCATION]"
-- IMPORTANT: Extract and include ALL public profile links from the API response data
-- Format public profile links clearly: "Public Profile: [URL] - [Description]"
+## CONTACT INFORMATION (Current Owners Only)
+- Phone Numbers: [List phone numbers for current owners]
+- Email Addresses: [List email addresses for current owners]
+- Public Profile Links: [Include TruePeopleSearch and other public data links specifically for the current owners]
 
 ## PROPERTY CHARACTERISTICS
-- Type, size, features, estimated value, history
+- Bedrooms: ${structuredData.bedrooms || 'Not Available'}
+- Bathrooms: ${structuredData.bathrooms || 'Not Available'}
+- Square Feet: ${structuredData.squareFeet || 'Not Available'}
+- Year Built: ${structuredData.yearBuilt || 'Not Available'}
 
 ## PROFESSIONAL OUTREACH STRATEGY
-- Initial contact approach, key talking points, follow-up
-
-## MARKET INSIGHTS
-- Local conditions, investment potential, comparables`
+- Recommended Contact Method: [Based on available contact info]
+- Key Talking Points: [Professional approach for current owners]
+- Follow-up Strategy: [Next steps for engagement]`
 
     const { text } = await generateText({
       model: openai("gpt-4o"),
@@ -175,14 +383,23 @@ Additional: ${additionalContactData ? JSON.stringify(additionalContactData, null
       console.error("Email error:", emailError)
     }
 
+    const resultData = {
+      summary: text,
+      rawData: skipTraceData,
+      additionalData: additionalContactData,
+      address: fullAddress,
+      structuredData: structuredData
+    }
+
+    // Cache the result
+    resultCache.set(cacheKey, {
+      data: resultData,
+      timestamp: Date.now()
+    })
+
     return {
       success: true,
-      data: {
-        summary: text,
-        rawData: skipTraceData,
-        additionalData: additionalContactData,
-        address: fullAddress,
-      },
+      data: resultData,
     }
   } catch (error) {
     console.error("Skip trace error:", error)
