@@ -17,6 +17,7 @@ import { useMemberSpaceUser } from "@/hooks/use-memberspace-user"
 import { useTenantConfig } from "@/contexts/tenant-context"
 import { saveUserCreation, generateCreationTitle } from "@/lib/auto-save-creation"
 import { getUserBrandingProfile } from "@/app/profile/branding/actions"
+import EmailCompositionModal from "@/components/email-composition-modal"
 import type { UserBrandingProfile } from "@/app/profile/branding/actions"
 import { getBrandOptionsForTenant } from "@/lib/tenant-brand-options"
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible"
@@ -123,6 +124,7 @@ export default function IdeaHubEmpowerForm() {
   const [isSendingEmail, setIsSendingEmail] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [isListening, setIsListening] = useState(false)
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
   const [userBrandingProfile, setUserBrandingProfile] = useState<UserBrandingProfile | null>(null)
   const [loadingProfile, setLoadingProfile] = useState(true)
   const [showImageHelp, setShowImageHelp] = useState(false)
@@ -317,6 +319,7 @@ export default function IdeaHubEmpowerForm() {
   }
 
   const sendEmail = async () => {
+    // Use Resend email functionality (Email to Self)
     const contentToSend = editableText || result?.text
     if (contentToSend && result?.imageUrl) {
       setIsSendingEmail(true)
@@ -350,6 +353,11 @@ export default function IdeaHubEmpowerForm() {
         setIsSendingEmail(false)
       }
     }
+  }
+
+  const sendEmailToClient = async () => {
+    // Use Gmail modal for sending content to client
+    setIsEmailModalOpen(true)
   }
 
   const saveToProfile = async () => {
@@ -967,7 +975,17 @@ export default function IdeaHubEmpowerForm() {
           className="flex items-center justify-center gap-2 bg-transparent"
         >
           {isSendingEmail ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
-          <span className="whitespace-nowrap">Email</span>
+          <span className="whitespace-nowrap">Email To Self</span>
+        </Button>
+        
+        {/* Always show Send Email to Client button */}
+        <Button
+          variant="outline"
+          onClick={sendEmailToClient}
+          className="flex items-center justify-center gap-2 bg-transparent"
+        >
+          <Mail className="h-4 w-4" />
+          <span className="whitespace-nowrap">Send Email To Client</span>
         </Button>
         <Button
           variant="outline"
@@ -1007,6 +1025,16 @@ export default function IdeaHubEmpowerForm() {
       >
         Create New Content
       </Button>
+
+      {/* Email Composition Modal */}
+      <EmailCompositionModal
+        isOpen={isEmailModalOpen}
+        onClose={() => setIsEmailModalOpen(false)}
+        scriptContent={editableText || result?.text || ""}
+        agentName={formData.name}
+        brokerageName=""
+        contentType="ideahub"
+      />
     </div>
   )
 
