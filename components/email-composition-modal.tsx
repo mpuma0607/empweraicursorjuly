@@ -79,12 +79,20 @@ export default function EmailCompositionModal({
     let extractedSubject = ''
     let cleanedContent = content
 
-    // Extract subject line (look for patterns like "Subject:", "SUBJECT:", etc.)
-    const subjectMatch = content.match(/^(?:Subject|SUBJECT):\s*(.+)$/m)
-    if (subjectMatch) {
-      extractedSubject = subjectMatch[1].trim()
-      // Remove the subject line from content
-      cleanedContent = cleanedContent.replace(/^(?:Subject|SUBJECT):\s*.+$/m, '').trim()
+    // Extract subject line (look for patterns like "Subject:", "SUBJECT:", "**Subject:**", etc.)
+    const subjectPatterns = [
+      /^\*\*Subject:\*\*\s*(.+)$/m,  // **Subject:** format
+      /^(?:Subject|SUBJECT):\s*(.+)$/m,  // Standard Subject: format
+    ]
+    
+    for (const pattern of subjectPatterns) {
+      const subjectMatch = content.match(pattern)
+      if (subjectMatch) {
+        extractedSubject = subjectMatch[1].trim()
+        // Remove the subject line from content
+        cleanedContent = cleanedContent.replace(pattern, '').trim()
+        break
+      }
     }
 
     // Remove signature placeholders (common patterns)
@@ -98,7 +106,15 @@ export default function EmailCompositionModal({
       /Sign:\s*$/gm,
       /Best regards,?\s*$/gm,
       /Sincerely,?\s*$/gm,
-      /Thank you,?\s*$/gm
+      /Thank you,?\s*$/gm,
+      // Remove specific placeholder patterns
+      /\[Your Name\]/g,
+      /\[Your Contact Information\]/g,
+      /\[Your Agency\]/g,
+      /\[Your Real Estate Agency\]/g,
+      /\[Your Name\]/g,
+      /\[Your Contact Information\]/g,
+      /\[Your Real Estate Agency\]/g
     ]
 
     signaturePatterns.forEach(pattern => {
