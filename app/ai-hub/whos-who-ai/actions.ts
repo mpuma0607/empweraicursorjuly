@@ -299,8 +299,6 @@ export async function skipTraceProperty(formData: SkipTraceFormData) {
     }
 
     // Generate structured summary with consistent data extraction
-    const fullAddress = `${formData.street}, ${formData.city}, ${formData.state} ${formData.zip}`
-
     // Extract structured data from API response
     const structuredData = extractStructuredData(skipTraceData, additionalContactData, fullAddress)
 
