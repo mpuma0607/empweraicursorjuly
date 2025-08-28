@@ -32,6 +32,7 @@ export const defaultTenantConfig: TenantConfig = {
       "whos-who-ai",
       "goalscreen-ai",
       "propbot-ai",
+      "real-img",
     ],
     customSections: [],
     hiddenFeatures: [],

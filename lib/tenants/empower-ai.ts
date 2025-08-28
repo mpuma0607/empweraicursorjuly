@@ -32,6 +32,7 @@ export const empowerAiConfig: TenantConfig = {
       "goalscreen-ai",
       "propbot-ai",
       "ideahub-empower",
+      "real-img",
     ],
     customSections: [],
     hiddenFeatures: ["networking-hub"],
