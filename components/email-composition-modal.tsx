@@ -23,7 +23,7 @@ interface EmailCompositionModalProps {
   scriptContent: string
   agentName: string
   brokerageName: string
-  contentType?: 'script' | 'cma' | 'ideahub' | 'realbio' | 'listit' // Add content type to determine which API to use
+  contentType?: 'script' | 'cma' | 'ideahub' | 'realbio' | 'listit' | 'real-img' // Add content type to determine which API to use
 }
 
 interface EmailConnectionStatus {
@@ -71,6 +71,8 @@ export default function EmailCompositionModal({
         setSubject(extractedSubject || `Agent Bio from ${agentName} - ${brokerageName}`)
       } else if (contentType === 'ideahub') {
         setSubject(extractedSubject || `Content from ${agentName} - ${brokerageName}`)
+      } else if (contentType === 'real-img') {
+        setSubject(extractedSubject || `Interactive Image from ${agentName} - ${brokerageName}`)
       } else {
         setSubject(extractedSubject || `Script from ${agentName} - ${brokerageName}`)
       }

@@ -25,10 +25,13 @@ import {
   X,
   Palette,
   Move,
-  Zap
+  Zap,
+  Mail,
+  Save
 } from "lucide-react"
 import { useMemberSpaceUser } from "@/hooks/use-memberspace-user"
 import { saveUserCreation } from "@/lib/auto-save-creation"
+import EmailCompositionModal from "@/components/email-composition-modal"
 
 interface Hotspot {
   id: string
@@ -38,6 +41,7 @@ interface Hotspot {
   height: number
   title: string
   content: string
+  shape: 'square' | 'circle'
   media: {
     image?: string
     video?: string
@@ -76,6 +80,8 @@ export function RealImgForm() {
   const [exportCode, setExportCode] = useState('')
   const [isPreviewMode, setIsPreviewMode] = useState(false)
   const [previewHotspot, setPreviewHotspot] = useState<Hotspot | null>(null)
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
+  const [emailContent, setEmailContent] = useState('')
   
   const { user, loading: userLoading } = useMemberSpaceUser()
   const imageRef = useRef<HTMLImageElement>(null)
@@ -120,6 +126,7 @@ export function RealImgForm() {
       height: 50,
       title: 'New Hotspot',
       content: 'Add your content here',
+      shape: 'square',
       media: {},
       style: {
         backgroundColor: '#3b82f6',
@@ -213,7 +220,7 @@ export function RealImgForm() {
           height: ${hotspot.height}px;
           background-color: ${hotspot.style.backgroundColor};
           border: 2px solid ${hotspot.style.borderColor};
-          border-radius: ${hotspot.style.borderRadius}px;
+          border-radius: ${hotspot.shape === 'circle' ? '50%' : hotspot.style.borderRadius + 'px'};
           cursor: pointer;
           display: flex;
           align-items: center;
@@ -312,6 +319,71 @@ export function RealImgForm() {
     }
   }
 
+  // Email to self (Resend)
+  const handleEmailToSelf = async () => {
+    if (!user || !imageUrl) return
+    
+    try {
+      const emailContent = `
+Interactive Image: ${imageName}
+
+Image URL: ${imageUrl}
+Hotspots: ${hotspots.length}
+
+${hotspots.map(hotspot => `
+${hotspot.title}:
+- Content: ${hotspot.content}
+- Media: ${hotspot.media.image ? 'Image ✓' : ''} ${hotspot.media.video ? 'Video ✓' : ''} ${hotspot.media.link ? 'Link ✓' : ''}
+- Style: ${hotspot.shape}, ${hotspot.style.backgroundColor}, ${hotspot.style.isFlashing ? 'Flashing' : 'Static'}
+`).join('')}
+
+Generated on: ${new Date().toLocaleDateString()}
+      `.trim()
+
+      const response = await fetch('/api/send-support-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: user.email,
+          subject: `Real-IMG: ${imageName}`,
+          content: emailContent
+        })
+      })
+
+      if (response.ok) {
+        alert('Email sent to yourself successfully!')
+      } else {
+        throw new Error('Failed to send email')
+      }
+    } catch (error) {
+      console.error('Error sending email:', error)
+      alert('Failed to send email. Please try again.')
+    }
+  }
+
+  // Email to someone else (Gmail)
+  const handleEmailToClient = () => {
+    if (!imageUrl || hotspots.length === 0) return
+    
+    const emailContent = `
+Interactive Image: ${imageName}
+
+I've created an interactive image with ${hotspots.length} hotspots for you to review.
+
+${hotspots.map(hotspot => `
+• ${hotspot.title}: ${hotspot.content}
+`).join('')}
+
+You can view the full interactive experience by clicking on the hotspots in the image.
+
+Best regards,
+${user?.name || 'Your Name'}
+    `.trim()
+
+    setEmailContent(emailContent)
+    setIsEmailModalOpen(true)
+  }
+
   // Copy export code
   const copyExportCode = () => {
     navigator.clipboard.writeText(exportCode)
@@ -403,7 +475,7 @@ export function RealImgForm() {
                     {hotspots.map((hotspot) => (
                       <div
                         key={hotspot.id}
-                        className={`absolute border-2 rounded cursor-pointer transition-all ${
+                        className={`absolute border-2 cursor-pointer transition-all ${
                           selectedHotspot?.id === hotspot.id ? 'ring-2 ring-blue-500' : ''
                         } ${hotspot.style.isFlashing ? 'animate-pulse' : ''}`}
                         style={{
@@ -416,7 +488,7 @@ export function RealImgForm() {
                           color: hotspot.style.textColor,
                           fontSize: hotspot.style.fontSize,
                           fontWeight: hotspot.style.fontWeight,
-                          borderRadius: hotspot.style.borderRadius,
+                          borderRadius: hotspot.shape === 'circle' ? '50%' : hotspot.style.borderRadius,
                           animation: hotspot.style.isFlashing ? `flash ${hotspot.style.flashSpeed}ms infinite` : 'none'
                         }}
                         onClick={() => handleHotspotClick(hotspot)}
@@ -470,6 +542,23 @@ export function RealImgForm() {
                           rows={3}
                           placeholder="Describe what users will see when they click this hotspot..."
                         />
+                      </div>
+                      
+                      {/* Shape Selection */}
+                      <div>
+                        <Label htmlFor="hotspot-shape">Shape</Label>
+                        <Select
+                          value={selectedHotspot.shape}
+                          onValueChange={(value) => updateHotspot(selectedHotspot.id, { shape: value as 'square' | 'circle' })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="square">Square</SelectItem>
+                            <SelectItem value="circle">Circle</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                       
                       {/* Media Section */}
@@ -681,6 +770,7 @@ export function RealImgForm() {
                               })}
                               min="0"
                               max="50"
+                              disabled={selectedHotspot.shape === 'circle'}
                             />
                           </div>
                         </div>
@@ -771,10 +861,11 @@ export function RealImgForm() {
                           <div>
                             <div className="font-medium">{hotspot.title}</div>
                             <div className="text-sm text-gray-500">
-                              {hotspot.media.image && <ImageIcon className="inline h-3 w-3 mr-1" />}
-                              {hotspot.media.video && <Video className="inline h-3 w-3 mr-1" />}
-                              {hotspot.media.link && <Link className="inline h-3 w-3 mr-1" />}
-                              {hotspot.style.isFlashing && <Zap className="inline h-3 w-3 mr-1 text-yellow-500" />}
+                              <span className="capitalize">{hotspot.shape}</span>
+                              {hotspot.media.image && <ImageIcon className="inline h-3 w-3 ml-2 mr-1" />}
+                              {hotspot.media.video && <Video className="inline h-3 w-3 ml-2 mr-1" />}
+                              {hotspot.media.link && <Link className="inline h-3 w-3 ml-2 mr-1" />}
+                              {hotspot.style.isFlashing && <Zap className="inline h-3 w-3 ml-2 mr-1 text-yellow-500" />}
                             </div>
                           </div>
                           <Button
@@ -855,9 +946,20 @@ export function RealImgForm() {
             <Button variant="outline" onClick={() => setCurrentStep('edit')}>
               Back to Editor
             </Button>
-            <Button onClick={handleSaveToProfile} disabled={isSaving}>
-              {isSaving ? 'Saving...' : 'Save to Profile'}
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={handleEmailToSelf}>
+                <Mail className="h-4 w-4 mr-2" />
+                Email To Self
+              </Button>
+              <Button variant="outline" onClick={handleEmailToClient}>
+                <Mail className="h-4 w-4 mr-2" />
+                Email To Someone Else
+              </Button>
+              <Button onClick={handleSaveToProfile} disabled={isSaving}>
+                <Save className="h-4 w-4 mr-2" />
+                {isSaving ? 'Saving...' : 'Save to Profile'}
+              </Button>
+            </div>
           </div>
         </TabsContent>
       </Tabs>
@@ -906,6 +1008,16 @@ export function RealImgForm() {
           </div>
         </div>
       )}
+
+      {/* Email Composition Modal */}
+      <EmailCompositionModal
+        isOpen={isEmailModalOpen}
+        onClose={() => setIsEmailModalOpen(false)}
+        contentType="real-img"
+        scriptContent={emailContent}
+        agentName={user?.name || 'Your Name'}
+        brokerageName="Your Brokerage"
+      />
     </div>
   )
 }
