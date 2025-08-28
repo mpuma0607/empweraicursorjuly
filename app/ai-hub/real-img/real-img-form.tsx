@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Switch } from "@/components/ui/switch"
 import { 
   Upload, 
   Plus, 
@@ -19,7 +20,12 @@ import {
   Image as ImageIcon,
   Link,
   Type,
-  Video
+  Video,
+  Play,
+  X,
+  Palette,
+  Move,
+  Zap
 } from "lucide-react"
 import { useMemberSpaceUser } from "@/hooks/use-memberspace-user"
 import { saveUserCreation } from "@/lib/auto-save-creation"
@@ -32,12 +38,21 @@ interface Hotspot {
   height: number
   title: string
   content: string
-  type: 'text' | 'link' | 'image' | 'video'
-  url?: string
+  media: {
+    image?: string
+    video?: string
+    link?: string
+    linkText?: string
+  }
   style: {
     backgroundColor: string
     borderColor: string
     textColor: string
+    fontSize: number
+    fontWeight: string
+    borderRadius: number
+    isFlashing: boolean
+    flashSpeed: number
   }
 }
 
@@ -59,6 +74,8 @@ export function RealImgForm() {
   const [isCreatingHotspot, setIsCreatingHotspot] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [exportCode, setExportCode] = useState('')
+  const [isPreviewMode, setIsPreviewMode] = useState(false)
+  const [previewHotspot, setPreviewHotspot] = useState<Hotspot | null>(null)
   
   const { user, loading: userLoading } = useMemberSpaceUser()
   const imageRef = useRef<HTMLImageElement>(null)
@@ -71,7 +88,7 @@ export function RealImgForm() {
       setImageFile(file)
       const url = URL.createObjectURL(file)
       setImageUrl(url)
-      setImageName(file.name.replace(/\.[^/.]+$/, '')) // Remove file extension
+      setImageName(file.name.replace(/\.[^/.]+$/, ''))
       setCurrentStep('edit')
     }
   }
@@ -97,17 +114,22 @@ export function RealImgForm() {
   const createHotspot = (x: number, y: number) => {
     const newHotspot: Hotspot = {
       id: `hotspot-${Date.now()}`,
-      x: x - 25, // Center the hotspot on click
+      x: x - 25,
       y: y - 25,
       width: 50,
       height: 50,
       title: 'New Hotspot',
       content: 'Add your content here',
-      type: 'text',
+      media: {},
       style: {
         backgroundColor: '#3b82f6',
         borderColor: '#1d4ed8',
-        textColor: '#ffffff'
+        textColor: '#ffffff',
+        fontSize: 12,
+        fontWeight: 'bold',
+        borderRadius: 4,
+        isFlashing: false,
+        flashSpeed: 1000
       }
     }
     setHotspots([...hotspots, newHotspot])
@@ -142,6 +164,37 @@ export function RealImgForm() {
     }
   }
 
+  // Handle media uploads
+  const handleMediaUpload = (type: 'image' | 'video', file: File) => {
+    if (!selectedHotspot) return
+    
+    const url = URL.createObjectURL(file)
+    const mediaKey = type === 'image' ? 'image' : 'video'
+    
+    updateHotspot(selectedHotspot.id, {
+      media: { ...selectedHotspot.media, [mediaKey]: url }
+    })
+  }
+
+  // Remove media
+  const removeMedia = (type: 'image' | 'video') => {
+    if (!selectedHotspot) return
+    
+    const newMedia = { ...selectedHotspot.media }
+    delete newMedia[type]
+    
+    updateHotspot(selectedHotspot.id, { media: newMedia })
+  }
+
+  // Handle hotspot click in preview mode
+  const handleHotspotClick = (hotspot: Hotspot) => {
+    if (isPreviewMode) {
+      setPreviewHotspot(hotspot)
+    } else {
+      setSelectedHotspot(hotspot)
+    }
+  }
+
   // Generate export code
   const generateExportCode = () => {
     const htmlCode = `
@@ -150,7 +203,7 @@ export function RealImgForm() {
     <img src="${imageUrl}" alt="${imageName}" style="max-width: 100%; height: auto;" />
     ${hotspots.map(hotspot => `
       <div 
-        class="real-img-hotspot" 
+        class="real-img-hotspot ${hotspot.style.isFlashing ? 'flashing' : ''}" 
         data-hotspot-id="${hotspot.id}"
         style="
           position: absolute;
@@ -160,14 +213,15 @@ export function RealImgForm() {
           height: ${hotspot.height}px;
           background-color: ${hotspot.style.backgroundColor};
           border: 2px solid ${hotspot.style.borderColor};
-          border-radius: 4px;
+          border-radius: ${hotspot.style.borderRadius}px;
           cursor: pointer;
           display: flex;
           align-items: center;
           justify-content: center;
           color: ${hotspot.style.textColor};
-          font-weight: bold;
-          font-size: 12px;
+          font-weight: ${hotspot.style.fontWeight};
+          font-size: ${hotspot.style.fontSize}px;
+          transition: all 0.2s ease;
         "
         title="${hotspot.title}"
         onclick="showHotspotContent('${hotspot.id}')"
@@ -177,11 +231,45 @@ export function RealImgForm() {
     `).join('')}
   </div>
   
+  <style>
+    .flashing {
+      animation: flash ${hotspots.find(h => h.style.isFlashing)?.style.flashSpeed || 1000}ms infinite;
+    }
+    @keyframes flash {
+      0%, 50% { opacity: 1; }
+      51%, 100% { opacity: 0.5; }
+    }
+  </style>
+  
   <script>
     function showHotspotContent(hotspotId) {
       const hotspot = ${JSON.stringify(hotspots)}.find(h => h.id === hotspotId);
       if (hotspot) {
-        alert(hotspot.content);
+        let content = '<div style="max-width: 400px; padding: 20px;">';
+        
+        if (hotspot.media.image) {
+          content += '<img src="' + hotspot.media.image + '" style="max-width: 100%; height: auto; margin-bottom: 15px; border-radius: 8px;" />';
+        }
+        
+        if (hotspot.media.video) {
+          content += '<video controls style="max-width: 100%; height: auto; margin-bottom: 15px; border-radius: 8px;"><source src="' + hotspot.media.video + '" type="video/mp4">Your browser does not support the video tag.</video>';
+        }
+        
+        content += '<h3 style="margin: 0 0 10px 0; color: #333;">' + hotspot.title + '</h3>';
+        content += '<p style="margin: 0 0 15px 0; line-height: 1.5; color: #666;">' + hotspot.content + '</p>';
+        
+        if (hotspot.media.link) {
+          content += '<a href="' + hotspot.media.link + '" target="_blank" style="display: inline-block; background: #3b82f6; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px;">' + (hotspot.media.linkText || 'Learn More') + '</a>';
+        }
+        
+        content += '</div>';
+        
+        // Create modal
+        const modal = document.createElement('div');
+        modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000;';
+        modal.innerHTML = content;
+        modal.onclick = () => document.body.removeChild(modal);
+        document.body.appendChild(modal);
       }
     }
   </script>
@@ -281,9 +369,18 @@ export function RealImgForm() {
                     <span>Image Editor</span>
                     <div className="flex gap-2">
                       <Button
+                        variant={isPreviewMode ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setIsPreviewMode(!isPreviewMode)}
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        {isPreviewMode ? 'Exit Preview' : 'Preview Mode'}
+                      </Button>
+                      <Button
                         variant={isCreatingHotspot ? "default" : "outline"}
                         size="sm"
                         onClick={() => setIsCreatingHotspot(!isCreatingHotspot)}
+                        disabled={isPreviewMode}
                       >
                         <Plus className="h-4 w-4 mr-2" />
                         {isCreatingHotspot ? 'Cancel' : 'Add Hotspot'}
@@ -308,7 +405,7 @@ export function RealImgForm() {
                         key={hotspot.id}
                         className={`absolute border-2 rounded cursor-pointer transition-all ${
                           selectedHotspot?.id === hotspot.id ? 'ring-2 ring-blue-500' : ''
-                        }`}
+                        } ${hotspot.style.isFlashing ? 'animate-pulse' : ''}`}
                         style={{
                           left: hotspot.x,
                           top: hotspot.y,
@@ -316,9 +413,13 @@ export function RealImgForm() {
                           height: hotspot.height,
                           backgroundColor: hotspot.style.backgroundColor,
                           borderColor: hotspot.style.borderColor,
-                          color: hotspot.style.textColor
+                          color: hotspot.style.textColor,
+                          fontSize: hotspot.style.fontSize,
+                          fontWeight: hotspot.style.fontWeight,
+                          borderRadius: hotspot.style.borderRadius,
+                          animation: hotspot.style.isFlashing ? `flash ${hotspot.style.flashSpeed}ms infinite` : 'none'
                         }}
-                        onClick={() => setSelectedHotspot(hotspot)}
+                        onClick={() => handleHotspotClick(hotspot)}
                       >
                         <div className="w-full h-full flex items-center justify-center text-xs font-bold">
                           {hotspot.title.charAt(0).toUpperCase()}
@@ -330,6 +431,12 @@ export function RealImgForm() {
                   {isCreatingHotspot && (
                     <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded text-sm text-blue-800">
                       Click on the image to place a new hotspot
+                    </div>
+                  )}
+                  
+                  {isPreviewMode && (
+                    <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded text-sm text-green-800">
+                      Preview Mode: Click hotspots to see how they'll appear to users
                     </div>
                   )}
                 </CardContent>
@@ -355,64 +462,275 @@ export function RealImgForm() {
                       </div>
                       
                       <div>
-                        <Label htmlFor="hotspot-type">Type</Label>
-                        <Select
-                          value={selectedHotspot.type}
-                          onValueChange={(value) => updateHotspot(selectedHotspot.id, { type: value as any })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="text">
-                              <div className="flex items-center gap-2">
-                                <Type className="h-4 w-4" />
-                                Text
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="link">
-                              <div className="flex items-center gap-2">
-                                <Link className="h-4 w-4" />
-                                Link
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="image">
-                              <div className="flex items-center gap-2">
-                                <ImageIcon className="h-4 w-4" />
-                                Image
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="video">
-                              <div className="flex items-center gap-2">
-                                <Video className="h-4 w-4" />
-                                Video
-                              </div>
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      
-                      <div>
                         <Label htmlFor="hotspot-content">Content</Label>
                         <Textarea
                           id="hotspot-content"
                           value={selectedHotspot.content}
                           onChange={(e) => updateHotspot(selectedHotspot.id, { content: e.target.value })}
                           rows={3}
+                          placeholder="Describe what users will see when they click this hotspot..."
                         />
                       </div>
                       
-                      {selectedHotspot.type === 'link' && (
-                        <div>
-                          <Label htmlFor="hotspot-url">URL</Label>
+                      {/* Media Section */}
+                      <div className="space-y-3">
+                        <Label className="text-sm font-medium">Media</Label>
+                        
+                        {/* Image Upload */}
+                        <div className="space-y-2">
+                          <Label className="text-xs text-gray-600">Image</Label>
+                          {selectedHotspot.media.image ? (
+                            <div className="relative">
+                              <img 
+                                src={selectedHotspot.media.image} 
+                                alt="Hotspot image" 
+                                className="w-full h-20 object-cover rounded border"
+                              />
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                className="absolute top-1 right-1 h-6 w-6 p-0"
+                                onClick={() => removeMedia('image')}
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="border-2 border-dashed border-gray-300 rounded p-2 text-center">
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => e.target.files?.[0] && handleMediaUpload('image', e.target.files[0])}
+                                className="hidden"
+                                id="hotspot-image-upload"
+                              />
+                              <label htmlFor="hotspot-image-upload" className="cursor-pointer">
+                                <ImageIcon className="h-4 w-4 mx-auto mb-1 text-gray-400" />
+                                <span className="text-xs text-gray-500">Add Image</span>
+                              </label>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Video Upload */}
+                        <div className="space-y-2">
+                          <Label className="text-xs text-gray-600">Video</Label>
+                          {selectedHotspot.media.video ? (
+                            <div className="relative">
+                              <video 
+                                src={selectedHotspot.media.video} 
+                                className="w-full h-20 object-cover rounded border"
+                                controls
+                              />
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                className="absolute top-1 right-1 h-6 w-6 p-0"
+                                onClick={() => removeMedia('video')}
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="border-2 border-dashed border-gray-300 rounded p-2 text-center">
+                              <input
+                                type="file"
+                                accept="video/*"
+                                onChange={(e) => e.target.files?.[0] && handleMediaUpload('video', e.target.files[0])}
+                                className="hidden"
+                                id="hotspot-video-upload"
+                              />
+                              <label htmlFor="hotspot-video-upload" className="cursor-pointer">
+                                <Video className="h-4 w-4 mx-auto mb-1 text-gray-400" />
+                                <span className="text-xs text-gray-500">Add Video</span>
+                              </label>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Link */}
+                        <div className="space-y-2">
+                          <Label className="text-xs text-gray-600">Link</Label>
                           <Input
-                            id="hotspot-url"
-                            value={selectedHotspot.url || ''}
-                            onChange={(e) => updateHotspot(selectedHotspot.id, { url: e.target.value })}
                             placeholder="https://..."
+                            value={selectedHotspot.media.link || ''}
+                            onChange={(e) => updateHotspot(selectedHotspot.id, { 
+                              media: { ...selectedHotspot.media, link: e.target.value }
+                            })}
+                          />
+                          <Input
+                            placeholder="Link text (e.g., 'Learn More')"
+                            value={selectedHotspot.media.linkText || ''}
+                            onChange={(e) => updateHotspot(selectedHotspot.id, { 
+                              media: { ...selectedHotspot.media, linkText: e.target.value }
+                            })}
                           />
                         </div>
-                      )}
+                      </div>
+                      
+                      {/* Style Section */}
+                      <div className="space-y-3">
+                        <Label className="text-sm font-medium">Style</Label>
+                        
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <Label className="text-xs text-gray-600">Width</Label>
+                            <Input
+                              type="number"
+                              value={selectedHotspot.width}
+                              onChange={(e) => updateHotspot(selectedHotspot.id, { width: parseInt(e.target.value) || 50 })}
+                              min="20"
+                              max="200"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs text-gray-600">Height</Label>
+                            <Input
+                              type="number"
+                              value={selectedHotspot.height}
+                              onChange={(e) => updateHotspot(selectedHotspot.id, { height: parseInt(e.target.value) || 50 })}
+                              min="20"
+                              max="200"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <Label className="text-xs text-gray-600">Background Color</Label>
+                          <div className="flex gap-2">
+                            <Input
+                              type="color"
+                              value={selectedHotspot.style.backgroundColor}
+                              onChange={(e) => updateHotspot(selectedHotspot.id, { 
+                                style: { ...selectedHotspot.style, backgroundColor: e.target.value }
+                              })}
+                              className="w-12 h-8 p-1"
+                            />
+                            <Input
+                              value={selectedHotspot.style.backgroundColor}
+                              onChange={(e) => updateHotspot(selectedHotspot.id, { 
+                                style: { ...selectedHotspot.style, backgroundColor: e.target.value }
+                              })}
+                              className="flex-1"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <Label className="text-xs text-gray-600">Border Color</Label>
+                          <div className="flex gap-2">
+                            <Input
+                              type="color"
+                              value={selectedHotspot.style.borderColor}
+                              onChange={(e) => updateHotspot(selectedHotspot.id, { 
+                                style: { ...selectedHotspot.style, borderColor: e.target.value }
+                              })}
+                              className="w-12 h-8 p-1"
+                            />
+                            <Input
+                              value={selectedHotspot.style.borderColor}
+                              onChange={(e) => updateHotspot(selectedHotspot.id, { 
+                                style: { ...selectedHotspot.style, borderColor: e.target.value }
+                              })}
+                              className="flex-1"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <Label className="text-xs text-gray-600">Text Color</Label>
+                          <div className="flex gap-2">
+                            <Input
+                              type="color"
+                              value={selectedHotspot.style.textColor}
+                              onChange={(e) => updateHotspot(selectedHotspot.id, { 
+                                style: { ...selectedHotspot.style, textColor: e.target.value }
+                              })}
+                              className="w-12 h-8 p-1"
+                            />
+                            <Input
+                              value={selectedHotspot.style.textColor}
+                              onChange={(e) => updateHotspot(selectedHotspot.id, { 
+                                style: { ...selectedHotspot.style, textColor: e.target.value }
+                              })}
+                              className="flex-1"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <Label className="text-xs text-gray-600">Font Size</Label>
+                            <Input
+                              type="number"
+                              value={selectedHotspot.style.fontSize}
+                              onChange={(e) => updateHotspot(selectedHotspot.id, { 
+                                style: { ...selectedHotspot.style, fontSize: parseInt(e.target.value) || 12 }
+                              })}
+                              min="8"
+                              max="24"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs text-gray-600">Border Radius</Label>
+                            <Input
+                              type="number"
+                              value={selectedHotspot.style.borderRadius}
+                              onChange={(e) => updateHotspot(selectedHotspot.id, { 
+                                style: { ...selectedHotspot.style, borderRadius: parseInt(e.target.value) || 4 }
+                              })}
+                              min="0"
+                              max="50"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <Label className="text-xs text-gray-600">Font Weight</Label>
+                          <Select
+                            value={selectedHotspot.style.fontWeight}
+                            onValueChange={(value) => updateHotspot(selectedHotspot.id, { 
+                              style: { ...selectedHotspot.style, fontWeight: value }
+                            })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="normal">Normal</SelectItem>
+                              <SelectItem value="bold">Bold</SelectItem>
+                              <SelectItem value="bolder">Bolder</SelectItem>
+                              <SelectItem value="lighter">Lighter</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm">Flashing Animation</Label>
+                          <Switch
+                            checked={selectedHotspot.style.isFlashing}
+                            onCheckedChange={(checked) => updateHotspot(selectedHotspot.id, { 
+                              style: { ...selectedHotspot.style, isFlashing: checked }
+                            })}
+                          />
+                        </div>
+                        
+                        {selectedHotspot.style.isFlashing && (
+                          <div>
+                            <Label className="text-xs text-gray-600">Flash Speed (ms)</Label>
+                            <Input
+                              type="number"
+                              value={selectedHotspot.style.flashSpeed}
+                              onChange={(e) => updateHotspot(selectedHotspot.id, { 
+                                style: { ...selectedHotspot.style, flashSpeed: parseInt(e.target.value) || 1000 }
+                              })}
+                              min="200"
+                              max="3000"
+                              step="100"
+                            />
+                          </div>
+                        )}
+                      </div>
                       
                       <div className="flex gap-2">
                         <Button
@@ -452,7 +770,12 @@ export function RealImgForm() {
                         <div className="flex items-center justify-between">
                           <div>
                             <div className="font-medium">{hotspot.title}</div>
-                            <div className="text-sm text-gray-500">{hotspot.type}</div>
+                            <div className="text-sm text-gray-500">
+                              {hotspot.media.image && <ImageIcon className="inline h-3 w-3 mr-1" />}
+                              {hotspot.media.video && <Video className="inline h-3 w-3 mr-1" />}
+                              {hotspot.media.link && <Link className="inline h-3 w-3 mr-1" />}
+                              {hotspot.style.isFlashing && <Zap className="inline h-3 w-3 mr-1 text-yellow-500" />}
+                            </div>
                           </div>
                           <Button
                             variant="ghost"
@@ -538,6 +861,51 @@ export function RealImgForm() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Preview Modal */}
+      {previewHotspot && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          onClick={() => setPreviewHotspot(null)}
+        >
+          <div 
+            className="bg-white rounded-lg max-w-md w-full mx-4 max-h-[80vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6">
+              {previewHotspot.media.image && (
+                <img 
+                  src={previewHotspot.media.image} 
+                  alt="Hotspot preview" 
+                  className="w-full h-48 object-cover rounded mb-4"
+                />
+              )}
+              
+              {previewHotspot.media.video && (
+                <video 
+                  src={previewHotspot.media.video} 
+                  controls 
+                  className="w-full h-48 object-cover rounded mb-4"
+                />
+              )}
+              
+              <h3 className="text-xl font-bold mb-3">{previewHotspot.title}</h3>
+              <p className="text-gray-600 mb-4 leading-relaxed">{previewHotspot.content}</p>
+              
+              {previewHotspot.media.link && (
+                <a 
+                  href={previewHotspot.media.link} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+                >
+                  {previewHotspot.media.linkText || 'Learn More'}
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
