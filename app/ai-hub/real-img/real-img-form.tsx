@@ -57,6 +57,7 @@ interface Hotspot {
     borderRadius: number
     isFlashing: boolean
     flashSpeed: number
+    buttonColor: string
   }
 }
 
@@ -128,16 +129,17 @@ export function RealImgForm() {
       content: 'Add your content here',
       shape: 'square',
       media: {},
-      style: {
-        backgroundColor: '#3b82f6',
-        borderColor: '#1d4ed8',
-        textColor: '#ffffff',
-        fontSize: 12,
-        fontWeight: 'bold',
-        borderRadius: 4,
-        isFlashing: false,
-        flashSpeed: 1000
-      }
+              style: {
+          backgroundColor: '#3b82f6',
+          borderColor: '#1d4ed8',
+          textColor: '#ffffff',
+          fontSize: 12,
+          fontWeight: 'bold',
+          borderRadius: 4,
+          isFlashing: false,
+          flashSpeed: 1000,
+          buttonColor: '#3b82f6'
+        }
     }
     setHotspots([...hotspots, newHotspot])
     setSelectedHotspot(newHotspot)
@@ -265,9 +267,9 @@ export function RealImgForm() {
         content += '<h3 style="margin: 0 0 10px 0; color: #333;">' + hotspot.title + '</h3>';
         content += '<p style="margin: 0 0 15px 0; line-height: 1.5; color: #666;">' + hotspot.content + '</p>';
         
-        if (hotspot.media.link) {
-          content += '<a href="' + hotspot.media.link + '" target="_blank" style="display: inline-block; background: #3b82f6; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px;">' + (hotspot.media.linkText || 'Learn More') + '</a>';
-        }
+                 if (hotspot.media.link) {
+           content += '<a href="' + hotspot.media.link + '" target="_blank" style="display: inline-block; background: ' + hotspot.style.buttonColor + '; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px;">' + (hotspot.media.linkText || 'Learn More') + '</a>';
+         }
         
         content += '</div>';
         
@@ -345,8 +347,9 @@ Generated on: ${new Date().toLocaleDateString()}
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           to: user.email,
+          from: 'noreply@marketing.getempowerai.com',
           subject: `Real-IMG: ${imageName}`,
-          content: emailContent
+          message: emailContent
         })
       })
 
@@ -726,26 +729,47 @@ ${user?.name || 'Your Name'}
                           </div>
                         </div>
                         
-                        <div>
-                          <Label className="text-xs text-gray-600">Text Color</Label>
-                          <div className="flex gap-2">
-                            <Input
-                              type="color"
-                              value={selectedHotspot.style.textColor}
-                              onChange={(e) => updateHotspot(selectedHotspot.id, { 
-                                style: { ...selectedHotspot.style, textColor: e.target.value }
-                              })}
-                              className="w-12 h-8 p-1"
-                            />
-                            <Input
-                              value={selectedHotspot.style.textColor}
-                              onChange={(e) => updateHotspot(selectedHotspot.id, { 
-                                style: { ...selectedHotspot.style, textColor: e.target.value }
-                              })}
-                              className="flex-1"
-                            />
-                          </div>
-                        </div>
+                                                 <div>
+                           <Label className="text-xs text-gray-600">Text Color</Label>
+                           <div className="flex gap-2">
+                             <Input
+                               type="color"
+                               value={selectedHotspot.style.textColor}
+                               onChange={(e) => updateHotspot(selectedHotspot.id, { 
+                                 style: { ...selectedHotspot.style, textColor: e.target.value }
+                               })}
+                               className="w-12 h-8 p-1"
+                             />
+                             <Input
+                               value={selectedHotspot.style.textColor}
+                               onChange={(e) => updateHotspot(selectedHotspot.id, { 
+                                 style: { ...selectedHotspot.style, textColor: e.target.value }
+                               })}
+                               className="flex-1"
+                             />
+                           </div>
+                         </div>
+                         
+                         <div>
+                           <Label className="text-xs text-gray-600">Button Color (for links)</Label>
+                           <div className="flex gap-2">
+                             <Input
+                               type="color"
+                               value={selectedHotspot.style.buttonColor}
+                               onChange={(e) => updateHotspot(selectedHotspot.id, { 
+                                 style: { ...selectedHotspot.style, buttonColor: e.target.value }
+                               })}
+                               className="w-12 h-8 p-1"
+                             />
+                             <Input
+                               value={selectedHotspot.style.buttonColor}
+                               onChange={(e) => updateHotspot(selectedHotspot.id, { 
+                                 style: { ...selectedHotspot.style, buttonColor: e.target.value }
+                               })}
+                               className="flex-1"
+                             />
+                           </div>
+                         </div>
                         
                         <div className="grid grid-cols-2 gap-2">
                           <div>
@@ -994,16 +1018,20 @@ ${user?.name || 'Your Name'}
               <h3 className="text-xl font-bold mb-3">{previewHotspot.title}</h3>
               <p className="text-gray-600 mb-4 leading-relaxed">{previewHotspot.content}</p>
               
-              {previewHotspot.media.link && (
-                <a 
-                  href={previewHotspot.media.link} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
-                >
-                  {previewHotspot.media.linkText || 'Learn More'}
-                </a>
-              )}
+                             {previewHotspot.media.link && (
+                 <a 
+                   href={previewHotspot.media.link} 
+                   target="_blank" 
+                   rel="noopener noreferrer"
+                   style={{
+                     backgroundColor: previewHotspot.style.buttonColor,
+                     color: 'white'
+                   }}
+                   className="inline-block px-4 py-2 rounded hover:opacity-80 transition-opacity"
+                 >
+                   {previewHotspot.media.linkText || 'Learn More'}
+                 </a>
+               )}
             </div>
           </div>
         </div>
