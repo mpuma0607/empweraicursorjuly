@@ -1,7 +1,11 @@
 "use server"
 
 import { generateText } from "ai"
-import { openai } from "@ai-sdk/openai"
+import OpenAI from "openai"
+
+const openaiInstance = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+})
 
 export interface StagingRequest {
   roomType: string
@@ -36,7 +40,7 @@ export async function generateVirtualStaging(
     
     // Convert image URL to base64 for OpenAI API
     const imageBuffer = await fetch(imageUrl).then(res => res.arrayBuffer())
-    const base64Image = Buffer.from(imageBuffer).toString('base64')
+    const base64Image = Buffer.from(imageBuffer)
     
     // Build the comprehensive AI prompt for virtual staging
     const prompt = buildStagingPrompt(stagingRequest, imageUrl)
@@ -45,7 +49,7 @@ export async function generateVirtualStaging(
     console.log('StageIT: Calling OpenAI gpt-image-1 API...')
     
     // Call OpenAI gpt-image-1 for actual image editing
-    const response = await openai.images.edit({
+    const response = await openaiInstance.images.edit({
       image: base64Image,
       prompt: prompt,
       n: 2, // Generate 2 variations
