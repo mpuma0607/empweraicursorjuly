@@ -142,7 +142,7 @@ export function StageItForm() {
     setIsProcessing(true)
     setCurrentStep('process')
 
-          try {
+                try {
         // Call the new API route for staging
         const response = await fetch('/api/stage', {
           method: 'POST',
@@ -155,7 +155,7 @@ export function StageItForm() {
             style: stagingRequest.style,
             colors: stagingRequest.colorPalette,
             notes: `Furniture density: ${stagingRequest.furnitureDensity}, Lighting: ${stagingRequest.lighting}, Target market: ${stagingRequest.targetMarket}, Property value: ${stagingRequest.propertyValue}, Additional features: ${stagingRequest.additionalFeatures.join(', ')}`,
-            size: "2048x2048"
+            size: "2048x2048" // use 2048 for final save
           })
         })
 
@@ -170,16 +170,16 @@ export function StageItForm() {
         const clientResults: StagingResult[] = [{
           id: `staging-${Date.now()}-1`,
           originalImage: imageUrl,
-          stagedImage: result.dataUrl, // The AI-generated staged image
+          stagedImage: result.dataUrl, // The AI-generated staged image from OpenAI
           style: stagingRequest.style,
-          prompt: `AI-generated ${stagingRequest.style} staging for ${stagingRequest.roomType}`,
+          prompt: result.prompt || `AI-generated ${stagingRequest.style} staging for ${stagingRequest.roomType}`,
           metadata: stagingRequest,
           createdAt: new Date()
         }]
-      
-      setStagingResults(clientResults)
-      setSelectedResult(clientResults[0])
-      setCurrentStep('results')
+        
+        setStagingResults(clientResults)
+        setSelectedResult(clientResults[0])
+        setCurrentStep('results')
     } catch (error) {
       console.error('Error generating staging:', error)
       alert('Failed to generate staging. Please try again.')
