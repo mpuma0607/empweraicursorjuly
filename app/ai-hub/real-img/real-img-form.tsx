@@ -293,16 +293,21 @@ export function RealImgForm() {
     const imageWidth = img.naturalWidth
     const imageHeight = img.naturalHeight
 
+    // Get the displayed image dimensions from the DOM
+    const displayedImage = imageRef.current
+    const displayedWidth = displayedImage?.offsetWidth || imageWidth
+    const displayedHeight = displayedImage?.offsetHeight || imageHeight
+
     const htmlCode = `
  <div class="real-img-interactive" data-image-id="${Date.now()}">
    <div class="real-img-container" style="position: relative; display: inline-block;">
      <img src="${base64Image}" alt="${imageName}" style="max-width: 100%; height: auto;" />
-         ${hotspots.map(hotspot => {
-       // Convert pixel positions to percentages
-       const leftPercent = (hotspot.x / imageWidth) * 100
-       const topPercent = (hotspot.y / imageHeight) * 100
-       const widthPercent = (hotspot.width / imageWidth) * 100
-       const heightPercent = (hotspot.height / imageHeight) * 100
+                   ${hotspots.map(hotspot => {
+        // Convert pixel positions to percentages based on displayed image size
+        const leftPercent = (hotspot.x / displayedWidth) * 100
+        const topPercent = (hotspot.y / displayedHeight) * 100
+        const widthPercent = (hotspot.width / displayedWidth) * 100
+        const heightPercent = (hotspot.height / displayedHeight) * 100
        
        return `
        <div 
@@ -355,16 +360,22 @@ export function RealImgForm() {
         transform: scale(1.05);
         box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       }
-      /* Make sure the container scales properly */
-      .real-img-container {
-        max-width: 100%;
-        height: auto;
-      }
-      .real-img-container img {
-        width: 100%;
-        height: auto;
-        display: block;
-      }
+             /* Make sure the container scales properly */
+       .real-img-container {
+         max-width: 100%;
+         height: auto;
+         position: relative;
+       }
+       .real-img-container img {
+         width: 100%;
+         height: auto;
+         display: block;
+       }
+       /* Ensure hotspots scale proportionally */
+       .real-img-hotspot {
+         position: absolute;
+         transform-origin: top left;
+       }
    </style>
   
   <script>
@@ -712,18 +723,28 @@ ${user?.name || 'Your Name'}
                         </Select>
                       </div>
 
-                      {/* Display Icon Input (if icon is selected) */}
-                      {selectedHotspot.displayType === 'icon' && (
-                        <div>
-                          <Label htmlFor="hotspot-display-icon">Icon</Label>
-                          <Input
-                            id="hotspot-display-icon"
-                            value={selectedHotspot.displayIcon}
-                            onChange={(e) => updateHotspot(selectedHotspot.id, { displayIcon: e.target.value })}
-                            placeholder="e.g., 🔗, 📄, 🎥"
-                          />
-                        </div>
-                      )}
+                                             {/* Display Icon Selection (if icon is selected) */}
+                       {selectedHotspot.displayType === 'icon' && (
+                         <div>
+                           <Label htmlFor="hotspot-display-icon">Icon</Label>
+                           <div className="grid grid-cols-6 gap-2 p-2 border rounded bg-gray-50">
+                             {['🏠', '📸', '🎥', '🔗', '📄', '💡', '⭐', '❤️', '🔥', '✨', '💎', '🌺', '🚗', '✈️', '🏖️', '🎯', '💼', '🎨', '🎭', '🎪', '🎨', '🎬', '🎵', '🎮'].map((icon) => (
+                               <button
+                                 key={icon}
+                                 type="button"
+                                 className={`w-8 h-8 text-lg border rounded hover:bg-white transition-colors ${
+                                   selectedHotspot.displayIcon === icon ? 'bg-blue-100 border-blue-300' : 'bg-white border-gray-200'
+                                 }`}
+                                 onClick={() => updateHotspot(selectedHotspot.id, { displayIcon: icon })}
+                                 title={icon}
+                               >
+                                 {icon}
+                               </button>
+                             ))}
+                           </div>
+                           <p className="text-xs text-gray-500 mt-1">Click an icon to select it</p>
+                         </div>
+                       )}
                       
                       {/* Media Section */}
                       <div className="space-y-3">
@@ -1125,7 +1146,7 @@ ${user?.name || 'Your Name'}
                    <li>Flashing animations and hover effects will work in the exported version</li>
                  </ol>
                                    <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded text-sm text-blue-800">
-                    <strong>Note:</strong> The exported HTML includes the image as base64 data, so it will work anywhere you embed it, even offline! Hotspots are now positioned using percentages, so they'll stay perfectly aligned with the image regardless of size.
+                    <strong>Note:</strong> The exported HTML includes the image as base64 data, so it will work anywhere you embed it, even offline! Hotspots are now positioned using percentages based on the displayed image size, ensuring perfect alignment regardless of container dimensions.
                   </div>
                </div>
             </CardContent>
