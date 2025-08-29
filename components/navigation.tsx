@@ -33,6 +33,7 @@ const navigationItems = [
       { title: "Who's Who AI", href: "/ai-hub/whos-who-ai", description: "Property Owner Skip Tracing" },
       { title: "GoalScreen AI", href: "/ai-hub/goalscreen-ai", description: "Daily Contact Goal Wallpaper Creator" },
       { title: "Real-IMG", href: "/ai-hub/real-img", description: "Interactive Image Creator with Hotspots" },
+      { title: "StageIT", href: "/ai-hub/stageit", description: "AI-Powered Virtual Staging Tool" },
       // AI Planning & Coaching Tools
       { title: "── AI Planning & Coaching ──", href: "#", description: "", isHeader: true },
       { title: "Action AI", href: "/ai-hub/action-ai", description: "Daily Prospecting Action Plans" },

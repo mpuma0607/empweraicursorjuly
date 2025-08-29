@@ -41,6 +41,7 @@ export const century21BegginsConfig: TenantConfig = {
       "propbot-ai",
       "dynamic-branded-content",
       "real-img",
+      "stageit",
     ],
     customSections: [],
     hiddenFeatures: [],

@@ -33,6 +33,7 @@ export const empowerAiConfig: TenantConfig = {
       "propbot-ai",
       "ideahub-empower",
       "real-img",
+      "stageit",
     ],
     customSections: [],
     hiddenFeatures: ["networking-hub"],

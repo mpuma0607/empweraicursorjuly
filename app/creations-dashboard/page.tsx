@@ -132,6 +132,8 @@ export default function CreationsDashboardPage() {
         return <FileText className="h-4 w-4" />
       case "real-img":
         return <Image className="h-4 w-4" />
+      case "stageit":
+        return <Home className="h-4 w-4" />
       default:
         return <FileText className="h-4 w-4" />
     }
@@ -165,6 +167,8 @@ export default function CreationsDashboardPage() {
         return "RealDeal AI"
       case "real-img":
         return "Real-IMG"
+      case "stageit":
+        return "StageIT"
       default:
         return toolType.replace("-", " ").replace(/\b\w/g, (l) => l.toUpperCase())
     }
