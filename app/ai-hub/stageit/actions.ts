@@ -31,52 +31,47 @@ export async function generateVirtualStaging(
   imageUrl: string
 ): Promise<StagingResult[]> {
   try {
-    console.log('StageIT: Starting AI staging generation...')
+    console.log('StageIT: Starting AI image staging...')
     console.log('StageIT: Staging request:', stagingRequest)
+    
+    // Convert image URL to base64 for OpenAI API
+    const imageBuffer = await fetch(imageUrl).then(res => res.arrayBuffer())
+    const base64Image = Buffer.from(imageBuffer).toString('base64')
     
     // Build the comprehensive AI prompt for virtual staging
     const prompt = buildStagingPrompt(stagingRequest, imageUrl)
     console.log('StageIT: Generated prompt length:', prompt.length)
     
-    console.log('StageIT: Calling OpenAI API...')
-    // Generate the AI staging description
-    const aiResponse = await generateText({
-      model: openai("gpt-4o"),
-      prompt,
-      maxTokens: 1000,
-      temperature: 0.7,
+    console.log('StageIT: Calling OpenAI gpt-image-1 API...')
+    
+    // Call OpenAI gpt-image-1 for actual image editing
+    const response = await openai.images.edit({
+      image: base64Image,
+      prompt: prompt,
+      n: 2, // Generate 2 variations
+      size: "1024x1024",
+      response_format: "url"
     })
-    console.log('StageIT: AI response received:', aiResponse.text.substring(0, 100) + '...')
-
-    // For now, we'll return mock results with the AI description
-    // In the future, this would integrate with actual image generation APIs
-    const mockResults: StagingResult[] = [
-      {
-        id: `staging-${Date.now()}-1`,
-        originalImage: imageUrl,
-        stagedImage: imageUrl, // This will be replaced with AI-generated image
-        style: stagingRequest.style,
-        prompt: prompt,
-        metadata: stagingRequest,
-        createdAt: new Date(),
-        aiDescription: aiResponse.text
-      },
-      {
-        id: `staging-${Date.now()}-2`,
-        originalImage: imageUrl,
-        stagedImage: imageUrl, // This will be replaced with AI-generated image
-        style: stagingRequest.style,
-        prompt: prompt,
-        metadata: stagingRequest,
-        createdAt: new Date(),
-        aiDescription: aiResponse.text
-      }
-    ]
-
-    return mockResults
+    
+    console.log('StageIT: Generated', response.data.length, 'staged images')
+    
+    // Create results with actual staged images
+    const results: StagingResult[] = response.data.map((imageData, index) => ({
+      id: `staging-${Date.now()}-${index + 1}`,
+      originalImage: imageUrl,
+      stagedImage: imageData.url!, // The actual staged image from OpenAI!
+      style: stagingRequest.style,
+      prompt: prompt,
+      metadata: stagingRequest,
+      createdAt: new Date(),
+      aiDescription: `AI-generated ${stagingRequest.style} staging for ${stagingRequest.roomType}`
+    }))
+    
+    return results
+    
   } catch (error) {
-    console.error('Error generating virtual staging:', error)
-    throw new Error('Failed to generate virtual staging. Please try again.')
+    console.error('StageIT: Error in image staging:', error)
+    throw new Error('Failed to generate staged images. Please try again.')
   }
 }
 
