@@ -143,20 +143,18 @@ export function StageItForm() {
     setCurrentStep('process')
 
                 try {
-        // Call the new API route for staging
+        // Call the new API route for staging using multipart form data
+        const formData = new FormData()
+        formData.append('image', imageFile!)
+        formData.append('roomType', stagingRequest.roomType)
+        formData.append('style', stagingRequest.style)
+        formData.append('colors', stagingRequest.colorPalette || '')
+        formData.append('notes', `Furniture density: ${stagingRequest.furnitureDensity}, Lighting: ${stagingRequest.lighting}, Target market: ${stagingRequest.targetMarket}, Property value: ${stagingRequest.propertyValue}, Additional features: ${stagingRequest.additionalFeatures.join(', ')}`)
+        formData.append('size', "2048x2048") // use 2048 for final save
+
         const response = await fetch('/api/stage', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            imageUrl: imageUrl,
-            roomType: stagingRequest.roomType,
-            style: stagingRequest.style,
-            colors: stagingRequest.colorPalette,
-            notes: `Furniture density: ${stagingRequest.furnitureDensity}, Lighting: ${stagingRequest.lighting}, Target market: ${stagingRequest.targetMarket}, Property value: ${stagingRequest.propertyValue}, Additional features: ${stagingRequest.additionalFeatures.join(', ')}`,
-            size: "2048x2048" // use 2048 for final save
-          })
+          body: formData
         })
 
         if (!response.ok) {
