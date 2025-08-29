@@ -283,6 +283,55 @@ export function RealImgForm() {
       base64Image = imageUrl
     }
 
+    // Convert hotspot media files to base64
+    const hotspotsWithBase64Media = await Promise.all(
+      hotspots.map(async (hotspot) => {
+        const media = { ...hotspot.media }
+        
+        // Convert image media to base64
+        if (media.image && media.image.startsWith('blob:')) {
+          try {
+            const response = await fetch(media.image)
+            const blob = await response.blob()
+            const arrayBuffer = await blob.arrayBuffer()
+            const bytes = new Uint8Array(arrayBuffer)
+            let binary = ''
+            for (let i = 0; i < bytes.byteLength; i++) {
+              binary += String.fromCharCode(bytes[i])
+            }
+            const mimeType = blob.type
+            media.image = `data:${mimeType};base64,${btoa(binary)}`
+          } catch (error) {
+            console.error('Error converting hotspot image to base64:', error)
+            // Remove the image if conversion fails
+            media.image = undefined
+          }
+        }
+        
+        // Convert video media to base64
+        if (media.video && media.video.startsWith('blob:')) {
+          try {
+            const response = await fetch(media.video)
+            const blob = await response.blob()
+            const arrayBuffer = await blob.arrayBuffer()
+            const bytes = new Uint8Array(arrayBuffer)
+            let binary = ''
+            for (let i = 0; i < bytes.byteLength; i++) {
+              binary += String.fromCharCode(bytes[i])
+            }
+            const mimeType = blob.type
+            media.video = `data:${mimeType};base64,${btoa(binary)}`
+          } catch (error) {
+            console.error('Error converting hotspot video to base64:', error)
+            // Remove the video if conversion fails
+            media.video = undefined
+          }
+        }
+        
+        return { ...hotspot, media }
+      })
+    )
+
     // Get image dimensions for percentage-based positioning
     const img = new Image()
     img.src = imageUrl
@@ -302,7 +351,7 @@ export function RealImgForm() {
  <div class="real-img-interactive" data-image-id="${Date.now()}">
    <div class="real-img-container" style="position: relative; display: inline-block;">
      <img src="${base64Image}" alt="${imageName}" style="max-width: 100%; height: auto;" />
-                   ${hotspots.map(hotspot => {
+                   ${hotspotsWithBase64Media.map(hotspot => {
         // Convert pixel positions to percentages based on displayed image size
         const leftPercent = (hotspot.x / displayedWidth) * 100
         const topPercent = (hotspot.y / displayedHeight) * 100
@@ -380,32 +429,39 @@ export function RealImgForm() {
   
   <script>
     function showHotspotContent(hotspotId) {
-      const hotspot = ${JSON.stringify(hotspots)}.find(h => h.id === hotspotId);
+      const hotspot = ${JSON.stringify(hotspotsWithBase64Media)}.find(h => h.id === hotspotId);
       if (hotspot) {
-        let content = '<div style="max-width: 400px; padding: 20px;">';
+        let content = '<div style="max-width: 500px; padding: 30px; background: white; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); position: relative;">';
         
-                 if (hotspot.media.image) {
-           content += '<img src="' + hotspot.media.image + '" style="max-width: 100%; height: 100%; object-fit: cover; margin-bottom: 15px; border-radius: 8px;" />';
-         }
-         
-         if (hotspot.media.video) {
-           content += '<video controls style="max-width: 100%; height: auto; margin-bottom: 15px; border-radius: 8px;"><source src="' + hotspot.media.video + '" type="video/mp4">Your browser does not support the video tag.</video>';
-         }
+        // Add close button
+        content += '<button onclick="this.parentElement.parentElement.remove()" style="position: absolute; top: 15px; right: 15px; background: #f3f4f6; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #6b7280;">×</button>';
         
-        content += '<h3 style="margin: 0 0 10px 0; color: #333;">' + hotspot.title + '</h3>';
-        content += '<p style="margin: 0 0 15px 0; line-height: 1.5; color: #666;">' + hotspot.content + '</p>';
+        if (hotspot.media.image) {
+          content += '<img src="' + hotspot.media.image + '" style="max-width: 100%; height: 200px; object-fit: cover; margin-bottom: 20px; border-radius: 8px; display: block;" />';
+        }
         
-                 if (hotspot.media.link) {
-           content += '<a href="' + hotspot.media.link + '" target="_blank" style="display: inline-block; background: ' + hotspot.style.buttonColor + '; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px;">' + (hotspot.media.linkText || 'Learn More') + '</a>';
-         }
+        if (hotspot.media.video) {
+          content += '<video controls style="max-width: 100%; height: 200px; object-fit: cover; margin-bottom: 20px; border-radius: 8px;"><source src="' + hotspot.media.video + '" type="video/mp4">Your browser does not support the video tag.</video>';
+        }
+        
+        content += '<h3 style="margin: 0 0 15px 0; color: #111827; font-size: 24px; font-weight: 600;">' + hotspot.title + '</h3>';
+        content += '<p style="margin: 0 0 20px 0; line-height: 1.6; color: #4b5563; font-size: 16px;">' + hotspot.content + '</p>';
+        
+        if (hotspot.media.link) {
+          content += '<a href="' + hotspot.media.link + '" target="_blank" style="display: inline-block; background: ' + hotspot.style.buttonColor + '; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 500; transition: opacity 0.2s;" onmouseover="this.style.opacity=0.8" onmouseout="this.style.opacity=1">' + (hotspot.media.linkText || 'Learn More') + '</a>';
+        }
         
         content += '</div>';
         
-        // Create modal
+        // Create modal with proper styling
         const modal = document.createElement('div');
-        modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000;';
+        modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px;';
         modal.innerHTML = content;
-        modal.onclick = () => document.body.removeChild(modal);
+        modal.onclick = (e) => {
+          if (e.target === modal) {
+            document.body.removeChild(modal);
+          }
+        };
         document.body.appendChild(modal);
       }
     }
@@ -1146,7 +1202,7 @@ ${user?.name || 'Your Name'}
                    <li>Flashing animations and hover effects will work in the exported version</li>
                  </ol>
                                    <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded text-sm text-blue-800">
-                    <strong>Note:</strong> The exported HTML includes the image as base64 data, so it will work anywhere you embed it, even offline! Hotspots are now positioned using percentages based on the displayed image size, ensuring perfect alignment regardless of container dimensions.
+                    <strong>Note:</strong> The exported HTML includes the image and all hotspot media (images, videos) as base64 data, so it will work anywhere you embed it, even offline! Hotspots are now positioned using percentages based on the displayed image size, ensuring perfect alignment regardless of container dimensions. All media content is embedded directly in the HTML for complete portability.
                   </div>
                </div>
             </CardContent>
@@ -1177,19 +1233,27 @@ ${user?.name || 'Your Name'}
       {/* Preview Modal */}
       {previewHotspot && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4"
           onClick={() => setPreviewHotspot(null)}
         >
           <div 
-            className="bg-white rounded-lg max-w-md w-full mx-4 max-h-[80vh] overflow-y-auto"
+            className="bg-white rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-6">
+            <div className="p-8">
+              {/* Close button */}
+              <button
+                onClick={() => setPreviewHotspot(null)}
+                className="absolute top-4 right-4 w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center text-gray-600 hover:text-gray-800 transition-colors"
+              >
+                ×
+              </button>
+              
               {previewHotspot.media.image && (
                 <img 
                   src={previewHotspot.media.image} 
                   alt="Hotspot preview" 
-                  className="w-full h-48 object-cover rounded mb-4"
+                  className="w-full h-56 object-cover rounded-lg mb-6 shadow-md"
                 />
               )}
               
@@ -1197,27 +1261,27 @@ ${user?.name || 'Your Name'}
                 <video 
                   src={previewHotspot.media.video} 
                   controls 
-                  className="w-full h-48 object-cover rounded mb-4"
+                  className="w-full h-56 object-cover rounded-lg mb-6 shadow-md"
                 />
               )}
               
-              <h3 className="text-xl font-bold mb-3">{previewHotspot.title}</h3>
-              <p className="text-gray-600 mb-4 leading-relaxed">{previewHotspot.content}</p>
+              <h3 className="text-2xl font-bold mb-4 text-gray-900">{previewHotspot.title}</h3>
+              <p className="text-gray-700 mb-6 leading-relaxed text-lg">{previewHotspot.content}</p>
               
-                             {previewHotspot.media.link && (
-                 <a 
-                   href={previewHotspot.media.link} 
-                   target="_blank" 
-                   rel="noopener noreferrer"
-                   style={{
-                     backgroundColor: previewHotspot.style.buttonColor,
-                     color: 'white'
-                   }}
-                   className="inline-block px-4 py-2 rounded hover:opacity-80 transition-opacity"
-                 >
-                   {previewHotspot.media.linkText || 'Learn More'}
-                 </a>
-               )}
+              {previewHotspot.media.link && (
+                <a 
+                  href={previewHotspot.media.link} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  style={{
+                    backgroundColor: previewHotspot.style.buttonColor,
+                    color: 'white'
+                  }}
+                  className="inline-block px-6 py-3 rounded-lg hover:opacity-90 transition-opacity font-medium text-lg shadow-md"
+                >
+                  {previewHotspot.media.linkText || 'Learn More'}
+                </a>
+              )}
             </div>
           </div>
         </div>

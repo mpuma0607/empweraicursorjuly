@@ -851,7 +851,7 @@ export default function HomePage() {
                 <ul className="space-y-3">
                   <li className="flex items-center gap-2 text-gray-300">
                     <CheckCircle className="h-5 w-5 text-green-500" />
-                    Access to all 11 AI tools
+                    Access to all 12 AI tools
                   </li>
                   <li className="flex items-center gap-2 text-gray-300">
                     <CheckCircle className="h-5 w-5 text-green-500" />
@@ -898,7 +898,7 @@ export default function HomePage() {
                 <ul className="space-y-3">
                   <li className="flex items-center gap-2 text-gray-300">
                     <CheckCircle className="h-5 w-5 text-green-500" />
-                    Access to all 11 AI tools
+                    Access to all 12 AI tools
                   </li>
                   <li className="flex items-center gap-2 text-gray-300">
                     <CheckCircle className="h-5 w-5 text-green-500" />

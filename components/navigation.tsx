@@ -32,6 +32,7 @@ const navigationItems = [
       { title: "PropBot AI", href: "/ai-hub/propbot-ai", description: "Intelligent Property Search & Analysis" },
       { title: "Who's Who AI", href: "/ai-hub/whos-who-ai", description: "Property Owner Skip Tracing" },
       { title: "GoalScreen AI", href: "/ai-hub/goalscreen-ai", description: "Daily Contact Goal Wallpaper Creator" },
+      { title: "Real-IMG", href: "/ai-hub/real-img", description: "Interactive Image Creator with Hotspots" },
       // AI Planning & Coaching Tools
       { title: "── AI Planning & Coaching ──", href: "#", description: "", isHeader: true },
       { title: "Action AI", href: "/ai-hub/action-ai", description: "Daily Prospecting Action Plans" },

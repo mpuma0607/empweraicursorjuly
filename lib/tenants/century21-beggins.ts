@@ -40,6 +40,7 @@ export const century21BegginsConfig: TenantConfig = {
       "goalscreen-ai",
       "propbot-ai",
       "dynamic-branded-content",
+      "real-img",
     ],
     customSections: [],
     hiddenFeatures: [],
