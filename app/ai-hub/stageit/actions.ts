@@ -1,7 +1,10 @@
 "use server"
 
-import { generateText } from "ai"
+export const runtime = "nodejs"
+export const maxDuration = 300 // give image gen enough time on Vercel
+
 import OpenAI from "openai"
+import { toFile } from "openai/uploads"
 
 const openaiInstance = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -35,46 +38,49 @@ export async function generateVirtualStaging(
   imageUrl: string
 ): Promise<StagingResult[]> {
   try {
-    console.log('StageIT: Starting AI image staging...')
-    console.log('StageIT: Staging request:', stagingRequest)
-    
-    // Convert image URL to base64 for OpenAI API
-    const imageBuffer = await fetch(imageUrl).then(res => res.arrayBuffer())
-    const base64Image = Buffer.from(imageBuffer)
-    
-    // Build the comprehensive AI prompt for virtual staging
-    const prompt = buildStagingPrompt(stagingRequest, imageUrl)
-    console.log('StageIT: Generated prompt length:', prompt.length)
-    
-    console.log('StageIT: Calling OpenAI API for image generation...')
-    
-    // Call OpenAI for image generation (not editing)
-    const response = await openaiInstance.images.generate({
-      prompt: prompt,
-      n: 2, // Generate 2 variations
+    console.log("StageIT: Starting AI image staging…");
+    console.log("StageIT: Staging request:", stagingRequest);
+
+    // 1) Fetch the original image and convert to a File
+    const imgRes = await fetch(imageUrl, { cache: "no-store" });
+    if (!imgRes.ok) {
+      throw new Error(`Failed to fetch image: ${imgRes.status} ${imgRes.statusText}`);
+    }
+    const buf = Buffer.from(await imgRes.arrayBuffer());
+    const baseImageFile = await toFile(buf, "base.png", { type: "image/png" });
+
+    // 2) Build your existing prompt
+    const prompt = buildStagingPrompt(stagingRequest, imageUrl);
+    console.log("StageIT: Prompt length:", prompt.length);
+
+    // 3) Call Images EDIT with the correct model + file input
+    const response = await openaiInstance.images.edit({
+      model: "gpt-image-1",
+      image: baseImageFile,          // MUST be File/Blob/ReadStream, not a base64 string
+      prompt,
+      n: 2,
       size: "1024x1024",
-      response_format: "url"
-    })
-    
-    console.log('StageIT: Generated', response.data.length, 'staged images')
-    
-    // Create results with actual staged images
-    const results: StagingResult[] = response.data.map((imageData, index) => ({
+      response_format: "b64_json",   // safer; always available
+    });
+
+    // 4) Map results to your StagingResult[]
+    const results: StagingResult[] = (response.data || []).map((img, index) => ({
       id: `staging-${Date.now()}-${index + 1}`,
       originalImage: imageUrl,
-      stagedImage: imageData.url!, // The actual staged image from OpenAI!
+      stagedImage: `data:image/png;base64,${img.b64_json}`, // data URL works fine in <img src=...>
       style: stagingRequest.style,
-      prompt: prompt,
+      prompt,
       metadata: stagingRequest,
       createdAt: new Date(),
-      aiDescription: `AI-generated ${stagingRequest.style} staging for ${stagingRequest.roomType}`
-    }))
-    
-    return results
-    
-  } catch (error) {
-    console.error('StageIT: Error in image staging:', error)
-    throw new Error('Failed to generate staged images. Please try again.')
+      aiDescription: `AI-generated ${stagingRequest.style} staging for ${stagingRequest.roomType}`,
+    }));
+
+    console.log("StageIT: Generated", results.length, "staged images");
+    return results;
+  } catch (error: any) {
+    // Surface the real cause (Next hides it otherwise)
+    console.error("StageIT: Error in image staging:", error?.response?.data || error);
+    throw new Error(error?.message || "Failed to generate staged images. Please try again.");
   }
 }
 
