@@ -283,41 +283,59 @@ export function RealImgForm() {
       base64Image = imageUrl
     }
 
+    // Get image dimensions for percentage-based positioning
+    const img = new Image()
+    img.src = imageUrl
+    await new Promise((resolve) => {
+      img.onload = resolve
+    })
+    
+    const imageWidth = img.naturalWidth
+    const imageHeight = img.naturalHeight
+
     const htmlCode = `
  <div class="real-img-interactive" data-image-id="${Date.now()}">
    <div class="real-img-container" style="position: relative; display: inline-block;">
      <img src="${base64Image}" alt="${imageName}" style="max-width: 100%; height: auto;" />
-    ${hotspots.map(hotspot => `
-      <div 
-        class="real-img-hotspot ${hotspot.style.isFlashing ? 'flashing' : ''}" 
-        data-hotspot-id="${hotspot.id}"
-        style="
-          position: absolute;
-          left: ${hotspot.x}px;
-          top: ${hotspot.y}px;
-          width: ${hotspot.width}px;
-          height: ${hotspot.height}px;
-          background-color: ${hotspot.style.backgroundColor};
-          border: 2px solid ${hotspot.style.borderColor};
-          border-radius: ${hotspot.shape === 'circle' ? '50%' : hotspot.style.borderRadius + 'px'};
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: ${hotspot.style.textColor};
-          font-weight: ${hotspot.style.fontWeight};
-          font-size: ${hotspot.style.fontSize}px;
-          transition: all 0.2s ease;
-        "
-        title="${hotspot.title}"
-        onclick="showHotspotContent('${hotspot.id}')"
-      >
-                 ${hotspot.displayType === 'blank' ? '' :
-          hotspot.displayType === 'number' ? (hotspots.indexOf(hotspot) + 1).toString() :
-          hotspot.displayType === 'icon' ? hotspot.displayIcon :
-          hotspot.title.charAt(0).toUpperCase()}
-      </div>
-    `).join('')}
+         ${hotspots.map(hotspot => {
+       // Convert pixel positions to percentages
+       const leftPercent = (hotspot.x / imageWidth) * 100
+       const topPercent = (hotspot.y / imageHeight) * 100
+       const widthPercent = (hotspot.width / imageWidth) * 100
+       const heightPercent = (hotspot.height / imageHeight) * 100
+       
+       return `
+       <div 
+         class="real-img-hotspot ${hotspot.style.isFlashing ? 'flashing' : ''}" 
+         data-hotspot-id="${hotspot.id}"
+         style="
+           position: absolute;
+           left: ${leftPercent.toFixed(2)}%;
+           top: ${topPercent.toFixed(2)}%;
+           width: ${widthPercent.toFixed(2)}%;
+           height: ${heightPercent.toFixed(2)}%;
+           background-color: ${hotspot.style.backgroundColor};
+           border: 2px solid ${hotspot.style.borderColor};
+           border-radius: ${hotspot.shape === 'circle' ? '50%' : hotspot.style.borderRadius + 'px'};
+           cursor: pointer;
+           display: flex;
+           align-items: center;
+           justify-content: center;
+           color: ${hotspot.style.textColor};
+           font-weight: ${hotspot.style.fontWeight};
+           font-size: ${hotspot.style.fontSize}px;
+           transition: all 0.2s ease;
+         "
+         title="${hotspot.title}"
+         onclick="showHotspotContent('${hotspot.id}')"
+       >
+                  ${hotspot.displayType === 'blank' ? '' :
+           hotspot.displayType === 'number' ? (hotspots.indexOf(hotspot) + '') :
+           hotspot.displayType === 'icon' ? hotspot.displayIcon :
+           hotspot.title.charAt(0).toUpperCase()}
+       </div>
+     `
+     }).join('')}
   </div>
   
      <style>
@@ -328,13 +346,25 @@ export function RealImgForm() {
        0%, 50% { opacity: 1; }
        51%, 100% { opacity: 0.5; }
      }
-     .real-img-hotspot {
-       transition: all 0.2s ease;
-     }
-     .real-img-hotspot:hover {
-       transform: scale(1.05);
-       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-     }
+           .real-img-hotspot {
+        transition: all 0.2s ease;
+        /* Ensure hotspots scale with the image */
+        transform-origin: center;
+      }
+      .real-img-hotspot:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      }
+      /* Make sure the container scales properly */
+      .real-img-container {
+        max-width: 100%;
+        height: auto;
+      }
+      .real-img-container img {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
    </style>
   
   <script>
@@ -1094,9 +1124,9 @@ ${user?.name || 'Your Name'}
                    <li>Click hotspots to see the content you added</li>
                    <li>Flashing animations and hover effects will work in the exported version</li>
                  </ol>
-                 <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded text-sm text-blue-800">
-                   <strong>Note:</strong> The exported HTML includes the image as base64 data, so it will work anywhere you embed it, even offline!
-                 </div>
+                                   <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded text-sm text-blue-800">
+                    <strong>Note:</strong> The exported HTML includes the image as base64 data, so it will work anywhere you embed it, even offline! Hotspots are now positioned using percentages, so they'll stay perfectly aligned with the image regardless of size.
+                  </div>
                </div>
             </CardContent>
           </Card>
