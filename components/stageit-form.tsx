@@ -25,7 +25,6 @@ import {
 import { useMemberSpaceUser } from "@/hooks/use-memberspace-user"
 import { saveUserCreation } from "@/lib/auto-save-creation"
 import EmailCompositionModal from "@/components/email-composition-modal"
-import { generateVirtualStaging, type StagingRequest as ServerStagingRequest, type StagingResult as ServerStagingResult } from "@/app/ai-hub/stageit/actions"
 
 interface StagingRequest {
   roomType: string
@@ -143,32 +142,40 @@ export function StageItForm() {
     setIsProcessing(true)
     setCurrentStep('process')
 
-    try {
-      // Convert the client-side StagingRequest to server-side format
-      const serverRequest: ServerStagingRequest = {
-        roomType: stagingRequest.roomType,
-        style: stagingRequest.style,
-        colorPalette: stagingRequest.colorPalette,
-        furnitureDensity: stagingRequest.furnitureDensity,
-        lighting: stagingRequest.lighting,
-        targetMarket: stagingRequest.targetMarket,
-        additionalFeatures: stagingRequest.additionalFeatures,
-        propertyValue: stagingRequest.propertyValue
-      }
+          try {
+        // Call the new API route for staging
+        const response = await fetch('/api/stage', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            imageUrl: imageUrl,
+            roomType: stagingRequest.roomType,
+            style: stagingRequest.style,
+            colors: stagingRequest.colorPalette,
+            notes: `Furniture density: ${stagingRequest.furnitureDensity}, Lighting: ${stagingRequest.lighting}, Target market: ${stagingRequest.targetMarket}, Property value: ${stagingRequest.propertyValue}, Additional features: ${stagingRequest.additionalFeatures.join(', ')}`,
+            size: "2048x2048"
+          })
+        })
 
-      // Call the real AI staging function
-      const aiResults = await generateVirtualStaging(serverRequest, imageUrl)
-      
-             // Convert server results to client format
-       const clientResults: StagingResult[] = aiResults.map(result => ({
-         id: result.id,
-         originalImage: result.originalImage,
-         stagedImage: result.stagedImage,
-         style: result.style,
-         prompt: result.aiDescription, // Use aiDescription from server
-         metadata: result.metadata,
-         createdAt: result.createdAt
-       }))
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Staging failed')
+        }
+
+        const result = await response.json()
+        
+        // Create staging results with the generated image
+        const clientResults: StagingResult[] = [{
+          id: `staging-${Date.now()}-1`,
+          originalImage: imageUrl,
+          stagedImage: result.dataUrl, // The AI-generated staged image
+          style: stagingRequest.style,
+          prompt: `AI-generated ${stagingRequest.style} staging for ${stagingRequest.roomType}`,
+          metadata: stagingRequest,
+          createdAt: new Date()
+        }]
       
       setStagingResults(clientResults)
       setSelectedResult(clientResults[0])
@@ -191,7 +198,7 @@ export function StageItForm() {
       await saveUserCreation({
         userId: user.id.toString(),
         userEmail: user.email,
-        toolType: 'stageit',
+        toolType: 'real-img',
         title,
         content: JSON.stringify({ stagingRequest, selectedResult }),
         formData: {
@@ -715,7 +722,7 @@ ${user?.name || 'Your Name'}
       <EmailCompositionModal
         isOpen={isEmailModalOpen}
         onClose={() => setIsEmailModalOpen(false)}
-        contentType="stageit"
+                      contentType="real-img"
         scriptContent={emailContent}
         agentName={user?.name || 'Your Name'}
         brokerageName="Your Brokerage"

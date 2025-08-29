@@ -46,11 +46,10 @@ export async function generateVirtualStaging(
     const prompt = buildStagingPrompt(stagingRequest, imageUrl)
     console.log('StageIT: Generated prompt length:', prompt.length)
     
-    console.log('StageIT: Calling OpenAI gpt-image-1 API...')
+    console.log('StageIT: Calling OpenAI API for image generation...')
     
-    // Call OpenAI gpt-image-1 for actual image editing
-    const response = await openaiInstance.images.edit({
-      image: base64Image,
+    // Call OpenAI for image generation (not editing)
+    const response = await openaiInstance.images.generate({
       prompt: prompt,
       n: 2, // Generate 2 variations
       size: "1024x1024",
