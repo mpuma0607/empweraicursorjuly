@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useRef, useCallback } from "react"
+import React, { useState, useRef, useCallback, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -42,6 +42,8 @@ interface Hotspot {
   title: string
   content: string
   shape: 'square' | 'circle'
+  displayType: 'blank' | 'number' | 'icon' | 'first-letter'
+  displayIcon: string
   media: {
     image?: string
     video?: string
@@ -83,6 +85,8 @@ export function RealImgForm() {
   const [previewHotspot, setPreviewHotspot] = useState<Hotspot | null>(null)
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
   const [emailContent, setEmailContent] = useState('')
+  const [draggedHotspot, setDraggedHotspot] = useState<Hotspot | null>(null)
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
   
   const { user, loading: userLoading } = useMemberSpaceUser()
   const imageRef = useRef<HTMLImageElement>(null)
@@ -128,6 +132,8 @@ export function RealImgForm() {
       title: 'New Hotspot',
       content: 'Add your content here',
       shape: 'square',
+      displayType: 'blank',
+      displayIcon: '',
       media: {},
               style: {
           backgroundColor: '#3b82f6',
@@ -204,6 +210,56 @@ export function RealImgForm() {
     }
   }
 
+  // Handle hotspot drag start
+  const handleHotspotMouseDown = (e: React.MouseEvent, hotspot: Hotspot) => {
+    if (isPreviewMode || isCreatingHotspot) return
+    
+    e.preventDefault()
+    e.stopPropagation()
+    
+    const rect = e.currentTarget.getBoundingClientRect()
+    const offsetX = e.clientX - rect.left
+    const offsetY = e.clientY - rect.top
+    
+    setDraggedHotspot(hotspot)
+    setDragOffset({ x: offsetX, y: offsetY })
+  }
+
+  // Handle mouse move for dragging
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!draggedHotspot || !canvasRef.current) return
+    
+    const rect = canvasRef.current.getBoundingClientRect()
+    const newX = e.clientX - rect.left - dragOffset.x
+    const newY = e.clientY - rect.top - dragOffset.y
+    
+    // Ensure hotspot stays within image bounds
+    const maxX = rect.width - draggedHotspot.width
+    const maxY = rect.height - draggedHotspot.height
+    
+    const clampedX = Math.max(0, Math.min(newX, maxX))
+    const clampedY = Math.max(0, Math.min(newY, maxY))
+    
+    updateHotspot(draggedHotspot.id, { x: clampedX, y: clampedY })
+  }, [draggedHotspot, dragOffset])
+
+  // Handle mouse up to stop dragging
+  const handleMouseUp = useCallback(() => {
+    setDraggedHotspot(null)
+  }, [])
+
+  // Add/remove mouse event listeners
+  useEffect(() => {
+    if (draggedHotspot) {
+      document.addEventListener('mousemove', handleMouseMove)
+      document.addEventListener('mouseup', handleMouseUp)
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove)
+        document.removeEventListener('mouseup', handleMouseUp)
+      }
+    }
+  }, [draggedHotspot, handleMouseMove, handleMouseUp])
+
   // Generate export code
   const generateExportCode = () => {
     const htmlCode = `
@@ -235,7 +291,10 @@ export function RealImgForm() {
         title="${hotspot.title}"
         onclick="showHotspotContent('${hotspot.id}')"
       >
-        ${hotspot.title.charAt(0).toUpperCase()}
+                 ${hotspot.displayType === 'blank' ? '' :
+          hotspot.displayType === 'number' ? (hotspots.indexOf(hotspot) + 1).toString() :
+          hotspot.displayType === 'icon' ? hotspot.displayIcon :
+          hotspot.title.charAt(0).toUpperCase()}
       </div>
     `).join('')}
   </div>
@@ -474,46 +533,59 @@ ${user?.name || 'Your Name'}
                       style={{ cursor: isCreatingHotspot ? 'crosshair' : 'default' }}
                     />
                     
-                    {/* Render hotspots */}
-                    {hotspots.map((hotspot) => (
-                      <div
-                        key={hotspot.id}
-                        className={`absolute border-2 cursor-pointer transition-all ${
-                          selectedHotspot?.id === hotspot.id ? 'ring-2 ring-blue-500' : ''
-                        } ${hotspot.style.isFlashing ? 'animate-pulse' : ''}`}
-                        style={{
-                          left: hotspot.x,
-                          top: hotspot.y,
-                          width: hotspot.width,
-                          height: hotspot.height,
-                          backgroundColor: hotspot.style.backgroundColor,
-                          borderColor: hotspot.style.borderColor,
-                          color: hotspot.style.textColor,
-                          fontSize: hotspot.style.fontSize,
-                          fontWeight: hotspot.style.fontWeight,
-                          borderRadius: hotspot.shape === 'circle' ? '50%' : hotspot.style.borderRadius,
-                          animation: hotspot.style.isFlashing ? `flash ${hotspot.style.flashSpeed}ms infinite` : 'none'
-                        }}
-                        onClick={() => handleHotspotClick(hotspot)}
-                      >
-                        <div className="w-full h-full flex items-center justify-center text-xs font-bold">
-                          {hotspot.title.charAt(0).toUpperCase()}
-                        </div>
-                      </div>
-                    ))}
+                                         {/* Render hotspots */}
+                     {hotspots.map((hotspot, index) => (
+                       <div
+                         key={hotspot.id}
+                         className={`absolute border-2 cursor-pointer transition-all ${
+                           selectedHotspot?.id === hotspot.id ? 'ring-2 ring-blue-500' : ''
+                         } ${hotspot.style.isFlashing ? 'animate-pulse' : ''} ${
+                           draggedHotspot?.id === hotspot.id ? 'z-10' : ''
+                         }`}
+                         style={{
+                           left: hotspot.x,
+                           top: hotspot.y,
+                           width: hotspot.width,
+                           height: hotspot.height,
+                           backgroundColor: hotspot.style.backgroundColor,
+                           borderColor: hotspot.style.borderColor,
+                           color: hotspot.style.textColor,
+                           fontSize: hotspot.style.fontSize,
+                           fontWeight: hotspot.style.fontWeight,
+                           borderRadius: hotspot.shape === 'circle' ? '50%' : hotspot.style.borderRadius,
+                           animation: hotspot.style.isFlashing ? `flash ${hotspot.style.flashSpeed}ms infinite` : 'none',
+                           cursor: isPreviewMode ? 'pointer' : 'grab'
+                         }}
+                         onClick={() => handleHotspotClick(hotspot)}
+                         onMouseDown={(e) => handleHotspotMouseDown(e, hotspot)}
+                       >
+                         <div className="w-full h-full flex items-center justify-center text-xs font-bold">
+                           {hotspot.displayType === 'blank' ? '' :
+                            hotspot.displayType === 'number' ? (index + 1).toString() :
+                            hotspot.displayType === 'icon' ? hotspot.displayIcon :
+                            hotspot.title.charAt(0).toUpperCase()}
+                         </div>
+                       </div>
+                     ))}
                   </div>
                   
-                  {isCreatingHotspot && (
-                    <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded text-sm text-blue-800">
-                      Click on the image to place a new hotspot
-                    </div>
-                  )}
-                  
-                  {isPreviewMode && (
-                    <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded text-sm text-green-800">
-                      Preview Mode: Click hotspots to see how they'll appear to users
-                    </div>
-                  )}
+                                     {isCreatingHotspot && (
+                     <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded text-sm text-blue-800">
+                       Click on the image to place a new hotspot
+                     </div>
+                   )}
+                   
+                   {!isPreviewMode && !isCreatingHotspot && hotspots.length > 0 && (
+                     <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-800">
+                       💡 Tip: Drag hotspots to move them around the image
+                     </div>
+                   )}
+                   
+                   {isPreviewMode && (
+                     <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded text-sm text-green-800">
+                       Preview Mode: Click hotspots to see how they'll appear to users
+                     </div>
+                   )}
                 </CardContent>
               </Card>
             </div>
@@ -563,6 +635,38 @@ ${user?.name || 'Your Name'}
                           </SelectContent>
                         </Select>
                       </div>
+                      
+                      {/* Display Type Selection */}
+                      <div>
+                        <Label htmlFor="hotspot-display-type">Display Type</Label>
+                        <Select
+                          value={selectedHotspot.displayType}
+                          onValueChange={(value) => updateHotspot(selectedHotspot.id, { displayType: value as 'blank' | 'number' | 'icon' | 'first-letter' })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="blank">Blank</SelectItem>
+                            <SelectItem value="number">Number</SelectItem>
+                            <SelectItem value="icon">Icon</SelectItem>
+                            <SelectItem value="first-letter">First Letter</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Display Icon Input (if icon is selected) */}
+                      {selectedHotspot.displayType === 'icon' && (
+                        <div>
+                          <Label htmlFor="hotspot-display-icon">Icon</Label>
+                          <Input
+                            id="hotspot-display-icon"
+                            value={selectedHotspot.displayIcon}
+                            onChange={(e) => updateHotspot(selectedHotspot.id, { displayIcon: e.target.value })}
+                            placeholder="e.g., 🔗, 📄, 🎥"
+                          />
+                        </div>
+                      )}
                       
                       {/* Media Section */}
                       <div className="space-y-3">
