@@ -260,12 +260,33 @@ export function RealImgForm() {
     }
   }, [draggedHotspot, handleMouseMove, handleMouseUp])
 
-  // Generate export code
-  const generateExportCode = () => {
+    // Generate export code
+  const generateExportCode = async () => {
+    // Convert image to base64 for embedding
+    let base64Image = ''
+    if (imageFile) {
+      try {
+        const arrayBuffer = await imageFile.arrayBuffer()
+        const bytes = new Uint8Array(arrayBuffer)
+        let binary = ''
+        for (let i = 0; i < bytes.byteLength; i++) {
+          binary += String.fromCharCode(bytes[i])
+        }
+        const mimeType = imageFile.type
+        base64Image = `data:${mimeType};base64,${btoa(binary)}`
+      } catch (error) {
+        console.error('Error converting image to base64:', error)
+        // Fallback to original URL if conversion fails
+        base64Image = imageUrl
+      }
+    } else {
+      base64Image = imageUrl
+    }
+
     const htmlCode = `
-<div class="real-img-interactive" data-image-id="${Date.now()}">
-  <div class="real-img-container" style="position: relative; display: inline-block;">
-    <img src="${imageUrl}" alt="${imageName}" style="max-width: 100%; height: auto;" />
+ <div class="real-img-interactive" data-image-id="${Date.now()}">
+   <div class="real-img-container" style="position: relative; display: inline-block;">
+     <img src="${base64Image}" alt="${imageName}" style="max-width: 100%; height: auto;" />
     ${hotspots.map(hotspot => `
       <div 
         class="real-img-hotspot ${hotspot.style.isFlashing ? 'flashing' : ''}" 
@@ -299,15 +320,22 @@ export function RealImgForm() {
     `).join('')}
   </div>
   
-  <style>
-    .flashing {
-      animation: flash ${hotspots.find(h => h.style.isFlashing)?.style.flashSpeed || 1000}ms infinite;
-    }
-    @keyframes flash {
-      0%, 50% { opacity: 1; }
-      51%, 100% { opacity: 0.5; }
-    }
-  </style>
+     <style>
+     .flashing {
+       animation: flash ${hotspots.find(h => h.style.isFlashing)?.style.flashSpeed || 1000}ms infinite;
+     }
+     @keyframes flash {
+       0%, 50% { opacity: 1; }
+       51%, 100% { opacity: 0.5; }
+     }
+     .real-img-hotspot {
+       transition: all 0.2s ease;
+     }
+     .real-img-hotspot:hover {
+       transform: scale(1.05);
+       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+     }
+   </style>
   
   <script>
     function showHotspotContent(hotspotId) {
@@ -315,13 +343,13 @@ export function RealImgForm() {
       if (hotspot) {
         let content = '<div style="max-width: 400px; padding: 20px;">';
         
-        if (hotspot.media.image) {
-          content += '<img src="' + hotspot.media.image + '" style="max-width: 100%; height: auto; margin-bottom: 15px; border-radius: 8px;" />';
-        }
-        
-        if (hotspot.media.video) {
-          content += '<video controls style="max-width: 100%; height: auto; margin-bottom: 15px; border-radius: 8px;"><source src="' + hotspot.media.video + '" type="video/mp4">Your browser does not support the video tag.</video>';
-        }
+                 if (hotspot.media.image) {
+           content += '<img src="' + hotspot.media.image + '" style="max-width: 100%; height: 100%; object-fit: cover; margin-bottom: 15px; border-radius: 8px;" />';
+         }
+         
+         if (hotspot.media.video) {
+           content += '<video controls style="max-width: 100%; height: auto; margin-bottom: 15px; border-radius: 8px;"><source src="' + hotspot.media.video + '" type="video/mp4">Your browser does not support the video tag.</video>';
+         }
         
         content += '<h3 style="margin: 0 0 10px 0; color: #333;">' + hotspot.title + '</h3>';
         content += '<p style="margin: 0 0 15px 0; line-height: 1.5; color: #666;">' + hotspot.content + '</p>';
@@ -553,7 +581,6 @@ ${user?.name || 'Your Name'}
                            fontSize: hotspot.style.fontSize,
                            fontWeight: hotspot.style.fontWeight,
                            borderRadius: hotspot.shape === 'circle' ? '50%' : hotspot.style.borderRadius,
-                           animation: hotspot.style.isFlashing ? `flash ${hotspot.style.flashSpeed}ms infinite` : 'none',
                            cursor: isPreviewMode ? 'pointer' : 'grab'
                          }}
                          onClick={() => handleHotspotClick(hotspot)}
@@ -1025,9 +1052,9 @@ ${user?.name || 'Your Name'}
             <Button variant="outline" onClick={() => setCurrentStep('upload')}>
               Back to Upload
             </Button>
-            <Button onClick={generateExportCode} disabled={hotspots.length === 0}>
-              Generate Export Code
-            </Button>
+                         <Button onClick={() => generateExportCode()} disabled={hotspots.length === 0}>
+               Generate Export Code
+             </Button>
           </div>
         </TabsContent>
 
@@ -1058,15 +1085,19 @@ ${user?.name || 'Your Name'}
                 </Button>
               </div>
               
-              <div className="p-4 bg-gray-50 rounded border">
-                <h4 className="font-medium mb-2">How to use:</h4>
-                <ol className="list-decimal list-inside space-y-1 text-sm text-gray-600">
-                  <li>Copy the HTML code above</li>
-                  <li>Paste it into your website's HTML</li>
-                  <li>The interactive image will appear with clickable hotspots</li>
-                  <li>Click hotspots to see the content you added</li>
-                </ol>
-              </div>
+                             <div className="p-4 bg-gray-50 rounded border">
+                 <h4 className="font-medium mb-2">How to use:</h4>
+                 <ol className="list-decimal list-inside space-y-1 text-sm text-gray-600">
+                   <li>Copy the HTML code above</li>
+                   <li>Paste it into your website's HTML</li>
+                   <li>The interactive image will appear with clickable hotspots</li>
+                   <li>Click hotspots to see the content you added</li>
+                   <li>Flashing animations and hover effects will work in the exported version</li>
+                 </ol>
+                 <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded text-sm text-blue-800">
+                   <strong>Note:</strong> The exported HTML includes the image as base64 data, so it will work anywhere you embed it, even offline!
+                 </div>
+               </div>
             </CardContent>
           </Card>
           
