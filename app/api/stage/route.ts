@@ -1,10 +1,10 @@
 import OpenAI from "openai";
-import { NextResponse } from "next/server";
 import { toFile } from "openai/uploads";
+import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const maxDuration = 300; // headroom for image jobs
+export const maxDuration = 300;
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
 
@@ -18,13 +18,13 @@ async function urlToFile(url: string, filename: string, mime = "image/png") {
 export async function POST(req: Request) {
   try {
     const {
-      imageUrl,         // required
-      maskUrl,          // optional: same W/H as image; transparent where edits allowed
-      roomType,         // e.g. "living room"
-      style,            // e.g. "modern high-end"
-      colors,           // optional text palette
-      notes,            // optional extra guidance
-      size = "1024x1024" // use "2048x2048" for final export; 1024 is faster for previews
+      imageUrl,          // required: public URL of the base photo
+      maskUrl,           // optional: PNG, same W/H as base; transparent where edits allowed
+      roomType,          // required: "living room", "primary bedroom", etc.
+      style,             // required: "modern high-end", "farmhouse", etc.
+      colors,            // optional: "warm neutrals, walnut, brass"
+      notes,             // optional: extra guidance
+      size = "1024x1024" // use "2048x2048" for finals; 1024 is faster for previews
     } = await req.json();
 
     if (!imageUrl || !roomType || !style) {
@@ -35,37 +35,44 @@ export async function POST(req: Request) {
     }
 
     const baseImage = await urlToFile(imageUrl, "base.png");
+    const maskFile = maskUrl ? await urlToFile(maskUrl, "mask.png") : undefined;
 
     const prompt = [
       `Virtual-stage this ${roomType} in ${style} style.`,
       colors ? `Palette: ${colors}.` : null,
       `Cohesive furniture layout; correct rug size; layered lighting; tasteful wall art.`,
-      `Preserve architecture (windows, doors, trim, flooring). Keep realistic perspective, scale, and shadows.`,
+      `Preserve architecture (windows, doors, trim, flooring). Realistic perspective, scale, and shadows.`,
       notes ? `Notes: ${notes}` : null,
       `Photorealistic, listing-quality output.`
     ].filter(Boolean).join(" ");
 
-    const editArgs: Parameters<typeof openai.images.edit>[0] = {
+    const args: Parameters<typeof openai.images.edit>[0] = {
       model: "gpt-image-1",
       image: baseImage,
       prompt,
       size,
       response_format: "b64_json",
+      // background: "transparent", // uncomment if you need alpha PNG
+      // n: 1,                      // set 2–4 for variations
     };
+    if (maskFile) (args as any).mask = maskFile;
 
-    if (maskUrl) {
-      const maskFile = await urlToFile(maskUrl, "mask.png");
-      (editArgs as any).mask = maskFile; // mask must be same W/H; transparent = editable
-    }
-
-    const result = await openai.images.edit(editArgs);
+    const result = await openai.images.edit(args);
     const b64 = result.data?.[0]?.b64_json;
-    if (!b64) throw new Error("No image returned from OpenAI");
+    if (!b64) throw new Error("No image returned from OpenAI.");
 
-    // Return a data URL for immediate preview in the UI
-    return NextResponse.json({ dataUrl: `data:image/png;base64,${b64}`, prompt });
+    const bin = Buffer.from(b64, "base64");
+    return new Response(bin, {
+      status: 200,
+      headers: {
+        "Content-Type": "image/png",
+        "Content-Length": String(bin.length),
+        "Cache-Control": "no-store",
+        "Content-Disposition": 'inline; filename="staged.png"',
+      },
+    });
   } catch (err: any) {
-    console.error("Stage API error:", err?.response?.data || err);
+    console.error("Stage route error:", err?.response?.data || err);
     return NextResponse.json(
       { error: err?.message || "Image edit failed", details: err?.response?.data ?? null },
       { status: 500 }

@@ -164,15 +164,17 @@ export function StageItForm() {
           throw new Error(errorData.error || 'Staging failed')
         }
 
-        const result = await response.json()
+        // Handle binary image response
+        const blob = await response.blob()
+        const objectUrl = URL.createObjectURL(blob)
         
         // Create staging results with the generated image
         const clientResults: StagingResult[] = [{
           id: `staging-${Date.now()}-1`,
           originalImage: imageUrl,
-          stagedImage: result.dataUrl, // The AI-generated staged image from OpenAI
+          stagedImage: objectUrl, // The AI-generated staged image from OpenAI as object URL
           style: stagingRequest.style,
-          prompt: result.prompt || `AI-generated ${stagingRequest.style} staging for ${stagingRequest.roomType}`,
+          prompt: `AI-generated ${stagingRequest.style} staging for ${stagingRequest.roomType}`,
           metadata: stagingRequest,
           createdAt: new Date()
         }]
