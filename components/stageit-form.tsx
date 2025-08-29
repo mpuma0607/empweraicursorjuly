@@ -159,16 +159,16 @@ export function StageItForm() {
       // Call the real AI staging function
       const aiResults = await generateVirtualStaging(serverRequest, imageUrl)
       
-      // Convert server results to client format
-      const clientResults: StagingResult[] = aiResults.map(result => ({
-        id: result.id,
-        originalImage: result.originalImage,
-        stagedImage: result.stagedImage,
-        style: result.style,
-        prompt: result.prompt,
-        metadata: result.metadata,
-        createdAt: result.createdAt
-      }))
+             // Convert server results to client format
+       const clientResults: StagingResult[] = aiResults.map(result => ({
+         id: result.id,
+         originalImage: result.originalImage,
+         stagedImage: result.stagedImage,
+         style: result.style,
+         prompt: result.aiDescription, // Use aiDescription from server
+         metadata: result.metadata,
+         createdAt: result.createdAt
+       }))
       
       setStagingResults(clientResults)
       setSelectedResult(clientResults[0])

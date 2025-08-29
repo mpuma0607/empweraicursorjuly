@@ -31,9 +31,14 @@ export async function generateVirtualStaging(
   imageUrl: string
 ): Promise<StagingResult[]> {
   try {
+    console.log('StageIT: Starting AI staging generation...')
+    console.log('StageIT: Staging request:', stagingRequest)
+    
     // Build the comprehensive AI prompt for virtual staging
     const prompt = buildStagingPrompt(stagingRequest, imageUrl)
+    console.log('StageIT: Generated prompt length:', prompt.length)
     
+    console.log('StageIT: Calling OpenAI API...')
     // Generate the AI staging description
     const aiResponse = await generateText({
       model: openai("gpt-4o"),
@@ -41,6 +46,7 @@ export async function generateVirtualStaging(
       maxTokens: 1000,
       temperature: 0.7,
     })
+    console.log('StageIT: AI response received:', aiResponse.text.substring(0, 100) + '...')
 
     // For now, we'll return mock results with the AI description
     // In the future, this would integrate with actual image generation APIs
