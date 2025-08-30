@@ -150,7 +150,7 @@ export function StageItForm() {
         formData.append('style', stagingRequest.style)
         formData.append('colors', stagingRequest.colorPalette || '')
         formData.append('notes', `Furniture density: ${stagingRequest.furnitureDensity}, Lighting: ${stagingRequest.lighting}, Target market: ${stagingRequest.targetMarket}, Property value: ${stagingRequest.propertyValue}, Additional features: ${stagingRequest.additionalFeatures.join(', ')}`)
-        formData.append('size', "2048x2048") // use 2048 for final save
+        formData.append('size', "1536x1024") // landscape format for real estate photos
 
         const response = await fetch('/api/stage', {
           method: 'POST',

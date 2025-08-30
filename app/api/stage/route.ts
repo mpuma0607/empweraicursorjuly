@@ -39,7 +39,7 @@ export async function POST(req: Request) {
     let style = "";
     let colors = "";
     let notes = "";
-    let size: "1024x1024" | "2048x2048" = "1024x1024";
+    let size: string = "1024x1024";
 
     if (contentType.includes("multipart/form-data")) {
       // ---- multipart: file upload from client ----
@@ -105,11 +105,15 @@ export async function POST(req: Request) {
       `Photorealistic, listing-quality output.`
     ].filter(Boolean).join(" ");
 
+    // Validate and normalize size parameter
+    const SUPPORTED_SIZES = new Set(["1024x1024", "1024x1536", "1536x1024", "auto"]);
+    const finalSize = SUPPORTED_SIZES.has(size) ? size : "auto";
+
     // Build outbound form to OpenAI (use plain fetch to avoid SDK file quirks)
     const aiForm = new FormData();
     aiForm.append("model", "gpt-image-1");
     aiForm.append("prompt", prompt);
-    aiForm.append("size", size);
+    aiForm.append("size", finalSize);
     aiForm.append("image", imageBlob!, "image.png");
     if (maskBlob) aiForm.append("mask", maskBlob, "mask.png");
 
