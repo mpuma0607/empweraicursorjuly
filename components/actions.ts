@@ -30,25 +30,55 @@ export async function generateActionPlan(formData: FormData) {
   try {
     const prospectFocus = formData.prospectType === "Other" ? formData.customProspectType : formData.prospectType
 
-    const prompt = `
-Generate: Daily real estate action plan
-Style: Professional, actionable, motivational
-Focus: ${prospectFocus} prospecting
-Language: ${formData.language}
+    const prompt = `Take on the role of an elite real estate coach and create a high-performance daily action plan for a real estate agent to execute today, focused on finding and prospecting ${prospectFocus}.
 
-Goals: ${formData.specificGoals || 'Standard prospecting'}
+${formData.specificGoals ? `Additional context: ${formData.specificGoals}` : ""}
 
-Create:
-- Prospecting focus and strategy
-- Text outreach plan with scripts
-- Phone call plan with scripts
-- Email outreach plan with scripts
-- Bonus task and motivation`
+IMPORTANT: Generate this entire action plan in ${formData.language}. All text, scripts, and instructions should be written in ${formData.language}.
+
+Instructions:
+This plan should be for today only — do not spread tasks across multiple days.
+
+The plan must be detailed, specific, and fully executable with a clear breakdown of actions and recommended numbers (e.g., "Send 10 text messages").
+
+Include professionally written scripts for each outreach method: Text, Email, and Phone Calls.
+
+Scripts must be crafted using VAK language principles to appeal to visual, auditory, and kinesthetic personality types.
+
+Ensure the tone is empowering, confident, and focused on helping the agent take effective, immediate action.
+
+REQUIRED SECTIONS (include ALL of these with the exact emojis):
+
+🔍 Prospecting Focus
+Brief summary of who they're targeting today (based on input)
+Why this audience is important today
+Emotional or strategic angle to approach them with
+
+📱 Text Outreach Plan
+Specific number of texts to send today
+Custom text message script using VAK language
+Tip on how to follow up or track replies
+
+📞 Phone Call Plan
+Number of calls to make today
+Prescriptive call structure: Opener, Questions, Close
+Full phone script with sensory-rich wording
+
+📧 Email Outreach Plan
+Number of emails to send today
+Email subject line idea
+Full email script that includes a visually descriptive layout and emotionally resonant CTA
+
+📊 Bonus Task or Follow-Up Assignment
+Optional bonus action that helps close the loop
+Short motivational note tied to the agent's bigger goals
+
+Generate a complete, detailed action plan with all 5 sections. Each section should contain substantial, actionable content.`
 
     const { text } = await generateText({
       model: openai("gpt-4o"),
-      temperature: 0.7,
       prompt,
+      temperature: 0.7,
     })
 
     return {
@@ -82,28 +112,86 @@ export async function analyzeComparables(address: string) {
     }
 
     // Create AI prompt for CMA analysis
-    const prompt = `
-Generate: Comparative Market Analysis
-Style: Professional, data-driven insights
-Focus: Property valuation, market positioning, comparable analysis
+    const prompt = `You are a professional real estate appraiser creating a Comparative Market Analysis (CMA). 
 
-Address: ${address}
-Comparables: ${JSON.stringify(comparableData, null, 2)}
+Subject Property: ${address}
 
-Analyze and provide:
-- Market value assessment
-- Comparable property insights
-- Pricing recommendations
-- Market positioning strategy
-- Investment potential analysis`
+Comparable Properties Data:
+${
+  comparableData.comparables.length > 0
+    ? comparableData.comparables
+        .slice(0, 10)
+        .map(
+          (comp, index) =>
+            `Comp ${index + 1}: ${comp.address}
+      - Price: $${comp.price?.toLocaleString() || "N/A"}
+      - Bedrooms: ${comp.bedrooms || "N/A"}
+      - Bathrooms: ${comp.bathrooms || "N/A"}
+      - Square Feet: ${comp.sqft?.toLocaleString() || "N/A"}
+      - Year Built: ${comp.yearBuilt || "N/A"}
+      - Days on Market: ${comp.daysOnMarket || "N/A"}
+      - Price per Sq Ft: $${comp.pricePerSqft || "N/A"}
+      - Property Type: ${comp.propertyType || "N/A"}
+      - Lot Size: ${comp.lotSize || "N/A"}
+      - MLS ID: ${comp.mlsId || comp.listingId || "N/A"}
+      `,
+        )
+        .join("\n\n")
+    : "No comparable properties found"
+}
 
-    const { text } = await generateText({
-      model: openai("gpt-4o"),
-      temperature: 0.7,
-      prompt,
+Summary Statistics:
+- Total Comparables: ${comparableData.totalComparables}
+- Average Price: $${comparableData.summary.averagePrice.toLocaleString()}
+- Price Range: $${comparableData.summary.priceRange.min.toLocaleString()} - $${comparableData.summary.priceRange.max.toLocaleString()}
+- Average Square Footage: ${comparableData.summary.averageSqft.toLocaleString()}
+
+Create a professional CMA report with these EXACT sections:
+
+**Property Overview**
+- Subject property details and location analysis
+- Neighborhood characteristics and market position
+
+**Comparable Properties Analysis**
+- Analysis of the ${comparableData.totalComparables} comparable properties
+- Key similarities and differences with subject property
+- Market positioning relative to comparables
+
+**Pricing Analysis**
+- Current market value estimate range
+- Price per square foot analysis
+- Factors affecting property value
+
+**Market Conditions**
+- Current market trends in this area
+- Days on market analysis
+- Market velocity and activity levels
+
+**Key Insights & Recommendations**
+- Pricing strategy recommendations
+- Market timing considerations
+- Competitive advantages and challenges
+
+Format each section with detailed bullet points using specific data from the comparable properties provided.`
+
+    const response = await openaiInstance.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are a professional real estate appraiser creating detailed CMA reports with specific data analysis.",
+        },
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      
+      max_tokens: 2500,
     })
 
-    const analysisText = text || ""
+    const analysisText = response.choices[0].message.content || ""
 
     if (!analysisText) {
       throw new Error("No analysis generated")

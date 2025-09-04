@@ -641,25 +641,44 @@ ${user?.name || 'Your Name'}
             </Card>
           )}
 
-          {/* Action Buttons */}
-          <div className="flex flex-wrap gap-2 justify-center">
-            <Button onClick={() => downloadImage(selectedResult?.stagedImage || '', `staged-${imageName}-${selectedResult?.style}.jpg`)}>
-              <Download className="h-4 w-4 mr-2" />
-              Download Staged Image
-            </Button>
-            <Button variant="outline" onClick={handleEmailToSelf}>
-              <Mail className="h-4 w-4 mr-2" />
-              Email To Self
-            </Button>
-            <Button variant="outline" onClick={handleEmailToClient}>
-              <Mail className="h-4 w-4 mr-2" />
-              Email To Client
-            </Button>
-            <Button onClick={handleSaveToProfile} disabled={isSaving}>
-              <Save className="h-4 w-4 mr-2" />
-              {isSaving ? 'Saving...' : 'Save to Profile'}
-            </Button>
-          </div>
+                     {/* Action Buttons */}
+           <div className="flex flex-wrap gap-2 justify-center">
+             <Button onClick={() => downloadImage(selectedResult?.stagedImage || '', `staged-${imageName}-${selectedResult?.style}.jpg`)}>
+               <Download className="h-4 w-4 mr-2" />
+               Download Staged Image
+             </Button>
+             <Button variant="outline" onClick={handleEmailToSelf}>
+               <Mail className="h-4 w-4 mr-2" />
+               Email To Self
+             </Button>
+             <Button variant="outline" onClick={handleEmailToClient}>
+               <Mail className="h-4 w-4 mr-2" />
+               Email To Client
+             </Button>
+             <Button onClick={handleSaveToProfile} disabled={isSaving}>
+               <Save className="h-4 w-4 mr-2" />
+               {isSaving ? 'Saving...' : 'Save to Profile'}
+             </Button>
+           </div>
+
+           {/* Stage Again/Another Buttons */}
+           <div className="flex flex-wrap gap-2 justify-center">
+             <Button variant="outline" onClick={() => setCurrentStep('configure')}>
+               <RefreshCw className="h-4 w-4 mr-2" />
+               Stage Again
+             </Button>
+             <Button variant="outline" onClick={() => {
+               setImageFile(null)
+               setImageUrl('')
+               setImageName('')
+               setStagingResults([])
+               setSelectedResult(null)
+               setCurrentStep('upload')
+             }}>
+               <Upload className="h-4 w-4 mr-2" />
+               Stage Another
+             </Button>
+           </div>
 
           {/* Staging Details */}
           {selectedResult && (

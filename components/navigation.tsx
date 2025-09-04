@@ -14,33 +14,30 @@ const navigationItems = [
     title: "AI Hub",
     href: "/ai-hub",
     submenu: [
-      // AI Marketing & Prospecting Tools
-      { title: "── AI Marketing & Prospecting ──", href: "#", description: "", isHeader: true },
-      {
-        title: "IdeaHub AI",
-        href: "/ai-hub/ideahub-ai",
-        description: "Social Media Content Generation",
-        begginsHref: "/ai-hub/ideahub-beggins",
-        empowerHref: "/ai-hub/ideahub-empower",
-      },
+      // Prospecting & Marketing AI Tools
+      { title: "── Prospecting & Marketing AI Tools ──", href: "#", description: "", isHeader: true },
+      { title: "IdeaHub (Empower)", href: "/ai-hub/ideahub-empower", description: "Multi-Brand Social Media Content Generation" },
+      { title: "IdeaHub (Beggins)", href: "/ai-hub/ideahub-beggins", description: "Social Media Content Generation for Beggins" },
       { title: "RealBio", href: "/ai-hub/realbio", description: "Professional Agent Bio Creation" },
-      { title: "ListIT", href: "/ai-hub/listit-ai", description: "Property Listing Descriptions" },
       { title: "ScriptIT", href: "/ai-hub/scriptit-ai", description: "Custom Real Estate Scripts" },
       { title: "QuickCMA AI", href: "/ai-hub/quickcma-ai", description: "Comparative Market Analysis Tool" },
-      { title: "MyMarket AI", href: "/ai-hub/mymarket-ai", description: "Housing & Rental Market Analysis" },
       { title: "RolePlay AI", href: "/ai-hub/roleplay-ai", description: "Voice Conversation Practice" },
-      { title: "PropBot AI", href: "/ai-hub/propbot-ai", description: "Intelligent Property Search & Analysis" },
       { title: "Who's Who AI", href: "/ai-hub/whos-who-ai", description: "Property Owner Skip Tracing" },
-      { title: "GoalScreen AI", href: "/ai-hub/goalscreen-ai", description: "Daily Contact Goal Wallpaper Creator" },
-      { title: "Real-IMG", href: "/ai-hub/real-img", description: "Interactive Image Creator with Hotspots" },
+      // AI Tools For Buyers & Listings
+      { title: "── AI Tools For Buyers & Listings ──", href: "#", description: "", isHeader: true },
       { title: "StageIT", href: "/ai-hub/stageit", description: "AI-Powered Virtual Staging Tool" },
-      // AI Planning & Coaching Tools
-      { title: "── AI Planning & Coaching ──", href: "#", description: "", isHeader: true },
+      { title: "ListIT", href: "/ai-hub/listit-ai", description: "Property Listing Descriptions" },
+      { title: "PropBot AI", href: "/ai-hub/propbot-ai", description: "Intelligent Property Search & Analysis" },
+      { title: "MyMarket AI", href: "/ai-hub/mymarket-ai", description: "Housing & Rental Market Analysis" },
+      { title: "Real-IMG", href: "/ai-hub/real-img", description: "Interactive Image Creator with Hotspots" },
+      // AI Planning and Coaching AI Tools
+      { title: "── AI Planning and Coaching AI Tools ──", href: "#", description: "", isHeader: true },
+      { title: "GoalScreen AI", href: "/ai-hub/goalscreen-ai", description: "Daily Contact Goal Wallpaper Creator" },
       { title: "Action AI", href: "/ai-hub/action-ai", description: "Daily Prospecting Action Plans" },
       { title: "RealCoach AI", href: "/ai-hub/realcoach-ai", description: "Personalized Business Coaching" },
       { title: "BizPlan AI", href: "/ai-hub/bizplan-ai", description: "90-Day Business Plan Generator" },
-      // AI Analysis & Contract Tools
-      { title: "── AI Analysis & Contract ──", href: "#", description: "", isHeader: true },
+      // AI Deal Analysis Tools
+      { title: "── AI Deal Analysis Tools ──", href: "#", description: "", isHeader: true },
       { title: "RealDeal AI", href: "/ai-hub/realdeal-ai", description: "Contract Analysis & Summarization" },
     ],
   },
@@ -460,14 +457,7 @@ export default function Navigation() {
                             ) : (
                               <Link
                                 key={subItem.href}
-                                href={
-                                  subItem.title === "IdeaHub AI" && tenantConfig.id === "century21-beggins"
-                                    ? subItem.begginsHref || subItem.href
-                                    : subItem.title === "IdeaHub AI" &&
-                                        (tenantConfig.id === "empower-ai" || tenantConfig.id === "empower-beta")
-                                      ? subItem.empowerHref || subItem.href
-                                      : subItem.href
-                                }
+                                href={subItem.href}
                                 className="block px-4 py-3 text-sm hover:bg-gray-50 hover:text-green-600 border-b border-gray-50 last:border-b-0"
                               >
                                 <div className="font-medium text-gray-900">{subItem.title}</div>
@@ -576,14 +566,7 @@ export default function Navigation() {
                             ) : (
                               <Link
                                 key={subItem.href}
-                                href={
-                                  subItem.title === "IdeaHub AI" && tenantConfig.id === "century21-beggins"
-                                    ? subItem.begginsHref || subItem.href
-                                    : subItem.title === "IdeaHub AI" &&
-                                        (tenantConfig.id === "empower-ai" || tenantConfig.id === "empower-beta")
-                                      ? subItem.empowerHref || subItem.href
-                                      : subItem.href
-                                }
+                                href={subItem.href}
                                 className="block py-2 text-sm hover:text-green-600"
                                 onClick={() => setMobileMenuOpen(false)}
                               >
