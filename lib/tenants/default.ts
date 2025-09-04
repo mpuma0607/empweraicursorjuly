@@ -19,7 +19,6 @@ export const defaultTenantConfig: TenantConfig = {
   features: {
     enabledTools: [
       "ideahub-empower",
-      "ideahub-beggins",
       "realbio",
       "scriptit",
       "quickcma-ai",

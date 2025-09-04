@@ -24,12 +24,12 @@ import {
 const aiTools = {
   "Prospecting & Marketing AI Tools": [
     {
-      title: "IdeaHub (Empower)",
-      href: "/ai-hub/ideahub-empower",
-      description: "Multi-Brand Social Media Content Generation",
+      title: "IdeaHub",
+      href: (config: any) => (config.id === "century21-beggins" ? "/ai-hub/ideahub-beggins" : "/ai-hub/ideahub-empower"),
+      description: "Social Media Content Generation",
       icon: Lightbulb,
       color: "yellow",
-      toolId: "ideahub-empower",
+      toolId: (config: any) => (config.id === "century21-beggins" ? "ideahub-beggins" : "ideahub-empower"),
       keywords: [
         "social media",
         "content",
@@ -62,44 +62,6 @@ const aiTools = {
         "brand selection",
         "multiple brands",
         "brand options",
-      ],
-    },
-    {
-      title: "IdeaHub (Beggins)",
-      href: "/ai-hub/ideahub-beggins",
-      description: "Social Media Content Generation for Beggins",
-      icon: Lightbulb,
-      color: "yellow",
-      toolId: "ideahub-beggins",
-      keywords: [
-        "social media",
-        "content",
-        "posts",
-        "marketing",
-        "ideas",
-        "creative",
-        "engagement",
-        "write",
-        "create",
-        "generate",
-        "facebook",
-        "instagram",
-        "linkedin",
-        "twitter",
-        "social content",
-        "social posts",
-        "content creation",
-        "marketing content",
-        "write posts",
-        "create content",
-        "generate ideas",
-        "social media posts",
-        "content ideas",
-        "marketing ideas",
-        "creative content",
-        "social strategy",
-        "beggins",
-        "century21",
       ],
     },
     {
@@ -670,8 +632,12 @@ export default function AIHubPage() {
       const enabledTools = tools.filter((tool: any) => {
         // If no enabledTools array exists, show all tools (backward compatibility)
         if (!config.features.enabledTools) return true
+        
+        // Handle dynamic toolId (for IdeaHub)
+        const toolId = typeof tool.toolId === "function" ? tool.toolId(config) : tool.toolId
+        
         // Otherwise, only show tools that are in the enabledTools array
-        return config.features.enabledTools.includes(tool.toolId)
+        return config.features.enabledTools.includes(toolId)
       })
 
       if (enabledTools.length > 0) {

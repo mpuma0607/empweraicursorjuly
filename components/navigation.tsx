@@ -16,8 +16,13 @@ const navigationItems = [
     submenu: [
       // Prospecting & Marketing AI Tools
       { title: "── Prospecting & Marketing AI Tools ──", href: "#", description: "", isHeader: true },
-      { title: "IdeaHub (Empower)", href: "/ai-hub/ideahub-empower", description: "Multi-Brand Social Media Content Generation" },
-      { title: "IdeaHub (Beggins)", href: "/ai-hub/ideahub-beggins", description: "Social Media Content Generation for Beggins" },
+      { 
+        title: "IdeaHub", 
+        href: "/ai-hub/ideahub-empower", 
+        description: "Social Media Content Generation",
+        begginsHref: "/ai-hub/ideahub-beggins",
+        empowerHref: "/ai-hub/ideahub-empower"
+      },
       { title: "RealBio", href: "/ai-hub/realbio", description: "Professional Agent Bio Creation" },
       { title: "ScriptIT", href: "/ai-hub/scriptit-ai", description: "Custom Real Estate Scripts" },
       { title: "QuickCMA AI", href: "/ai-hub/quickcma-ai", description: "Comparative Market Analysis Tool" },
@@ -457,7 +462,14 @@ export default function Navigation() {
                             ) : (
                               <Link
                                 key={subItem.href}
-                                href={subItem.href}
+                                href={
+                                  subItem.title === "IdeaHub" && tenantConfig.id === "century21-beggins"
+                                    ? subItem.begginsHref || subItem.href
+                                    : subItem.title === "IdeaHub" &&
+                                        (tenantConfig.id === "empower-ai" || tenantConfig.id === "empower-beta")
+                                      ? subItem.empowerHref || subItem.href
+                                      : subItem.href
+                                }
                                 className="block px-4 py-3 text-sm hover:bg-gray-50 hover:text-green-600 border-b border-gray-50 last:border-b-0"
                               >
                                 <div className="font-medium text-gray-900">{subItem.title}</div>
@@ -566,7 +578,14 @@ export default function Navigation() {
                             ) : (
                               <Link
                                 key={subItem.href}
-                                href={subItem.href}
+                                href={
+                                  subItem.title === "IdeaHub" && tenantConfig.id === "century21-beggins"
+                                    ? subItem.begginsHref || subItem.href
+                                    : subItem.title === "IdeaHub" &&
+                                        (tenantConfig.id === "empower-ai" || tenantConfig.id === "empower-beta")
+                                      ? subItem.empowerHref || subItem.href
+                                      : subItem.href
+                                }
                                 className="block py-2 text-sm hover:text-green-600"
                                 onClick={() => setMobileMenuOpen(false)}
                               >
