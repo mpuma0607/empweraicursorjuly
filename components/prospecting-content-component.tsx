@@ -173,8 +173,12 @@ export default function ProspectingContentComponent({
       let logoIdentifier = ""
       if (brandingOptions.brandingChoice === "saved-brand" && userBrandingProfile?.brand) {
         logoIdentifier = userBrandingProfile.brand
-      } else if (brandingOptions.brandingChoice === "saved-logo" && userBrandingProfile?.logo_public_id) {
-        logoIdentifier = userBrandingProfile.logo_public_id
+      } else if (brandingOptions.brandingChoice === "saved-logo" && userBrandingProfile?.custom_logo_url) {
+        // Extract public_id from saved logo URL (same as Dynamic Marketing Hub)
+        const publicIdMatch = userBrandingProfile.custom_logo_url.match(/\/([^/]+)\.(jpg|jpeg|png|gif|webp)$/i)
+        if (publicIdMatch) {
+          logoIdentifier = `branding-logos:${publicIdMatch[1]}`
+        }
       } else if (brandingOptions.brandingChoice === "dropdown" && brandingOptions.selectedBrand) {
         logoIdentifier = brandingOptions.selectedBrand
       }
@@ -223,6 +227,7 @@ export default function ProspectingContentComponent({
 
       if (result && result.url) {
         setBrandedImageUrl(result.url)
+        // Keep selectedImage as URL for preview
         
         // Auto-scroll to branding section after generation
         setTimeout(() => {
