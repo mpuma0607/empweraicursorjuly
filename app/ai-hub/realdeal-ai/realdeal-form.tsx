@@ -93,21 +93,23 @@ export default function RealDealForm() {
     }
   }, [user, isUserLoading])
 
-  // Check Gmail connection status
-  useEffect(() => {
-    const checkGmailConnection = async () => {
-      try {
-        const response = await fetch("/api/oauth/check-gmail-connection")
-        if (response.ok) {
-          const data = await response.json()
-          setIsGmailConnected(data.connected)
+      // Check Gmail connection status
+    useEffect(() => {
+      const checkGmailConnection = async () => {
+        if (!user?.email) return
+        
+        try {
+          const response = await fetch(`/api/oauth/check-gmail-connection?email=${encodeURIComponent(user.email)}`)
+          if (response.ok) {
+            const data = await response.json()
+            setIsGmailConnected(data.connected)
+          }
+        } catch (error) {
+          console.error("Error checking Gmail connection:", error)
         }
-      } catch (error) {
-        console.error("Error checking Gmail connection:", error)
       }
-    }
-    checkGmailConnection()
-  }, [])
+      checkGmailConnection()
+    }, [user?.email])
 
   // Handle PDF.js library loading
   const handlePdfJsLoad = () => {

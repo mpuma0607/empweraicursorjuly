@@ -5,6 +5,9 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function POST(request: NextRequest) {
   try {
+    console.log("=== REALDEAL EMAIL API START ===")
+    console.log("Resend API Key exists:", !!process.env.RESEND_API_KEY)
+    
     const formData = await request.formData()
     
     const analysis = formData.get("analysis") as string
@@ -12,14 +15,21 @@ export async function POST(request: NextRequest) {
     const propertyAddress = formData.get("propertyAddress") as string
     const email = formData.get("email") as string
 
+    console.log("Form data received:", { 
+      hasAnalysis: !!analysis, 
+      agentName, 
+      email, 
+      propertyAddress,
+      analysisLength: analysis?.length || 0
+    })
+
     if (!analysis || !agentName || !email) {
+      console.error("Missing required fields:", { analysis: !!analysis, agentName: !!agentName, email: !!email })
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
       )
     }
-
-    console.log("RealDeal email send request:", { agentName, email, propertyAddress })
 
     const emailHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">
@@ -61,8 +71,13 @@ export async function POST(request: NextRequest) {
       </div>
     `
 
+    console.log("Sending email via Resend...")
+    console.log("Email to:", email)
+    console.log("Email from: RealDeal AI <noreply@marketing.getempowerai.com>")
+    console.log("Subject:", `Contract Analysis - ${propertyAddress || "Real Estate Contract"}`)
+
     const response = await resend.emails.send({
-      from: "RealDeal AI <noreply@marketing.thenextlevelu.com>",
+      from: "RealDeal AI <noreply@marketing.getempowerai.com>",
       to: [email],
       subject: `Contract Analysis - ${propertyAddress || "Real Estate Contract"}`,
       html: emailHtml,
@@ -72,7 +87,7 @@ export async function POST(request: NextRequest) {
 
     if (response.error) {
       console.error("Resend error details:", response.error)
-      throw new Error(`Resend API error: ${response.error.message}`)
+      throw new Error(`Resend API error: ${response.error.message || JSON.stringify(response.error)}`)
     }
 
     if (!response.data) {

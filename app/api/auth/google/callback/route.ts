@@ -71,16 +71,21 @@ export async function GET(request: NextRequest) {
     const tokenData = await tokenResponse.json()
     
     // Get user info from Google
+    console.log('Getting user info from Google API...')
     const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
       headers: {
         Authorization: `Bearer ${tokenData.access_token}`,
       },
     })
     
+    console.log('User info response status:', userInfoResponse.status)
+    console.log('User info response headers:', Object.fromEntries(userInfoResponse.headers.entries()))
+    
     if (!userInfoResponse.ok) {
-      console.error('Failed to get user info')
+      const errorText = await userInfoResponse.text()
+      console.error('Failed to get user info:', userInfoResponse.status, errorText)
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || 'https://getempowerai.com'}/profile/email-integration?error=user_info_failed`
+        `${process.env.NEXT_PUBLIC_APP_URL || 'https://getempowerai.com'}/profile/email-integration?error=user_info_failed&details=${encodeURIComponent(errorText)}`
       )
     }
     
@@ -94,7 +99,11 @@ export async function GET(request: NextRequest) {
        accessToken: tokenData.access_token,
        refreshToken: tokenData.refresh_token,
        expiresAt,
-       scopes: ['https://www.googleapis.com/auth/gmail.send']
+       scopes: [
+         'https://www.googleapis.com/auth/gmail.send',
+         'https://www.googleapis.com/auth/userinfo.email',
+         'https://www.googleapis.com/auth/userinfo.profile'
+       ]
      })
      
      console.log(`OAuth completed successfully for ${userInfo.email}`)
