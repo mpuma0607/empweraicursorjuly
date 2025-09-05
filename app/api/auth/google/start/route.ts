@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
       `client_id=${process.env.GOOGLE_OAUTH_CLIENT_ID}` +
       `&redirect_uri=${encodeURIComponent(process.env.GOOGLE_OAUTH_REDIRECT_URI || 'https://getempowerai.com/api/auth/google/callback')}` +
       `&response_type=code` +
-      `&scope=${encodeURIComponent('https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile')}` +
+      `&scope=${encodeURIComponent('https://www.googleapis.com/auth/gmail.modify https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile')}` +
       `&access_type=offline` +
       `&prompt=consent` +
       `&state=${state}` +
