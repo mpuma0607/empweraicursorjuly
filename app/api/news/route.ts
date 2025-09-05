@@ -11,7 +11,7 @@ interface Article {
 
 export async function GET() {
   try {
-    // RSS feed sources for real estate news
+    // RSS feed sources for real estate news (all publicly accessible)
     const rssSources = [
       {
         url: "https://feeds.feedburner.com/realtor-mag-daily-news",
@@ -25,10 +25,51 @@ export async function GET() {
         url: "https://www.housingwire.com/feed/",
         name: "HousingWire",
       },
-      // Google News RSS for specific keywords
       {
-        url: 'https://news.google.com/rss/search?q="real estate" OR "Century 21"&hl=en-US&gl=US&ceid=US:en',
-        name: "Google News",
+        url: "https://www.nar.realtor/news/rss",
+        name: "NAR News",
+      },
+      {
+        url: "https://www.realtor.com/news/feed/",
+        name: "Realtor.com News",
+      },
+      {
+        url: "https://www.biggerpockets.com/blog/feed",
+        name: "BiggerPockets",
+      },
+      {
+        url: "https://www.rentals.com/blog/feed/",
+        name: "Rentals.com",
+      },
+      {
+        url: "https://www.apartmenttherapy.com/feed",
+        name: "Apartment Therapy",
+      },
+      {
+        url: "https://www.curbed.com/feed",
+        name: "Curbed",
+      },
+      {
+        url: "https://www.architecturaldigest.com/feed",
+        name: "Architectural Digest",
+      },
+      // Reddit RSS feeds (publicly accessible)
+      {
+        url: "https://www.reddit.com/r/RealEstate/hot.rss",
+        name: "Reddit Real Estate",
+      },
+      {
+        url: "https://www.reddit.com/r/RealEstateInvesting/hot.rss",
+        name: "Reddit Real Estate Investing",
+      },
+      // Industry-specific feeds
+      {
+        url: "https://www.mortgagenewsdaily.com/rss",
+        name: "Mortgage News Daily",
+      },
+      {
+        url: "https://www.nationalmortgagenews.com/rss",
+        name: "National Mortgage News",
       },
     ]
 
@@ -48,10 +89,43 @@ export async function GET() {
         const xmlText = await response.text()
         const articles = parseRSSFeed(xmlText, source.name)
 
-        // Filter articles by keywords
+        // Filter articles by keywords and quality
         const filteredArticles = articles.filter((article) => {
           const content = `${article.title} ${article.description}`.toLowerCase()
-          return content.includes("real estate") || content.includes("century 21")
+          
+          // Real estate related keywords
+          const realEstateKeywords = [
+            "real estate", "realtor", "realtors", "realty", "property", "properties",
+            "housing", "home", "homes", "buyer", "buyers", "seller", "sellers",
+            "listing", "listings", "mortgage", "mortgages", "refinance", "refinancing",
+            "investment", "investing", "investor", "investors", "rental", "rentals",
+            "landlord", "tenant", "tenants", "lease", "leasing", "commercial real estate",
+            "residential", "condo", "condos", "townhouse", "townhouses", "apartment",
+            "apartments", "zillow", "redfin", "century 21", "keller williams", "remax",
+            "coldwell banker", "brokerage", "broker", "brokers", "agent", "agents",
+            "mls", "multiple listing service", "appraisal", "appraisals", "inspection",
+            "inspections", "closing", "closings", "escrow", "title", "titles",
+            "foreclosure", "foreclosures", "short sale", "short sales", "fsbo",
+            "probate", "probate real estate", "divorce real estate", "pre-foreclosure",
+            "absentee owner", "absentee owners", "expired listing", "expired listings",
+            "soi", "sphere of influence", "first time buyer", "first time buyers"
+          ]
+          
+          // Check if article contains any real estate keywords
+          const hasRealEstateKeyword = realEstateKeywords.some(keyword => 
+            content.includes(keyword)
+          )
+          
+          // Quality filters - exclude low-quality content
+          const isLowQuality = content.includes("advertisement") || 
+                              content.includes("sponsored") ||
+                              content.includes("promoted") ||
+                              content.includes("click here") ||
+                              content.includes("read more") ||
+                              article.title.length < 10 ||
+                              article.description.length < 20
+          
+          return hasRealEstateKeyword && !isLowQuality
         })
 
         allArticles.push(...filteredArticles)
@@ -61,10 +135,17 @@ export async function GET() {
       }
     }
 
-    // Sort by date (newest first) and limit to 20 articles
-    const sortedArticles = allArticles
+    // Remove duplicates based on title similarity
+    const uniqueArticles = allArticles.filter((article, index, self) => 
+      index === self.findIndex(a => 
+        a.title.toLowerCase().trim() === article.title.toLowerCase().trim()
+      )
+    )
+
+    // Sort by date (newest first) and limit to 30 articles
+    const sortedArticles = uniqueArticles
       .sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime())
-      .slice(0, 20)
+      .slice(0, 30)
 
     return NextResponse.json({ articles: sortedArticles })
   } catch (error) {
