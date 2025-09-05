@@ -142,9 +142,9 @@ export default function ProspectingContentComponent({
     loadImages()
   }, [lane])
 
-  const handleImageSelect = (imageUrl: string) => {
-    setSelectedImage(imageUrl)
-    setBrandingImage(imageUrl)
+  const handleImageSelect = (image: CloudinaryImage) => {
+    setSelectedImage(image.secure_url)
+    setBrandingImage(image.public_id) // Store public_id instead of URL
     setBrandedImageUrl(null)
     
     // Auto-scroll to branding section when image is selected
@@ -155,7 +155,7 @@ export default function ProspectingContentComponent({
 
   const handleGenerateBrandedImage = async () => {
     if (!brandingImage || !brandingOptions.wantBranding) {
-      setBrandedImageUrl(brandingImage)
+      setBrandedImageUrl(selectedImage) // Use selectedImage URL for preview
       // Auto-scroll to branding section
       setTimeout(() => {
         brandingSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -165,18 +165,10 @@ export default function ProspectingContentComponent({
 
     setIsGenerating(true)
     try {
-      // Extract public_id from the image URL
-      // Cloudinary URL format: https://res.cloudinary.com/cloud_name/image/upload/v1234567890/folder/image_name.jpg
-      const urlParts = brandingImage.split('/')
-      const uploadIndex = urlParts.findIndex(part => part === 'upload')
-      const publicId = urlParts.slice(uploadIndex + 2).join('/').split('.')[0]
+      // Use public_id directly (no URL parsing needed)
+      const publicId = brandingImage
       
-      console.log("Public ID extraction debug:", {
-        originalUrl: brandingImage,
-        urlParts,
-        uploadIndex,
-        extractedPublicId: publicId
-      })
+      console.log("Using public_id directly:", publicId)
       
       let logoIdentifier = ""
       if (brandingOptions.brandingChoice === "saved-brand" && userBrandingProfile?.brand) {
@@ -293,7 +285,7 @@ export default function ProspectingContentComponent({
             <div
               key={image.public_id}
               className="relative group cursor-pointer"
-              onClick={() => handleImageSelect(image.secure_url)}
+              onClick={() => handleImageSelect(image)}
             >
               <div className="aspect-square relative overflow-hidden rounded-lg border-2 border-gray-200 hover:border-purple-500 transition-colors">
                 <Image
@@ -308,7 +300,7 @@ export default function ProspectingContentComponent({
                     className="opacity-0 group-hover:opacity-100 transition-opacity"
                     onClick={(e) => {
                       e.stopPropagation()
-                      handleImageSelect(image.secure_url)
+                      handleImageSelect(image)
                     }}
                   >
                     Select
