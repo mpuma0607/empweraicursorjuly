@@ -707,7 +707,7 @@ export default function AIHubPage() {
               "Generate engaging social media content ideas and posts tailored to your real estate business and target audience with AI-powered creativity."}
             {tool.title === "IdeaHub V2" &&
               "Advanced social media content generation with custom branding, logo overlays, and personalized contact information for professional social media posts."}
-            {tool.title === "IdeaHub Empower" &&
+            {tool.title === "IdeaHub" &&
               "Generate engaging social media content with support for multiple real estate brands. Choose from 18+ brand options including Keller Williams, RE/MAX, Coldwell Banker, and more."}
             {tool.title === "RealBio" &&
               "Create compelling, professional agent biographies that showcase your expertise, experience, and unique value proposition to attract more clients."}
@@ -731,6 +731,10 @@ export default function AIHubPage() {
               "Discover property owner information and contact details using advanced skip tracing technology with AI-powered professional summaries."}
             {tool.title === "PropBot AI" &&
               "Describe properties in natural language and let AI search, analyze, and present the best matches from active listings with detailed insights and voice search."}
+            {tool.title === "StageIT" &&
+              "Transform empty or outdated rooms into beautifully staged spaces using AI-powered virtual staging technology. Create stunning property photos that help sell faster."}
+            {tool.title === "Real-IMG" &&
+              "Create interactive property images with clickable hotspots that showcase key features, amenities, and room details to engage potential buyers and increase interest."}
             {tool.title === "GoalScreen AI" &&
               "Create personalized goal-focused wallpapers for your devices with motivational content, target tracking, and custom designs to keep you focused."}
           </p>
