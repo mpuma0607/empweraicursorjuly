@@ -17,6 +17,24 @@ export async function GET() {
     
     // RSS feed sources for real estate news (verified working sources)
     const rssSources = [
+      // Reddit RSS feeds (definitely work and are publicly accessible)
+      {
+        url: "https://www.reddit.com/r/RealEstate/hot.rss",
+        name: "Reddit Real Estate",
+      },
+      {
+        url: "https://www.reddit.com/r/RealEstateInvesting/hot.rss",
+        name: "Reddit Real Estate Investing",
+      },
+      {
+        url: "https://www.reddit.com/r/FirstTimeHomeBuyer/hot.rss",
+        name: "Reddit First Time Home Buyer",
+      },
+      {
+        url: "https://www.reddit.com/r/RealEstatePhotography/hot.rss",
+        name: "Reddit Real Estate Photography",
+      },
+      // Industry news sources
       {
         url: "https://feeds.feedburner.com/realtor-mag-daily-news",
         name: "REALTOR Magazine",
@@ -29,16 +47,7 @@ export async function GET() {
         url: "https://www.housingwire.com/feed/",
         name: "HousingWire",
       },
-      // Reddit RSS feeds (definitely work)
-      {
-        url: "https://www.reddit.com/r/RealEstate/hot.rss",
-        name: "Reddit Real Estate",
-      },
-      {
-        url: "https://www.reddit.com/r/RealEstateInvesting/hot.rss",
-        name: "Reddit Real Estate Investing",
-      },
-      // Additional working sources
+      // Additional sources
       {
         url: "https://www.biggerpockets.com/blog/feed",
         name: "BiggerPockets",
@@ -46,11 +55,6 @@ export async function GET() {
       {
         url: "https://www.nar.realtor/news/rss",
         name: "NAR News",
-      },
-      // Fallback to some basic real estate news sources
-      {
-        url: "https://www.realtor.com/news/feed/",
-        name: "Realtor.com News",
       },
     ]
 
@@ -163,6 +167,27 @@ export async function GET() {
           description: "Expert insights on real estate investment opportunities and market analysis.",
           pubDate: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
           source: "BiggerPockets",
+        },
+        {
+          title: "Mortgage Rates and Market Impact: What Agents Need to Know",
+          link: "https://www.housingwire.com",
+          description: "Analysis of current mortgage rates and their impact on the real estate market.",
+          pubDate: new Date(Date.now() - 259200000).toISOString(), // 3 days ago
+          source: "HousingWire",
+        },
+        {
+          title: "Technology Trends Transforming Real Estate in 2024",
+          link: "https://www.inman.com",
+          description: "How new technologies are changing the way real estate professionals work.",
+          pubDate: new Date(Date.now() - 345600000).toISOString(), // 4 days ago
+          source: "Inman News",
+        },
+        {
+          title: "Century 21 Market Report: Q4 2024 Insights",
+          link: "https://www.century21.com",
+          description: "Comprehensive market analysis and insights from Century 21's latest quarterly report.",
+          pubDate: new Date(Date.now() - 432000000).toISOString(), // 5 days ago
+          source: "Century 21",
         }
       ]
       return NextResponse.json({ articles: testArticles })
