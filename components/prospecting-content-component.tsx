@@ -175,9 +175,18 @@ export default function ProspectingContentComponent({
         logoIdentifier = userBrandingProfile.brand
       } else if (brandingOptions.brandingChoice === "saved-logo" && userBrandingProfile?.custom_logo_url) {
         // Extract public_id from saved logo URL (same as Dynamic Marketing Hub)
-        const publicIdMatch = userBrandingProfile.custom_logo_url.match(/\/([^/]+)\.(jpg|jpeg|png|gif|webp)$/i)
+        console.log("Custom logo URL:", userBrandingProfile.custom_logo_url)
+        const publicIdMatch = userBrandingProfile.custom_logo_url.match(/branding-logos\/([^/]+)\.(jpg|jpeg|png|gif|webp)$/i)
+        console.log("Primary regex match:", publicIdMatch)
         if (publicIdMatch) {
           logoIdentifier = `branding-logos:${publicIdMatch[1]}`
+        } else {
+          // Fallback: try to extract from the end of the URL
+          const fallbackMatch = userBrandingProfile.custom_logo_url.match(/\/([^/]+)\.(jpg|jpeg|png|gif|webp)$/i)
+          console.log("Fallback regex match:", fallbackMatch)
+          if (fallbackMatch) {
+            logoIdentifier = `branding-logos:${fallbackMatch[1]}`
+          }
         }
       } else if (brandingOptions.brandingChoice === "dropdown" && brandingOptions.selectedBrand) {
         logoIdentifier = brandingOptions.selectedBrand
