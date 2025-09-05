@@ -166,7 +166,17 @@ export default function ProspectingContentComponent({
     setIsGenerating(true)
     try {
       // Extract public_id from the image URL
-      const publicId = brandingImage.split('/').slice(-2).join('/').split('.')[0]
+      // Cloudinary URL format: https://res.cloudinary.com/cloud_name/image/upload/v1234567890/folder/image_name.jpg
+      const urlParts = brandingImage.split('/')
+      const uploadIndex = urlParts.findIndex(part => part === 'upload')
+      const publicId = urlParts.slice(uploadIndex + 2).join('/').split('.')[0]
+      
+      console.log("Public ID extraction debug:", {
+        originalUrl: brandingImage,
+        urlParts,
+        uploadIndex,
+        extractedPublicId: publicId
+      })
       
       let logoIdentifier = ""
       if (brandingOptions.brandingChoice === "saved-brand" && userBrandingProfile?.brand) {
@@ -185,14 +195,30 @@ export default function ProspectingContentComponent({
           logo_public_id: userBrandingProfile.logo_public_id,
           custom_logo_url: userBrandingProfile.custom_logo_url
         } : null,
-        selectedBrand: brandingOptions.selectedBrand
+        selectedBrand: brandingOptions.selectedBrand,
+        publicId,
+        brandingImage
       })
+
+      // Check if we have a valid logo identifier
+      if (!logoIdentifier) {
+        console.error("No logo identifier found for branding choice:", brandingOptions.brandingChoice)
+        alert("Please select a valid branding option")
+        return
+      }
 
       const contactInfo = brandingOptions.includeContact ? {
         name: brandingOptions.name,
         email: brandingOptions.email,
         phone: brandingOptions.phone,
       } : null
+
+      console.log("Calling applyBrandingTransformation with:", {
+        publicId,
+        brandingChoice: brandingOptions.brandingChoice,
+        logoIdentifier,
+        contactInfo
+      })
 
       const result = await applyBrandingTransformation({
         publicId,
@@ -201,14 +227,22 @@ export default function ProspectingContentComponent({
         contactInfo,
       })
 
-      setBrandedImageUrl(result.url)
-      
-      // Auto-scroll to branding section after generation
-      setTimeout(() => {
-        brandingSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      }, 100)
+      console.log("Branding transformation result:", result)
+
+      if (result && result.url) {
+        setBrandedImageUrl(result.url)
+        
+        // Auto-scroll to branding section after generation
+        setTimeout(() => {
+          brandingSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }, 100)
+      } else {
+        console.error("No URL returned from branding transformation")
+        alert("Failed to generate branded image. Please try again.")
+      }
     } catch (error) {
       console.error("Error generating branded image:", error)
+      alert("Error generating branded image: " + (error instanceof Error ? error.message : 'Unknown error'))
     } finally {
       setIsGenerating(false)
     }
@@ -241,37 +275,55 @@ export default function ProspectingContentComponent({
         <p className="text-sm text-gray-600 mb-4">{description}</p>
       </div>
 
+      {/* Debug Info */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="bg-gray-100 p-4 rounded-lg text-sm">
+          <p><strong>Debug Info:</strong></p>
+          <p>Lane: {lane}</p>
+          <p>Images loaded: {images.length}</p>
+          <p>Loading images: {loadingImages ? 'Yes' : 'No'}</p>
+          <p>Selected image: {selectedImage ? 'Yes' : 'No'}</p>
+        </div>
+      )}
+
       {/* Image Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {images.map((image) => (
-          <div
-            key={image.public_id}
-            className="relative group cursor-pointer"
-            onClick={() => handleImageSelect(image.secure_url)}
-          >
-            <div className="aspect-square relative overflow-hidden rounded-lg border-2 border-gray-200 hover:border-purple-500 transition-colors">
-              <Image
-                src={image.secure_url}
-                alt={image.filename}
-                fill
-                className="object-cover"
-              />
-              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-opacity flex items-center justify-center">
-                <Button
-                  size="sm"
-                  className="opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    handleImageSelect(image.secure_url)
-                  }}
-                >
-                  Select
-                </Button>
+      {images.length > 0 ? (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {images.map((image) => (
+            <div
+              key={image.public_id}
+              className="relative group cursor-pointer"
+              onClick={() => handleImageSelect(image.secure_url)}
+            >
+              <div className="aspect-square relative overflow-hidden rounded-lg border-2 border-gray-200 hover:border-purple-500 transition-colors">
+                <Image
+                  src={image.secure_url}
+                  alt={image.filename}
+                  fill
+                  className="object-cover"
+                />
+                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-opacity flex items-center justify-center">
+                  <Button
+                    size="sm"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleImageSelect(image.secure_url)
+                    }}
+                  >
+                    Select
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-8">
+          <p className="text-gray-500 mb-4">No content available for this lane yet.</p>
+          <p className="text-sm text-gray-400">Content will be added to the Dynamic Marketing Hub soon.</p>
+        </div>
+      )}
 
       {/* Selected Image and Branding Options */}
       {selectedImage && (
