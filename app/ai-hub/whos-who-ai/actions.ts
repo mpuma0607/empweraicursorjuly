@@ -41,12 +41,12 @@ function extractUrls(obj: any, ownerName?: string, address?: string): { url: str
   const traverse = (item: any, path: string = '') => {
     if (typeof item === 'string') {
       // Check if this string contains a URL (including URLs in parentheses)
-      const urlMatch = item.match(/(https?:\/\/[^\s)]+)|(\(https?:\/\/[^\s)]+\))|(\([^)]*truepeoplesearch\.com[^)]*\))/g)
+      const urlMatch = item.match(/(https?:\/\/[^\s)]+)|(\([^)]*truepeoplesearch\.com[^)]*\))/g)
       if (urlMatch) {
         urlMatch.forEach(url => {
           // Clean and validate the URL - remove parentheses and trailing punctuation
-          let cleanUrl = url.replace(/^\(|\)$/g, '') // Remove surrounding parentheses
-          cleanUrl = cleanUrl.replace(/[.,;!?]+$/, '') // Remove trailing punctuation
+          let cleanUrl = url.replace(/^\(+|\)+$/g, '') // Remove surrounding parentheses (multiple)
+          cleanUrl = cleanUrl.replace(/[.,;!?)\]]+$/, '') // Remove trailing punctuation including closing parenthesis and brackets
           
           // Ensure it starts with http/https
           if (!cleanUrl.startsWith('http')) {

@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Loader2, Download, FileText, Calendar, Palette, Eye, X } from "lucide-react"
+import { Loader2, Download, FileText, Calendar, Palette, Eye, X, Image, Home } from "lucide-react"
 import { useMemberSpaceUser } from "@/hooks/use-memberspace-user"
 
 interface UserCreation {
