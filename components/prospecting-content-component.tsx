@@ -43,6 +43,7 @@ const laneToFolderMap: Record<string, string> = {
   "pre-foreclosure": "social-content/unbranded/prospecting/pre-foreclosure",
   "divorce": "social-content/unbranded/prospecting/divorce",
   "absentee-owners": "social-content/unbranded/prospecting/absentee-owners",
+  // Note: first-time-buyers and investors may not have content in Cloudinary yet
   "first-time-buyers": "social-content/unbranded/prospecting/first-time-buyers",
   "investors": "social-content/unbranded/prospecting/investors",
 }
@@ -88,22 +89,21 @@ export default function ProspectingContentComponent({
         return
       }
 
+      setLoadingProfile(true)
       try {
-        const profile = await getUserBrandingProfile(user.id, tenantConfig.id)
+        const profile = await getUserBrandingProfile(user.id.toString(), tenantConfig.id)
         console.log("Loaded user branding profile:", profile)
         setUserBrandingProfile(profile)
         
         // Set default branding options based on profile
         if (profile) {
-          setBrandingOptions({
-            wantBranding: true,
-            brandingChoice: "saved-brand",
-            selectedBrand: profile.brand || "dropdown",
-            includeContact: true,
-            name: profile.name || user.name || "",
-            email: profile.email || user.email || "",
-            phone: profile.phone || "",
-          })
+          setBrandingOptions((prev) => ({
+            ...prev,
+            selectedBrand: profile.brand || prev.selectedBrand,
+            name: prev.name || user.name || `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+            email: prev.email || user.email || "",
+            phone: prev.phone || "",
+          }))
         }
       } catch (error) {
         console.error("Error loading user branding profile:", error)
