@@ -8,8 +8,8 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Loader2, Download, ExternalLink } from "lucide-react"
 import Image from "next/image"
+import { Loader2, Download, ExternalLink } from "lucide-react"
 import { useMemberSpaceUser } from "@/hooks/use-memberspace-user"
 import { useTenantConfig } from "@/contexts/tenant-context"
 import { getUserBrandingProfile } from "@/app/profile/branding/actions"
@@ -309,9 +309,9 @@ export default function ProspectingContentComponent({
 
                 {brandingOptions.wantBranding && (
                   <>
-                    {/* Branding Choice */}
-                    <div>
-                      <Label className="text-sm font-medium">Branding Source</Label>
+                    {/* Branding Options */}
+                    <div className="space-y-4">
+                      <Label className="text-lg font-medium">Branding Options:</Label>
                       <RadioGroup
                         value={brandingOptions.brandingChoice}
                         onValueChange={(value: "saved-brand" | "saved-logo" | "dropdown") =>
@@ -319,48 +319,68 @@ export default function ProspectingContentComponent({
                         }
                         className="mt-2"
                       >
-                        {userBrandingProfile?.logoIdentifier && (
+                        {/* Show saved brand option if user has a brand in profile */}
+                        {userBrandingProfile?.brand && (
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="saved-brand" id="saved-brand" />
-                            <Label htmlFor="saved-brand">Use Saved Brand ({userBrandingProfile.brand})</Label>
+                            <Label htmlFor="saved-brand">
+                              Use your saved brand: <strong>{userBrandingProfile.brand}</strong>
+                            </Label>
                           </div>
                         )}
-                        {userBrandingProfile?.logoIdentifier && (
+
+                        {/* Show saved logo option if user has a custom logo in profile */}
+                        {userBrandingProfile?.custom_logo_url && (
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="saved-logo" id="saved-logo" />
-                            <Label htmlFor="saved-logo">Use Saved Logo Only</Label>
+                            <Label htmlFor="saved-logo">Use your custom logo from profile</Label>
+                            {userBrandingProfile.custom_logo_url && (
+                              <div className="ml-4">
+                                <Image
+                                  src={userBrandingProfile.custom_logo_url || "/placeholder.svg"}
+                                  alt="Saved logo"
+                                  width={50}
+                                  height={50}
+                                  className="object-contain border rounded"
+                                />
+                              </div>
+                            )}
                           </div>
                         )}
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="dropdown" id="dropdown" />
-                          <Label htmlFor="dropdown">Choose from Dropdown</Label>
-                        </div>
-                      </RadioGroup>
-                    </div>
 
-                    {/* Brand Selection */}
-                    {brandingOptions.brandingChoice === "dropdown" && (
-                      <div>
-                        <Label htmlFor="brand-select">Select Brand</Label>
-                        <Select
-                          value={brandingOptions.selectedBrand}
-                          onValueChange={(value) =>
-                            setBrandingOptions(prev => ({ ...prev, selectedBrand: value }))
-                          }
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Choose a brand" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {brandOptions.map((brand) => (
-                              <SelectItem key={brand.value} value={brand.value}>
-                                {brand.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    )}
+                        {/* Show dropdown option ONLY if user has NO profile */}
+                        {!userBrandingProfile?.brand && !userBrandingProfile?.custom_logo_url && (
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="dropdown" id="dropdown" />
+                            <Label htmlFor="dropdown">Select brand from list</Label>
+                          </div>
+                        )}
+                      </RadioGroup>
+
+                      {/* Show dropdown selection if no profile and dropdown is selected */}
+                      {(!userBrandingProfile?.brand && !userBrandingProfile?.custom_logo_url) && brandingOptions.brandingChoice === "dropdown" && (
+                        <div className="space-y-2">
+                          <Label htmlFor="selectedBrand">Select a brand</Label>
+                          <Select
+                            value={brandingOptions.selectedBrand}
+                            onValueChange={(value) =>
+                              setBrandingOptions(prev => ({ ...prev, selectedBrand: value }))
+                            }
+                          >
+                            <SelectTrigger id="selectedBrand">
+                              <SelectValue placeholder="Choose a brand" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {brandOptions.map((brand) => (
+                                <SelectItem key={brand.value} value={brand.value}>
+                                  {brand.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+                    </div>
 
                     {/* Contact Information */}
                     <div>
