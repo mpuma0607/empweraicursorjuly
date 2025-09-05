@@ -17,6 +17,19 @@ export async function GET() {
     
     // RSS feed sources for real estate news (verified working sources)
     const rssSources = [
+      // Industry news sources - verified working
+      {
+        url: "https://feeds.feedburner.com/inmannews",
+        name: "Inman News",
+      },
+      {
+        url: "https://feeds.feedburner.com/realtor-mag-daily-news",
+        name: "REALTOR Magazine",
+      },
+      {
+        url: "https://www.housingwire.com/feed/",
+        name: "HousingWire",
+      },
       // Reddit RSS feeds (definitely work and are publicly accessible)
       {
         url: "https://www.reddit.com/r/RealEstate/hot.rss",
@@ -30,23 +43,6 @@ export async function GET() {
         url: "https://www.reddit.com/r/FirstTimeHomeBuyer/hot.rss",
         name: "Reddit First Time Home Buyer",
       },
-      {
-        url: "https://www.reddit.com/r/RealEstatePhotography/hot.rss",
-        name: "Reddit Real Estate Photography",
-      },
-      // Industry news sources
-      {
-        url: "https://feeds.feedburner.com/realtor-mag-daily-news",
-        name: "REALTOR Magazine",
-      },
-      {
-        url: "https://www.inman.com/feed/",
-        name: "Inman News",
-      },
-      {
-        url: "https://www.housingwire.com/feed/",
-        name: "HousingWire",
-      },
       // Additional sources
       {
         url: "https://www.biggerpockets.com/blog/feed",
@@ -55,6 +51,38 @@ export async function GET() {
       {
         url: "https://www.nar.realtor/news/rss",
         name: "NAR News",
+      },
+      {
+        url: "https://www.realtor.com/news/feed/",
+        name: "Realtor.com News",
+      },
+      {
+        url: "https://www.redfin.com/blog/feed/",
+        name: "Redfin Blog",
+      },
+      {
+        url: "https://rss.app/rss-feed/architectural-digest-rss-feed",
+        name: "Architectural Digest",
+      },
+      {
+        url: "https://rss.app/rss-feed/realtor-com-rss-feed",
+        name: "Realtor.com RSS",
+      },
+      {
+        url: "https://rss.app/rss-feed/the-mortgage-reports-rss-feed",
+        name: "The Mortgage Reports",
+      },
+      {
+        url: "https://rss.app/rss-feed/cpexecutive-rss-feed",
+        name: "Commercial Property Executive",
+      },
+      {
+        url: "https://rss.app/rss-feed/point2homes-com-rss-feed",
+        name: "Point2 Homes",
+      },
+      {
+        url: "https://rss.app/rss-feed/curbed-rss-feed",
+        name: "Curbed",
       },
     ]
 
@@ -78,8 +106,12 @@ export async function GET() {
         }
 
         const xmlText = await response.text()
+        console.log(`Raw XML from ${source.name} (first 500 chars):`, xmlText.substring(0, 500))
         const articles = parseRSSFeed(xmlText, source.name)
         console.log(`Found ${articles.length} articles from ${source.name}`)
+        if (articles.length > 0) {
+          console.log(`First article from ${source.name}:`, articles[0])
+        }
 
         // Filter articles by keywords and quality
         const filteredArticles = articles.filter((article) => {
@@ -143,54 +175,10 @@ export async function GET() {
     console.log(`Final result: ${sortedArticles.length} unique articles`)
     console.log("Sources:", [...new Set(sortedArticles.map(a => a.source))])
 
-    // If no articles found, return some test articles as fallback
+    // If no articles found, return empty array - no test articles
     if (sortedArticles.length === 0) {
-      console.log("No articles found from any source - returning test articles")
-      const testArticles = [
-        {
-          title: "Real Estate Market Update: Current Trends and Insights",
-          link: "https://www.nar.realtor/news",
-          description: "Latest insights on the real estate market trends and what agents need to know.",
-          pubDate: new Date().toISOString(),
-          source: "NAR News",
-        },
-        {
-          title: "5 Tips for First-Time Home Buyers in 2024",
-          link: "https://www.realtor.com/news",
-          description: "Essential advice for first-time home buyers navigating today's competitive market.",
-          pubDate: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
-          source: "Realtor.com News",
-        },
-        {
-          title: "Real Estate Investment Strategies for 2024",
-          link: "https://www.biggerpockets.com/blog",
-          description: "Expert insights on real estate investment opportunities and market analysis.",
-          pubDate: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
-          source: "BiggerPockets",
-        },
-        {
-          title: "Mortgage Rates and Market Impact: What Agents Need to Know",
-          link: "https://www.housingwire.com",
-          description: "Analysis of current mortgage rates and their impact on the real estate market.",
-          pubDate: new Date(Date.now() - 259200000).toISOString(), // 3 days ago
-          source: "HousingWire",
-        },
-        {
-          title: "Technology Trends Transforming Real Estate in 2024",
-          link: "https://www.inman.com",
-          description: "How new technologies are changing the way real estate professionals work.",
-          pubDate: new Date(Date.now() - 345600000).toISOString(), // 4 days ago
-          source: "Inman News",
-        },
-        {
-          title: "Century 21 Market Report: Q4 2024 Insights",
-          link: "https://www.century21.com",
-          description: "Comprehensive market analysis and insights from Century 21's latest quarterly report.",
-          pubDate: new Date(Date.now() - 432000000).toISOString(), // 5 days ago
-          source: "Century 21",
-        }
-      ]
-      return NextResponse.json({ articles: testArticles })
+      console.log("No articles found from any source - returning empty array")
+      return NextResponse.json({ articles: [] })
     }
 
     return NextResponse.json({ articles: sortedArticles })
