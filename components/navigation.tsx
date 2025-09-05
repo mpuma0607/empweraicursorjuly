@@ -108,6 +108,12 @@ const navigationItems = [
     ],
   },
   {
+    title: "Coaching Hub",
+    href: "/coaching-hub",
+    submenu: [],
+    empowerOnly: true,
+  },
+  {
     title: "Onboarding Hub",
     href: "/onboarding-hub",
     submenu: [
@@ -235,6 +241,11 @@ export default function Navigation() {
 
       // For Beggins tenant, hide Networking Hub
       if (item.title === "Networking Hub" && tenantConfig.id === "century21-beggins") {
+        return null
+      }
+
+      // For Coaching Hub, only show for Empower tenants
+      if (item.title === "Coaching Hub" && tenantConfig.id !== "empower-ai" && tenantConfig.id !== "empower-beta") {
         return null
       }
 
