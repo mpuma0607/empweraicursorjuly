@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -11,6 +11,9 @@ import { Textarea } from "@/components/ui/textarea"
 import { Upload, FileText, Download, Mail, Copy, Loader2, AlertCircle, Info } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useToast } from "@/hooks/use-toast"
+import { useMemberSpaceUser } from "@/hooks/use-memberspace-user"
+import { useTenant } from "@/contexts/tenant-context"
+import { getUserBrandingProfile } from "@/app/profile/branding/actions"
 import Script from "next/script"
 
 interface AnalysisResult {
@@ -45,8 +48,66 @@ export default function RealDealForm() {
   const [isDragOver, setIsDragOver] = useState(false)
   const [pdfJsLoaded, setPdfJsLoaded] = useState(false)
   const [jsPdfLoaded, setJsPdfLoaded] = useState(false)
+  const [userBranding, setUserBranding] = useState<any>(null)
+  const [isGmailConnected, setIsGmailConnected] = useState(false)
+  const [isClientEmailLoading, setIsClientEmailLoading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
+  const { user, loading: isUserLoading } = useMemberSpaceUser()
+  const { config: tenantConfig } = useTenant()
+
+  // Fetch user branding profile
+  useEffect(() => {
+    const fetchUserBranding = async () => {
+      if (!user?.id || !tenantConfig?.id) return
+
+      try {
+        const brandingProfile = await getUserBrandingProfile(user.id.toString(), tenantConfig.id)
+        if (brandingProfile) {
+          setUserBranding(brandingProfile)
+          console.log("Loaded user branding profile:", brandingProfile)
+        }
+      } catch (error) {
+        console.error("Error fetching user branding:", error)
+        // Continue without branding - will use default styling
+      }
+    }
+
+    fetchUserBranding()
+  }, [user?.id, tenantConfig?.id])
+
+  // Auto-populate user data when available
+  useEffect(() => {
+    if (user && !isUserLoading) {
+      // Auto-fill form fields
+      const agentNameField = document.getElementById("agentName") as HTMLInputElement
+      const emailField = document.getElementById("email") as HTMLInputElement
+      
+      if (agentNameField && !agentNameField.value) {
+        agentNameField.value = user.name || `${user.firstName || ""} ${user.lastName || ""}`.trim()
+      }
+      
+      if (emailField && !emailField.value) {
+        emailField.value = user.email || ""
+      }
+    }
+  }, [user, isUserLoading])
+
+  // Check Gmail connection status
+  useEffect(() => {
+    const checkGmailConnection = async () => {
+      try {
+        const response = await fetch("/api/oauth/check-gmail-connection")
+        if (response.ok) {
+          const data = await response.json()
+          setIsGmailConnected(data.connected)
+        }
+      } catch (error) {
+        console.error("Error checking Gmail connection:", error)
+      }
+    }
+    checkGmailConnection()
+  }, [])
 
   // Handle PDF.js library loading
   const handlePdfJsLoad = () => {
@@ -542,6 +603,56 @@ export default function RealDealForm() {
     })
   }
 
+  const sendEmailToClient = async () => {
+    if (!result) return
+
+    try {
+      setIsClientEmailLoading(true)
+      console.log("Starting client email send...")
+
+      // Create a simple formatted text version for email
+      const cleanedAnalysis = cleanTextForPDF(result.analysis)
+
+      const formData = new FormData()
+      formData.append("analysis", cleanedAnalysis)
+      formData.append("agentName", result.agentName)
+      formData.append("propertyAddress", result.propertyAddress)
+      formData.append("email", result.email)
+
+      console.log("Making request to /api/realdeal/send-client-email")
+
+      const response = await fetch("/api/realdeal/send-client-email", {
+        method: "POST",
+        body: formData,
+      })
+
+      console.log("Client email response status:", response.status)
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: "Unknown error" }))
+        console.error("Client email sending failed:", errorData)
+        throw new Error(errorData.error || `Failed to send client email: ${response.status}`)
+      }
+
+      const emailResult = await response.json()
+      console.log("Client email sent successfully:", emailResult)
+
+      toast({
+        title: "Email Sent to Client",
+        description: "Contract analysis has been sent to your client via Gmail.",
+      })
+    } catch (error) {
+      console.error("Error sending client email:", error)
+      toast({
+        variant: "destructive",
+        title: "Client Email Failed",
+        description: error instanceof Error ? error.message : "Failed to send the email to client. Please try again.",
+      })
+    } finally {
+      setIsClientEmailLoading(false)
+    }
+  }
+
   const formatAnalysis = (text: string) => {
     return text
       .replace(/\*\*(.*?)\*\*/g, '<strong class="text-gray-900 font-semibold">$1</strong>')
@@ -772,8 +883,24 @@ export default function RealDealForm() {
                     ) : (
                       <Mail className="h-4 w-4 mr-2" />
                     )}
-                    Email
+                    Email to Self
                   </Button>
+                  {isGmailConnected && (
+                    <Button
+                      onClick={sendEmailToClient}
+                      variant="outline"
+                      size="sm"
+                      className="text-green-600 border-green-600 hover:bg-green-50"
+                      disabled={isClientEmailLoading}
+                    >
+                      {isClientEmailLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      ) : (
+                        <Mail className="h-4 w-4 mr-2" />
+                      )}
+                      Email to Client
+                    </Button>
+                  )}
                   <Button
                     onClick={copyToClipboard}
                     variant="outline"
