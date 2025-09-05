@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Loader2, Download, FileText, Calendar, Palette, Eye, X, Image, Home } from "lucide-react"
+import { Loader2, Download, FileText, Calendar, Palette, Eye, X, Image as ImageIcon, Home } from "lucide-react"
 import { useMemberSpaceUser } from "@/hooks/use-memberspace-user"
 
 interface UserCreation {
@@ -131,7 +131,7 @@ export default function CreationsDashboardPage() {
       case "realdeal-ai":
         return <FileText className="h-4 w-4" />
       case "real-img":
-        return <Image className="h-4 w-4" />
+        return <ImageIcon className="h-4 w-4" />
       case "stageit":
         return <Home className="h-4 w-4" />
       default:
