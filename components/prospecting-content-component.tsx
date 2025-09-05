@@ -90,6 +90,7 @@ export default function ProspectingContentComponent({
 
       try {
         const profile = await getUserBrandingProfile(user.id, tenantConfig.id)
+        console.log("Loaded user branding profile:", profile)
         setUserBrandingProfile(profile)
         
         // Set default branding options based on profile
@@ -97,7 +98,7 @@ export default function ProspectingContentComponent({
           setBrandingOptions({
             wantBranding: true,
             brandingChoice: "saved-brand",
-            selectedBrand: profile.brandingChoice || "dropdown",
+            selectedBrand: profile.brand || "dropdown",
             includeContact: true,
             name: profile.name || user.name || "",
             email: profile.email || user.email || "",
@@ -118,6 +119,8 @@ export default function ProspectingContentComponent({
   useEffect(() => {
     async function loadImages() {
       const folderPath = laneToFolderMap[lane]
+      console.log(`Loading images for lane: ${lane}, folder: ${folderPath}`)
+      
       if (!folderPath) {
         console.error(`No folder mapping found for lane: ${lane}`)
         return
@@ -126,6 +129,7 @@ export default function ProspectingContentComponent({
       setLoadingImages(true)
       try {
         const fetchedImages = await fetchCloudinaryImages(folderPath)
+        console.log(`Fetched ${fetchedImages.length} images for ${lane}:`, fetchedImages)
         setImages(fetchedImages)
       } catch (error) {
         console.error("Error loading images:", error)
@@ -141,6 +145,11 @@ export default function ProspectingContentComponent({
     setSelectedImage(imageUrl)
     setBrandingImage(imageUrl)
     setBrandedImageUrl(null)
+    
+    // Auto-scroll to branding section when image is selected
+    setTimeout(() => {
+      brandingSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 300)
   }
 
   const handleGenerateBrandedImage = async () => {
@@ -313,7 +322,7 @@ export default function ProspectingContentComponent({
                         {userBrandingProfile?.logoIdentifier && (
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="saved-brand" id="saved-brand" />
-                            <Label htmlFor="saved-brand">Use Saved Brand ({userBrandingProfile.brandingChoice})</Label>
+                            <Label htmlFor="saved-brand">Use Saved Brand ({userBrandingProfile.brand})</Label>
                           </div>
                         )}
                         {userBrandingProfile?.logoIdentifier && (
