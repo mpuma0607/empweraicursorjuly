@@ -99,6 +99,7 @@ export default function ProspectingContentComponent({
         if (profile) {
           setBrandingOptions((prev) => ({
             ...prev,
+            brandingChoice: profile.brand ? "saved-brand" : (profile.custom_logo_url ? "saved-logo" : "dropdown"),
             selectedBrand: profile.brand || prev.selectedBrand,
             name: prev.name || user.name || `${user.firstName || ""} ${user.lastName || ""}`.trim(),
             email: prev.email || user.email || "",
@@ -168,13 +169,24 @@ export default function ProspectingContentComponent({
       const publicId = brandingImage.split('/').slice(-2).join('/').split('.')[0]
       
       let logoIdentifier = ""
-      if (brandingOptions.brandingChoice === "saved-brand" && userBrandingProfile?.logoIdentifier) {
-        logoIdentifier = userBrandingProfile.logoIdentifier
-      } else if (brandingOptions.brandingChoice === "saved-logo" && userBrandingProfile?.logoIdentifier) {
-        logoIdentifier = userBrandingProfile.logoIdentifier
+      if (brandingOptions.brandingChoice === "saved-brand" && userBrandingProfile?.brand) {
+        logoIdentifier = userBrandingProfile.brand
+      } else if (brandingOptions.brandingChoice === "saved-logo" && userBrandingProfile?.logo_public_id) {
+        logoIdentifier = userBrandingProfile.logo_public_id
       } else if (brandingOptions.brandingChoice === "dropdown" && brandingOptions.selectedBrand) {
         logoIdentifier = brandingOptions.selectedBrand
       }
+
+      console.log("Branding generation debug:", {
+        brandingChoice: brandingOptions.brandingChoice,
+        logoIdentifier,
+        userBrandingProfile: userBrandingProfile ? {
+          brand: userBrandingProfile.brand,
+          logo_public_id: userBrandingProfile.logo_public_id,
+          custom_logo_url: userBrandingProfile.custom_logo_url
+        } : null,
+        selectedBrand: brandingOptions.selectedBrand
+      })
 
       const contactInfo = brandingOptions.includeContact ? {
         name: brandingOptions.name,
