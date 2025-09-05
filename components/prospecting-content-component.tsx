@@ -34,17 +34,17 @@ type ProspectingContentComponentProps = {
   description: string // e.g., "Marketing materials and follow-up strategies to nurture FSBO relationships"
 }
 
-// Map prospecting lanes to Cloudinary folder paths
+// Map prospecting lanes to Cloudinary folder paths (matching Dynamic Marketing structure)
 const laneToFolderMap: Record<string, string> = {
-  "fsbo": "prospecting/fsbo",
-  "expired": "prospecting/expired",
-  "soi": "prospecting/soi", 
-  "probate": "prospecting/probate",
-  "pre-foreclosure": "prospecting/pre-foreclosure",
-  "divorce": "prospecting/divorce",
-  "absentee-owners": "prospecting/absentee-owners",
-  "first-time-buyers": "prospecting/first-time-buyers",
-  "investors": "prospecting/investors",
+  "fsbo": "social-content/unbranded/prospecting/fsbo",
+  "expired": "social-content/unbranded/prospecting/expired",
+  "soi": "social-content/unbranded/prospecting/soi", 
+  "probate": "social-content/unbranded/prospecting/probate",
+  "pre-foreclosure": "social-content/unbranded/prospecting/pre-foreclosure",
+  "divorce": "social-content/unbranded/prospecting/divorce",
+  "absentee-owners": "social-content/unbranded/prospecting/absentee-owners",
+  "first-time-buyers": "social-content/unbranded/prospecting/first-time-buyers",
+  "investors": "social-content/unbranded/prospecting/investors",
 }
 
 export default function ProspectingContentComponent({ 
