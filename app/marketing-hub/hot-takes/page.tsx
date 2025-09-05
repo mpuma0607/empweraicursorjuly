@@ -24,7 +24,12 @@ export default function HotTakesPage() {
   const fetchArticles = async () => {
     try {
       setLoading(true)
-      const response = await fetch("/api/news")
+      const response = await fetch("/api/news", {
+        cache: "no-store",
+        headers: {
+          "Cache-Control": "no-cache",
+        },
+      })
       if (!response.ok) throw new Error("Failed to fetch articles")
       const data = await response.json()
       setArticles(data.articles || [])

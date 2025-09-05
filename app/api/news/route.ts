@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server"
 
+export const revalidate = 0 // Disable caching
+
 interface Article {
   title: string
   link: string
@@ -11,6 +13,8 @@ interface Article {
 
 export async function GET() {
   try {
+    console.log("Fetching real estate news from improved sources...")
+    
     // RSS feed sources for real estate news (all publicly accessible)
     const rssSources = [
       {
@@ -78,16 +82,20 @@ export async function GET() {
     // Fetch articles from each RSS source
     for (const source of rssSources) {
       try {
+        console.log(`Fetching from: ${source.name} - ${source.url}`)
         const response = await fetch(source.url, {
           headers: {
             "User-Agent": "Mozilla/5.0 (compatible; RSS Reader)",
+            "Cache-Control": "no-cache",
           },
+          cache: "no-store", // Disable caching
         })
 
         if (!response.ok) continue
 
         const xmlText = await response.text()
         const articles = parseRSSFeed(xmlText, source.name)
+        console.log(`Found ${articles.length} articles from ${source.name}`)
 
         // Filter articles by keywords and quality
         const filteredArticles = articles.filter((article) => {
@@ -128,6 +136,7 @@ export async function GET() {
           return hasRealEstateKeyword && !isLowQuality
         })
 
+        console.log(`Filtered to ${filteredArticles.length} real estate articles from ${source.name}`)
         allArticles.push(...filteredArticles)
       } catch (error) {
         console.error(`Error fetching from ${source.name}:`, error)
@@ -146,6 +155,9 @@ export async function GET() {
     const sortedArticles = uniqueArticles
       .sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime())
       .slice(0, 30)
+
+    console.log(`Final result: ${sortedArticles.length} unique articles`)
+    console.log("Sources:", [...new Set(sortedArticles.map(a => a.source))])
 
     return NextResponse.json({ articles: sortedArticles })
   } catch (error) {
