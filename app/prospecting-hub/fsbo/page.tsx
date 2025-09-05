@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Home, Search, MessageSquare, Repeat } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import ProspectingContentComponent from "@/components/prospecting-content-component"
 
 export default function FSBOPage() {
   return (
@@ -503,16 +504,11 @@ export default function FSBOPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <h4 className="font-semibold text-black mb-4">FSBO Marketing Materials</h4>
-                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                  <iframe
-                    src="https://drive.google.com/embeddedfolderview?id=1tYrdrw4_zATfQDsiG_B8R7iX6JoSVayt#grid"
-                    style={{ width: "100%", height: "600px", border: 0 }}
-                    title="FSBO Marketing Materials"
-                  />
-                </div>
-              </div>
+              <ProspectingContentComponent
+                lane="fsbo"
+                title="FSBO Marketing Materials"
+                description="Marketing materials and follow-up strategies to nurture FSBO relationships"
+              />
             </CardContent>
           </Card>
         </div>

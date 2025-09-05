@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Home, Search, MessageSquare, Repeat } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import ProspectingContentComponent from "@/components/prospecting-content-component"
 
 export default function ProbatePage() {
   return (
@@ -628,16 +629,11 @@ export default function ProbatePage() {
               <CardDescription>Educational materials and nurturing campaigns for probate families</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <h4 className="font-semibold text-black mb-4">Probate Marketing Materials</h4>
-                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                  <iframe
-                    src="https://drive.google.com/embeddedfolderview?id=1Aa9mR9UEpFoAE-UfXAvDE9Kb23WLfklL#grid"
-                    style={{ width: "100%", height: "600px", border: 0 }}
-                    title="Probate Marketing Materials"
-                  />
-                </div>
-              </div>
+              <ProspectingContentComponent
+                lane="probate"
+                title="Probate Marketing Materials"
+                description="Educational materials and nurturing campaigns for probate families"
+              />
             </CardContent>
           </Card>
         </div>

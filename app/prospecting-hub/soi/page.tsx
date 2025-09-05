@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Users, Search, MessageSquare, Repeat } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import ProspectingContentComponent from "@/components/prospecting-content-component"
 
 export default function SOIPage() {
   return (
@@ -290,16 +291,11 @@ export default function SOIPage() {
               <CardDescription>Marketing materials and touch plans to nurture SOI relationships</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <h4 className="font-semibold text-black mb-4">SOI Marketing Materials</h4>
-                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                  <iframe
-                    src="https://drive.google.com/embeddedfolderview?id=1AP69nTX7M9Q8vhN2zTtkz6A6Ow5HV1lP#grid"
-                    style={{ width: "100%", height: "600px", border: 0 }}
-                    title="SOI Marketing Materials"
-                  />
-                </div>
-              </div>
+              <ProspectingContentComponent
+                lane="soi"
+                title="SOI Marketing Materials"
+                description="Marketing materials and touch plans to nurture SOI relationships"
+              />
             </CardContent>
           </Card>
         </div>

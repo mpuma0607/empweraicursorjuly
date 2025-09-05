@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Home, Search, MessageSquare, Repeat } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import ProspectingContentComponent from "@/components/prospecting-content-component"
 
 export default function FirstTimeBuyersPage() {
   return (
@@ -292,16 +293,11 @@ export default function FirstTimeBuyersPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <h4 className="font-semibold text-black mb-4">First-Time Buyer Marketing Materials</h4>
-                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                  <iframe
-                    src="https://drive.google.com/embeddedfolderview?id=1duf-xMuHsHK-GWkM8-VwsphbsjGlWuBS#grid"
-                    style={{ width: "100%", height: "600px", border: 0 }}
-                    title="First-Time Buyer Marketing Materials"
-                  />
-                </div>
-              </div>
+              <ProspectingContentComponent
+                lane="first-time-buyers"
+                title="First-Time Buyer Marketing Materials"
+                description="Marketing materials and follow-up strategies to nurture first-time buyer relationships"
+              />
             </CardContent>
           </Card>
         </div>

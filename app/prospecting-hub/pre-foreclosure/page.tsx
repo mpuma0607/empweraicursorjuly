@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Home, Search, MessageSquare, Repeat } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import ProspectingContentComponent from "@/components/prospecting-content-component"
 
 export default function PreForeclosurePage() {
   return (
@@ -377,16 +378,11 @@ export default function PreForeclosurePage() {
               <CardDescription>Marketing materials and follow-up strategies for pre-foreclosure leads</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <h4 className="font-semibold text-black mb-4">Pre-Foreclosure Marketing Materials</h4>
-                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                  <iframe
-                    src="https://drive.google.com/embeddedfolderview?id=1PreForeclosureFolder#grid"
-                    style={{ width: "100%", height: "600px", border: 0 }}
-                    title="Pre-Foreclosure Marketing Materials"
-                  />
-                </div>
-              </div>
+              <ProspectingContentComponent
+                lane="pre-foreclosure"
+                title="Pre-Foreclosure Marketing Materials"
+                description="Marketing materials and follow-up strategies for pre-foreclosure leads"
+              />
             </CardContent>
           </Card>
         </div>

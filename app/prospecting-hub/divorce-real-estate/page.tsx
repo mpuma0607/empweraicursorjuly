@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Home, Search, MessageSquare, Repeat } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import ProspectingContentComponent from "@/components/prospecting-content-component"
 
 export default function DivorcePage() {
   return (
@@ -149,16 +150,11 @@ export default function DivorcePage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <h4 className="font-semibold text-black mb-4">Divorce Real Estate Marketing Materials</h4>
-                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                  <iframe
-                    src="https://drive.google.com/embeddedfolderview?id=1WfxT42P5vGo5Lbi5tj_dZCuRtp-V3JbS#grid"
-                    style={{ width: "100%", height: "600px", border: 0 }}
-                    title="Divorce Real Estate Marketing Materials"
-                  />
-                </div>
-              </div>
+              <ProspectingContentComponent
+                lane="divorce"
+                title="Divorce Real Estate Marketing Materials"
+                description="Professional marketing materials and follow-up campaigns for divorce real estate"
+              />
             </CardContent>
           </Card>
         </div>

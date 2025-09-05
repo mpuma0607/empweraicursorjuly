@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { MapPin, Search, MessageSquare, Repeat } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import ProspectingContentComponent from "@/components/prospecting-content-component"
 
 export default function AbsenteeOwnersPage() {
   return (
@@ -488,16 +489,11 @@ export default function AbsenteeOwnersPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <h4 className="font-semibold text-black mb-4">Absentee Owner Marketing Materials</h4>
-                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                  <iframe
-                    src="https://drive.google.com/embeddedfolderview?id=1duf-xMuHsHK-GWkM8-VwsphbsjGlWuBS#grid"
-                    style={{ width: "100%", height: "600px", border: 0 }}
-                    title="Absentee Owner Marketing Materials"
-                  />
-                </div>
-              </div>
+              <ProspectingContentComponent
+                lane="absentee-owners"
+                title="Absentee Owner Marketing Materials"
+                description="Marketing materials and follow-up strategies to nurture absentee owner relationships"
+              />
             </CardContent>
           </Card>
         </div>
