@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -60,6 +60,7 @@ export default function ProspectingContentComponent({
   const [brandingImage, setBrandingImage] = useState<string | null>(null)
   const [brandedImageUrl, setBrandedImageUrl] = useState<string | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
+  const [showPreviewModal, setShowPreviewModal] = useState(false)
 
   const { user, loading: userLoading } = useMemberSpaceUser()
   const tenantConfig = useTenantConfig()
@@ -75,6 +76,9 @@ export default function ProspectingContentComponent({
     email: "",
     phone: "",
   })
+
+  // Ref for branding section to enable auto-scroll
+  const brandingSectionRef = useRef<HTMLDivElement>(null)
 
   // Load user branding profile
   useEffect(() => {
@@ -142,6 +146,10 @@ export default function ProspectingContentComponent({
   const handleGenerateBrandedImage = async () => {
     if (!brandingImage || !brandingOptions.wantBranding) {
       setBrandedImageUrl(brandingImage)
+      // Auto-scroll to branding section
+      setTimeout(() => {
+        brandingSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 100)
       return
     }
 
@@ -173,6 +181,11 @@ export default function ProspectingContentComponent({
       })
 
       setBrandedImageUrl(result.url)
+      
+      // Auto-scroll to branding section after generation
+      setTimeout(() => {
+        brandingSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 100)
     } catch (error) {
       console.error("Error generating branded image:", error)
     } finally {
@@ -241,7 +254,7 @@ export default function ProspectingContentComponent({
 
       {/* Selected Image and Branding Options */}
       {selectedImage && (
-        <Card>
+        <Card ref={brandingSectionRef}>
           <CardHeader>
             <CardTitle className="text-lg">Customize Your Content</CardTitle>
             <CardDescription>
@@ -300,7 +313,7 @@ export default function ProspectingContentComponent({
                         {userBrandingProfile?.logoIdentifier && (
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="saved-brand" id="saved-brand" />
-                            <Label htmlFor="saved-brand">Use Saved Brand</Label>
+                            <Label htmlFor="saved-brand">Use Saved Brand ({userBrandingProfile.brandingChoice})</Label>
                           </div>
                         )}
                         {userBrandingProfile?.logoIdentifier && (
@@ -412,15 +425,15 @@ export default function ProspectingContentComponent({
                   )}
                 </Button>
 
-                {/* Download Button */}
+                {/* Preview Button */}
                 {brandedImageUrl && (
                   <Button
-                    onClick={handleDownload}
+                    onClick={() => setShowPreviewModal(true)}
                     variant="outline"
                     className="w-full"
                   >
-                    <Download className="h-4 w-4 mr-2" />
-                    Download Image
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Preview Content
                   </Button>
                 )}
               </div>
@@ -435,6 +448,43 @@ export default function ProspectingContentComponent({
           <p className="text-sm">Content will be added soon!</p>
         </div>
       )}
+
+      {/* Preview Modal */}
+      <Dialog open={showPreviewModal} onOpenChange={setShowPreviewModal}>
+        <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="text-black">Preview Your Branded Content</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto flex items-center justify-center p-4">
+            {brandedImageUrl && (
+              <div className="relative max-w-2xl w-full">
+                <Image
+                  src={brandedImageUrl}
+                  alt="Branded content preview"
+                  width={800}
+                  height={800}
+                  className="w-full h-auto rounded-lg border shadow-lg"
+                />
+              </div>
+            )}
+          </div>
+          <div className="flex justify-center gap-4 pt-4 border-t">
+            <Button
+              onClick={handleDownload}
+              className="flex items-center gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Download Image
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setShowPreviewModal(false)}
+            >
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
