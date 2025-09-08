@@ -65,6 +65,7 @@ type BrandingOptions = {
   name: string
   email: string
   phone: string
+  textColor: "white" | "black"
 }
 
 export default function DynamicBrandedContentPage() {
@@ -92,6 +93,7 @@ export default function DynamicBrandedContentPage() {
     name: "",
     email: "",
     phone: "",
+    textColor: "white",
   })
 
   // Load user branding profile
@@ -214,6 +216,7 @@ export default function DynamicBrandedContentPage() {
         brandingChoice: brandingOptions.brandingChoice,
         logoIdentifier,
         contactInfo,
+        textColor: brandingOptions.textColor,
       })
 
       setBrandedImageUrl(result.url)
@@ -406,6 +409,23 @@ export default function DynamicBrandedContentPage() {
                     onChange={(e) => handleBrandingOptionChange("phone", e.target.value)}
                     placeholder="Your phone number"
                   />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label className="text-lg font-medium">Text Color</Label>
+                  <RadioGroup
+                    value={brandingOptions.textColor}
+                    onValueChange={(value: "white" | "black") => handleBrandingOptionChange("textColor", value)}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="white" id="text-white" />
+                      <Label htmlFor="text-white">White Text (for darker backgrounds)</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="black" id="text-black" />
+                      <Label htmlFor="text-black">Black Text (for lighter backgrounds)</Label>
+                    </div>
+                  </RadioGroup>
                 </div>
               </div>
             )}

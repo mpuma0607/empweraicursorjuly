@@ -26,6 +26,7 @@ type BrandingOptions = {
   name: string
   email: string
   phone: string
+  textColor: "white" | "black"
 }
 
 type ProspectingContentComponentProps = {
@@ -76,6 +77,7 @@ export default function ProspectingContentComponent({
     name: "",
     email: "",
     phone: "",
+    textColor: "white",
   })
 
   // Ref for branding section to enable auto-scroll
@@ -230,6 +232,7 @@ export default function ProspectingContentComponent({
         brandingChoice: brandingOptions.brandingChoice,
         logoIdentifier,
         contactInfo,
+        textColor: brandingOptions.textColor,
       })
 
       console.log("Branding transformation result:", result)
@@ -501,6 +504,25 @@ export default function ProspectingContentComponent({
                               }
                               placeholder="(555) 123-4567"
                             />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium">Text Color</Label>
+                            <RadioGroup
+                              value={brandingOptions.textColor}
+                              onValueChange={(value: "white" | "black") =>
+                                setBrandingOptions(prev => ({ ...prev, textColor: value }))
+                              }
+                            >
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="white" id="prospecting-text-white" />
+                                <Label htmlFor="prospecting-text-white" className="text-sm">White Text (for darker backgrounds)</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="black" id="prospecting-text-black" />
+                                <Label htmlFor="prospecting-text-black" className="text-sm">Black Text (for lighter backgrounds)</Label>
+                              </div>
+                            </RadioGroup>
                           </div>
                         </div>
                       )}

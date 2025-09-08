@@ -30,6 +30,7 @@ export type BrandingParams = {
   brandingChoice: "saved-brand" | "saved-logo" | "dropdown"
   logoIdentifier: string
   contactInfo: ContactInfo
+  textColor?: "white" | "black"
 }
 
 export type BrandingResult = {
@@ -65,13 +66,14 @@ export async function fetchCloudinaryImages(folderPath: string): Promise<Cloudin
 // Apply branding transformation to an image
 export async function applyBrandingTransformation(params: BrandingParams): Promise<BrandingResult> {
   try {
-    const { publicId, brandingChoice, logoIdentifier, contactInfo } = params
+    const { publicId, brandingChoice, logoIdentifier, contactInfo, textColor = "white" } = params
 
     console.log("Applying branding transformation:", {
       publicId,
       brandingChoice,
       hasLogoIdentifier: !!logoIdentifier,
       hasContactInfo: !!contactInfo,
+      textColor,
     })
 
     const cloudName = process.env.CLOUDINARY_CLOUD_NAME
@@ -94,7 +96,8 @@ export async function applyBrandingTransformation(params: BrandingParams): Promi
       const contactParts = [contactInfo.name, contactInfo.email, contactInfo.phone].filter(Boolean)
       const contactText = contactParts.join(" | ")
       const encoded = encodeURIComponent(contactText)
-      transformations.push(`l_text:Arial_24_bold:${encoded},co_white,g_south_west,x_30,y_30`)
+      const colorCode = textColor === "black" ? "co_black" : "co_white"
+      transformations.push(`l_text:Arial_24_bold:${encoded},${colorCode},g_south_west,x_30,y_30`)
     }
 
     // 4. Combine full URL

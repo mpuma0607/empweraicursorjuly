@@ -25,6 +25,7 @@ type FormData = {
   contentType: string
   tonality: string
   language: string
+  textColor: "white" | "black"
 }
 
 export async function generateContent(formData: FormData) {
@@ -180,7 +181,11 @@ async function generateAndProcessImage(formData: FormData, topic: string): Promi
     Colors: Warm, inviting, professional real estate colors
     Content: Should be relevant to real estate and the topic
     Quality: High resolution, suitable for social media
-    Avoid: Text, logos, or branding in the generated image`
+    Avoid: Text, logos, or branding in the generated image
+    
+    ${formData.textColor === 'white' ? 
+      'IMPORTANT: Ensure the image has darker background areas or add a subtle dark overlay where text will be placed for optimal white text visibility.' : 
+      'IMPORTANT: Ensure the image has lighter background areas or add a subtle light overlay where text will be placed for optimal black text visibility.'}`
 
     const imageResponse = await openaiClient.images.generate({
       model: "dall-e-3",
@@ -286,7 +291,8 @@ async function buildTransformationUrl(baseImagePublicId: string, formData: FormD
     const contactParts = [formData.name, formData.email, formData.phone].filter(Boolean)
     const contactText = contactParts.join(" | ")
     const encodedContact = encodeURIComponent(contactText)
-    transformationUrl += `/l_text:Arial_24_bold:${encodedContact}/co_white/fl_layer_apply,g_south_west,x_30,y_30`
+    const colorCode = formData.textColor === "black" ? "co_black" : "co_white"
+    transformationUrl += `/l_text:Arial_24_bold:${encodedContact}/${colorCode}/fl_layer_apply,g_south_west,x_30,y_30`
   }
 
   // Add the base image public_id at the end

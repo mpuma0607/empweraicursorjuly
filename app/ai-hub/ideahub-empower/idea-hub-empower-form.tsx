@@ -111,6 +111,7 @@ type FormState = {
   contentType: string
   tonality: string
   language: string
+  textColor: "white" | "black"
 }
 
 type ContentResult = {
@@ -154,6 +155,7 @@ export default function IdeaHubEmpowerForm() {
     contentType: "Social post",
     tonality: "Professional & Authoritative",
     language: "English",
+    textColor: "white",
   })
 
   const [result, setResult] = useState<ContentResult | null>(null)
@@ -774,6 +776,23 @@ export default function IdeaHubEmpowerForm() {
                 onChange={handleInputChange}
               />
             </div>
+            
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Text Color</Label>
+              <RadioGroup
+                value={formData.textColor}
+                onValueChange={(value: "white" | "black") => handleSelectChange("textColor", value)}
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="white" id="empower-text-white" />
+                  <Label htmlFor="empower-text-white" className="text-sm">White Text (for darker backgrounds)</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="black" id="empower-text-black" />
+                  <Label htmlFor="empower-text-black" className="text-sm">Black Text (for lighter backgrounds)</Label>
+                </div>
+              </RadioGroup>
+            </div>
           </div>
         )}
       </div>
@@ -1019,6 +1038,7 @@ export default function IdeaHubEmpowerForm() {
             contentType: "Social post",
             tonality: "Professional & Authoritative",
             language: "English",
+            textColor: "white",
           })
         }}
         className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
