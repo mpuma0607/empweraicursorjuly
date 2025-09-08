@@ -53,6 +53,8 @@ const categories = [
       { id: "absentee-owners", name: "Absentee" },
       { id: "expired", name: "Expired" },
       { id: "fsbo", name: "FSBO" },
+      { id: "first-time-buyers", name: "First-Time" },
+      { id: "investors", name: "Investors" },
     ],
   },
 ]
@@ -569,7 +571,7 @@ export default function DynamicBrandedContentPage() {
                             className="w-full"
                           >
                             <div className="overflow-x-auto mb-4">
-                              <TabsList className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-1 flex-shrink-0 h-auto min-w-max">
+                              <TabsList className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-9 gap-1 flex-shrink-0 h-auto min-w-max">
                                 {category.subCategories?.map((subCategory) => (
                                   <TabsTrigger 
                                     key={subCategory.id} 

@@ -43,9 +43,8 @@ const laneToFolderMap: Record<string, string> = {
   "probate": "social-content/unbranded/prospecting/probate",
   "pre-foreclosure": "social-content/unbranded/prospecting/pre-foreclosure",
   "divorce": "social-content/unbranded/prospecting/divorce",
-  "absentee-owners": "social-content/unbranded/prospecting/absentee-owners",
-  // Note: first-time-buyers and investors may not have content in Cloudinary yet
-  "first-time-buyers": "social-content/unbranded/prospecting/first-time-buyers",
+  "absentee-owners": "social-content/unbranded/prospecting/absentee owners",
+  "first-time-buyers": "social-content/unbranded/prospecting/first time homebuyers",
   "investors": "social-content/unbranded/prospecting/investors",
 }
 
