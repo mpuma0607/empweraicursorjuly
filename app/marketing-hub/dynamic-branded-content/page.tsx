@@ -50,10 +50,10 @@ const categories = [
       { id: "probate", name: "Probate" },
       { id: "pre-foreclosure", name: "Pre-Foreclosure" },
       { id: "divorce", name: "Divorce" },
-      { id: "absentee owners", name: "Absentee" },
+      { id: "absentee-owners", name: "Absentee" },
       { id: "expired", name: "Expired" },
       { id: "fsbo", name: "FSBO" },
-      { id: "first time homebuyers", name: "First-Time" },
+      { id: "first-time-buyers", name: "First-Time" },
       { id: "investors", name: "Investors" },
     ],
   },
@@ -133,9 +133,29 @@ export default function DynamicBrandedContentPage() {
 
   // Load images for a category when it's opened
   const loadImagesForCategory = async (category: string, subCategory?: string) => {
-    const folderPath = subCategory
-      ? `social-content/unbranded/${category}/${subCategory}`
-      : `social-content/unbranded/${category}`
+    let folderPath: string
+    if (subCategory) {
+      if (category === "prospecting") {
+        // Map subCategory IDs to actual Cloudinary folder names
+        const prospectingFolderMap: Record<string, string> = {
+          "soi": "soi",
+          "probate": "probate", 
+          "pre-foreclosure": "pre-foreclosure",
+          "divorce": "divorce",
+          "absentee-owners": "absentee owners",
+          "expired": "expired",
+          "fsbo": "fsbo",
+          "first-time-buyers": "first time homebuyers",
+          "investors": "investors"
+        }
+        const folderName = prospectingFolderMap[subCategory] || subCategory
+        folderPath = `social-content/unbranded/prospecting/${folderName}`
+      } else {
+        folderPath = `social-content/unbranded/${category}/${subCategory}`
+      }
+    } else {
+      folderPath = `social-content/unbranded/${category}`
+    }
     const cacheKey = subCategory ? `${category}-${subCategory}` : category
 
     // Check if we already have images for this category
