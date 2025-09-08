@@ -43,8 +43,8 @@ const laneToFolderMap: Record<string, string> = {
   "probate": "social-content/unbranded/prospecting/probate",
   "pre-foreclosure": "social-content/unbranded/prospecting/pre-foreclosure",
   "divorce": "social-content/unbranded/prospecting/divorce",
-  "absentee-owners": "social-content/unbranded/prospecting/absentee owners",
-  "first-time-buyers": "social-content/unbranded/prospecting/first time homebuyers",
+  "absentee-owners": "social-content/unbranded/prospecting/absentee-owners",
+  "first-time-buyers": "social-content/unbranded/prospecting/first-time-buyers",
   "investors": "social-content/unbranded/prospecting/investors",
 }
 

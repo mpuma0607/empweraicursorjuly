@@ -53,7 +53,7 @@ const categories = [
       { id: "absentee-owners", name: "Absentee" },
       { id: "expired", name: "Expired" },
       { id: "fsbo", name: "FSBO" },
-      { id: "first-time-buyers", name: "First-Time" },
+      { id: "first-time-buyers", name: "First Time Buyers" },
       { id: "investors", name: "Investors" },
     ],
   },
@@ -131,23 +131,24 @@ export default function DynamicBrandedContentPage() {
     loadUserBrandingProfile()
   }, [user, userLoading, tenantConfig])
 
+  // Map subCategory IDs to actual Cloudinary folder names
+  const prospectingFolderMap: Record<string, string> = {
+    "soi": "soi",
+    "probate": "probate", 
+    "pre-foreclosure": "pre-foreclosure",
+    "divorce": "divorce",
+    "absentee-owners": "absentee-owners",
+    "expired": "expired",
+    "fsbo": "fsbo",
+    "first-time-buyers": "first-time-buyers",
+    "investors": "investors"
+  }
+
   // Load images for a category when it's opened
   const loadImagesForCategory = async (category: string, subCategory?: string) => {
     let folderPath: string
     if (subCategory) {
       if (category === "prospecting") {
-        // Map subCategory IDs to actual Cloudinary folder names
-        const prospectingFolderMap: Record<string, string> = {
-          "soi": "soi",
-          "probate": "probate", 
-          "pre-foreclosure": "pre-foreclosure",
-          "divorce": "divorce",
-          "absentee-owners": "absentee owners",
-          "expired": "expired",
-          "fsbo": "fsbo",
-          "first-time-buyers": "first time homebuyers",
-          "investors": "investors"
-        }
         const folderName = prospectingFolderMap[subCategory] || subCategory
         folderPath = `social-content/unbranded/prospecting/${folderName}`
       } else {
@@ -167,6 +168,7 @@ export default function DynamicBrandedContentPage() {
 
     try {
       console.log(`Loading images for category: ${category}, subCategory: ${subCategory}, folderPath: ${folderPath}`)
+      console.log(`Prospecting folder map for ${subCategory}:`, prospectingFolderMap[subCategory])
       const fetchedImages = await fetchCloudinaryImages(folderPath)
       console.log(`Fetched ${fetchedImages.length} images for ${folderPath}`)
       setImages((prev) => ({ ...prev, [cacheKey]: fetchedImages }))
