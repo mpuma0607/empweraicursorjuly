@@ -133,9 +133,30 @@ export default function DynamicBrandedContentPage() {
 
   // Load images for a category when it's opened
   const loadImagesForCategory = async (category: string, subCategory?: string) => {
-    const folderPath = subCategory
-      ? `social-content/unbranded/${category}/${subCategory}`
-      : `social-content/unbranded/${category}`
+    // Special handling for prospecting category with folder name mapping
+    let folderPath: string
+    if (subCategory) {
+      if (category === "prospecting") {
+        // Map subCategory IDs to actual Cloudinary folder names
+        const prospectingFolderMap: Record<string, string> = {
+          "soi": "soi",
+          "probate": "probate", 
+          "pre-foreclosure": "pre-foreclosure",
+          "divorce": "divorce",
+          "absentee-owners": "absentee owners",
+          "expired": "expired",
+          "fsbo": "fsbo",
+          "first-time-buyers": "first time homebuyers",
+          "investors": "investors"
+        }
+        const folderName = prospectingFolderMap[subCategory] || subCategory
+        folderPath = `social-content/unbranded/prospecting/${folderName}`
+      } else {
+        folderPath = `social-content/unbranded/${category}/${subCategory}`
+      }
+    } else {
+      folderPath = `social-content/unbranded/${category}`
+    }
     const cacheKey = subCategory ? `${category}-${subCategory}` : category
 
     // Check if we already have images for this category
@@ -146,7 +167,9 @@ export default function DynamicBrandedContentPage() {
     setLoadingImages((prev) => ({ ...prev, [cacheKey]: true }))
 
     try {
+      console.log(`Loading images for category: ${category}, subCategory: ${subCategory}, folderPath: ${folderPath}`)
       const fetchedImages = await fetchCloudinaryImages(folderPath)
+      console.log(`Fetched ${fetchedImages.length} images for ${folderPath}`)
       setImages((prev) => ({ ...prev, [cacheKey]: fetchedImages }))
     } catch (error) {
       console.error(`Error loading images for ${folderPath}:`, error)
