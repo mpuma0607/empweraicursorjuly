@@ -46,13 +46,13 @@ const categories = [
     name: "Prospecting",
     description: "Targeted content for specific prospecting niches",
     subCategories: [
-      { id: "soi", name: "Sphere of Influence" },
+      { id: "soi", name: "SOI" },
       { id: "probate", name: "Probate" },
       { id: "pre-foreclosure", name: "Pre-Foreclosure" },
       { id: "divorce", name: "Divorce" },
-      { id: "absentee-owners", name: "Absentee Owners" },
-      { id: "expired", name: "Expired Listings" },
-      { id: "fsbo", name: "For Sale By Owner" },
+      { id: "absentee-owners", name: "Absentee" },
+      { id: "expired", name: "Expired" },
+      { id: "fsbo", name: "FSBO" },
     ],
   },
 ]
@@ -557,24 +557,30 @@ export default function DynamicBrandedContentPage() {
                         </div>
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-4xl max-h-[80vh] flex flex-col">
+                    <DialogContent className="max-w-5xl max-h-[85vh] flex flex-col">
                       <DialogHeader className="flex-shrink-0">
                         <DialogTitle className="text-black">{category.name} Content</DialogTitle>
                       </DialogHeader>
-                      <div className="flex-1 overflow-y-auto overflow-x-auto">
+                      <div className="flex-1 overflow-y-auto overflow-x-hidden">
                         {category.id === "prospecting" ? (
                           <Tabs
                             defaultValue={activeProspectingTab}
                             onValueChange={handleProspectingTabChange}
                             className="w-full"
                           >
-                            <TabsList className="grid grid-cols-3 md:grid-cols-7 mb-4 flex-shrink-0">
-                              {category.subCategories?.map((subCategory) => (
-                                <TabsTrigger key={subCategory.id} value={subCategory.id}>
-                                  {subCategory.name}
-                                </TabsTrigger>
-                              ))}
-                            </TabsList>
+                            <div className="overflow-x-auto mb-4">
+                              <TabsList className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-1 flex-shrink-0 h-auto min-w-max">
+                                {category.subCategories?.map((subCategory) => (
+                                  <TabsTrigger 
+                                    key={subCategory.id} 
+                                    value={subCategory.id}
+                                    className="text-xs sm:text-sm px-2 py-2 h-auto whitespace-nowrap"
+                                  >
+                                    {subCategory.name}
+                                  </TabsTrigger>
+                                ))}
+                              </TabsList>
+                            </div>
                             {category.subCategories?.map((subCategory) => (
                               <TabsContent key={subCategory.id} value={subCategory.id}>
                                 {renderImageGrid(category.id, subCategory.id)}
