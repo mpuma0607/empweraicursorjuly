@@ -368,7 +368,7 @@ export function WhosWhoForm() {
     const urls: string[] = []
     
     // Enhanced regex to catch more URL patterns including public record sites
-    const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|(truepeoplesearch\.com[^\s]*)|(whitepages\.com[^\s]*)|(spokeo\.com[^\s]*)|(beenverified\.com[^\s]*)|(peoplefinder\.com[^\s]*)/gi
+    const urlRegex = /(https?:\/\/[^\s\)]+)|(www\.[^\s\)]+)|(truepeoplesearch\.com[^\s\)]*)|(whitepages\.com[^\s\)]*)|(spokeo\.com[^\s\)]*)|(beenverified\.com[^\s\)]*)|(peoplefinder\.com[^\s\)]*)/gi
     
     const content = text.replace(urlRegex, (match) => {
       let url = match
