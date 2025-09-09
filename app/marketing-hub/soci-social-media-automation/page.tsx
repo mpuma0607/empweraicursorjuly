@@ -28,10 +28,42 @@ import {
   Mail,
   AlertTriangle
 } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+
+// Extend Window interface for PayWhirl
+declare global {
+  interface Window {
+    paywhirl: (action: string, config: any, elementId: string) => void
+  }
+}
 
 export default function SOCiSocialMediaAutomationPage() {
   const [activeTab, setActiveTab] = useState("overview")
+
+  useEffect(() => {
+    // Load PayWhirl script
+    const script = document.createElement('script')
+    script.src = 'https://app.paywhirl.com/pwa.js'
+    script.async = true
+    script.onload = () => {
+      if (window.paywhirl) {
+        window.paywhirl('widget', {
+          autoscroll: 1,
+          initial_autoscroll: 0,
+          domain: 'century-21-be3',
+          uuid: '431ef523-cd04-40ea-9cff-ee096a4eb2c3'
+        }, 'pw_68c0698f398b9')
+      }
+    }
+    document.head.appendChild(script)
+
+    return () => {
+      // Cleanup
+      if (document.head.contains(script)) {
+        document.head.removeChild(script)
+      }
+    }
+  }, [])
 
   const features = [
     {
@@ -209,7 +241,16 @@ export default function SOCiSocialMediaAutomationPage() {
 
           {/* CTA */}
           <div className="flex justify-center mb-16">
-            <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-lg px-8 py-4">
+            <Button 
+              size="lg" 
+              className="bg-blue-600 hover:bg-blue-700 text-lg px-8 py-4"
+              onClick={() => {
+                document.getElementById('paywhirl-widget')?.scrollIntoView({ 
+                  behavior: 'smooth',
+                  block: 'center'
+                })
+              }}
+            >
               Connect SOCi
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
@@ -405,12 +446,8 @@ export default function SOCiSocialMediaAutomationPage() {
           
           {/* PayWhirl Widget */}
           <div className="max-w-2xl mx-auto">
-            <div id="paywhirl-widget" className="min-h-[400px] bg-gray-50 rounded-lg flex items-center justify-center">
-              <div className="text-center">
-                <Settings className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 mb-2">SOCi Sign-up Widget</p>
-                <p className="text-sm text-gray-500">Payment form will load here</p>
-              </div>
+            <div id="paywhirl-widget" className="min-h-[400px] bg-white rounded-lg border border-gray-200 p-4">
+              <div id="pw_68c0698f398b9"></div>
             </div>
           </div>
         </div>
@@ -428,27 +465,6 @@ export default function SOCiSocialMediaAutomationPage() {
         </div>
       </div>
 
-      {/* PayWhirl Script */}
-      <script 
-        type="text/javascript" 
-        id='pw_68c0698f398b9' 
-        src="https://app.paywhirl.com/pwa.js"
-        async
-      />
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `
-            if (typeof paywhirl !== 'undefined') {
-              paywhirl('widget', {
-                autoscroll: 1,
-                initial_autoscroll: 0,
-                domain: 'century-21-be3',
-                uuid: '431ef523-cd04-40ea-9cff-ee096a4eb2c3'
-              }, 'pw_68c0698f398b9');
-            }
-          `
-        }}
-      />
     </div>
   )
 }
