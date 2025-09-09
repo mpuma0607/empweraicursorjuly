@@ -312,16 +312,6 @@ export const resourceCenterByTenant: Record<string, TenantResourceConfig> = {
             priority: 2
           },
           {
-            id: "branded-social-content",
-            title: "Branded Social Content",
-            description: "Pre-made social media content with branding",
-            href: "/marketing-hub/branded-social-content",
-            icon: Share2,
-            keywords: ["social media", "branded", "content", "posts", "ready-made"],
-            category: "marketing-branding",
-            priority: 3
-          },
-          {
             id: "hot-takes",
             title: "Real Estate Hot Takes",
             description: "RSS feed of the latest real estate news and trends",
@@ -329,17 +319,7 @@ export const resourceCenterByTenant: Record<string, TenantResourceConfig> = {
             icon: TrendingUp,
             keywords: ["news", "trends", "rss", "hot takes", "industry"],
             category: "marketing-branding",
-            priority: 4
-          },
-          {
-            id: "brokerage-logos",
-            title: "Brokerage Logos",
-            description: "Access Empower AI logos and branding assets",
-            href: "/marketing-hub/brokerage-logos",
-            icon: Building2,
-            keywords: ["logos", "branding", "assets", "brokerage", "empower"],
-            category: "marketing-branding",
-            priority: 5
+            priority: 3
           }
         ]
       },
@@ -835,16 +815,6 @@ export const resourceCenterByTenant: Record<string, TenantResourceConfig> = {
             priority: 2
           },
           {
-            id: "branded-social-content",
-            title: "Branded Social Content",
-            description: "Pre-made social media content with branding",
-            href: "/marketing-hub/branded-social-content",
-            icon: Share2,
-            keywords: ["social media", "branded", "content", "posts", "ready-made"],
-            category: "marketing-branding",
-            priority: 3
-          },
-          {
             id: "hot-takes",
             title: "Real Estate Hot Takes",
             description: "RSS feed of the latest real estate news and trends",
@@ -852,7 +822,7 @@ export const resourceCenterByTenant: Record<string, TenantResourceConfig> = {
             icon: TrendingUp,
             keywords: ["news", "trends", "rss", "hot takes", "industry"],
             category: "marketing-branding",
-            priority: 4
+            priority: 3
           },
           {
             id: "century21-logos",
@@ -862,7 +832,7 @@ export const resourceCenterByTenant: Record<string, TenantResourceConfig> = {
             icon: Building2,
             keywords: ["century 21", "logos", "branding", "assets", "beggins"],
             category: "marketing-branding",
-            priority: 5
+            priority: 4
           },
           {
             id: "beach-project-toolkits",
@@ -872,7 +842,7 @@ export const resourceCenterByTenant: Record<string, TenantResourceConfig> = {
             icon: Waves,
             keywords: ["beach projects", "toolkits", "marketing", "premium", "development"],
             category: "marketing-branding",
-            priority: 6
+            priority: 5
           }
         ]
       },
