@@ -600,7 +600,7 @@ export default function SocialMediaMasteryPage() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Download className="h-5 w-5" />
+                    <FileText className="h-5 w-5" />
                     Lead Magnet Ideas
                   </CardTitle>
                   <CardDescription>High-converting lead magnets for real estate</CardDescription>
