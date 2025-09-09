@@ -40,7 +40,7 @@ const moxiModules = [
       {
         title: "Adding Single Contact and Tracking Activity",
         duration: "15:20",
-        url: "https://youtu.be/HzRf6zydEAA",
+        url: "https://youtu.be/syqWwS8ERek",
       },
       {
         title: "Updating a Lead from Your Brokerage in MoxiEngage",
@@ -147,11 +147,6 @@ const moxiModules = [
         url: "https://youtu.be/ix6Ro_Wwfx0",
       },
       {
-        title: "How to Adjust CMA Report Pages in Moxi Present",
-        duration: "13:15",
-        url: "https://youtu.be/FDLL13sGunA",
-      },
-      {
         title: "How to Create a Buyer Tour in Moxi Present | Real-Time Property Updates, Scheduling & Client Ratings",
         duration: "7:50",
         url: "https://youtu.be/FB-32XbuR7A",
@@ -174,7 +169,7 @@ const moxiModules = [
       {
         title: "MoxiPresent Tips: How to Minimize Print Pages for a Shorter Presentation",
         duration: "11:20",
-        url: "https://youtu.be/BqYDQfKyvgE",
+        url: "https://youtu.be/fK-iNCYQev8",
       },
       {
         title: "How Brokerages Can Create Custom Pages & Templates in Moxi Present",
@@ -211,9 +206,9 @@ const moxiModules = [
         url: "https://youtu.be/79Vr4TC8-iw",
       },
       {
-        title: "Is Your Moxi Website Secure? How to Enable SSL for Agent Sites",
+        title: "Is Your Moxi Website Secure? How to Enable SSL for Agent Sites and switch to",
         duration: "12:45",
-        url: "https://youtu.be/GHzWJP1uDGs",
+        url: "https://youtu.be/Xe2oqt1i_B0",
       },
       {
         title: "Stand Out Online: How to Create a Custom Home Page on MoxiWorks",
@@ -224,11 +219,6 @@ const moxiModules = [
         title: "How to Add a Vanity Domain to Your MoxiWorks Website (Up to 20!)",
         duration: "10:30",
         url: "https://youtu.be/V7uzqcnZ6AY",
-      },
-      {
-        title: "How to Update Your DNS Settings for a MoxiWorks Website",
-        duration: "12:45",
-        url: "https://youtu.be/EVKL-p6vW1w",
       },
       {
         title: "Show Off Your Reviews: How to Add RealSatisfied Surveys to Your Moxi Website",
@@ -612,10 +602,6 @@ export default function MoxiWorksTrainingPage() {
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="text-sm font-medium text-black hover:text-blue-600 flex-1"
-                                      onClick={(e) => {
-                                        e.preventDefault()
-                                        alert("PDF resources are currently being updated. Check back soon!")
-                                      }}
                                     >
                                       Initial Set Up
                                     </a>
@@ -627,12 +613,41 @@ export default function MoxiWorksTrainingPage() {
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="text-sm font-medium text-black hover:text-blue-600 flex-1"
-                                      onClick={(e) => {
-                                        e.preventDefault()
-                                        alert("PDF resources are currently being updated. Check back soon!")
-                                      }}
                                     >
                                       How To Export Contacts
+                                    </a>
+                                    <Badge variant="outline">PDF</Badge>
+                                  </li>
+                                  <li className="flex items-center justify-between p-3 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
+                                    <a
+                                      href="/pdfs/moxi-engage-task-list.pdf"
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-sm font-medium text-black hover:text-blue-600 flex-1"
+                                    >
+                                      Moxi Engage Task List
+                                    </a>
+                                    <Badge variant="outline">PDF</Badge>
+                                  </li>
+                                  <li className="flex items-center justify-between p-3 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
+                                    <a
+                                      href="/pdfs/add-person-to-campaign.pdf"
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-sm font-medium text-black hover:text-blue-600 flex-1"
+                                    >
+                                      How to add a person to a running campaign
+                                    </a>
+                                    <Badge variant="outline">PDF</Badge>
+                                  </li>
+                                  <li className="flex items-center justify-between p-3 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
+                                    <a
+                                      href="/pdfs/add-to-favs-and-saves.pdf"
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-sm font-medium text-black hover:text-blue-600 flex-1"
+                                    >
+                                      How to add to favs and saves
                                     </a>
                                     <Badge variant="outline">PDF</Badge>
                                   </li>
@@ -667,6 +682,82 @@ export default function MoxiWorksTrainingPage() {
                             </Card>
 
                             {/* Moxi Login Button for Engage */}
+                            <Card className="md:col-span-2">
+                              <CardHeader>
+                                <CardTitle className="text-black">Access Moxi Platform</CardTitle>
+                              </CardHeader>
+                              <CardContent>
+                                <Button
+                                  onClick={() => window.open("https://mymoxi.century21.com/sessions/new", "_blank")}
+                                  className="w-full bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
+                                >
+                                  <ExternalLink className="h-4 w-4" />
+                                  LOG IN TO MOXI
+                                </Button>
+                              </CardContent>
+                            </Card>
+                          </div>
+                        ) : module.id === "websites" ? (
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <Card>
+                              <CardHeader>
+                                <CardTitle className="text-black">Setup Guides</CardTitle>
+                              </CardHeader>
+                              <CardContent>
+                                <ul className="space-y-3">
+                                  <li className="flex items-center justify-between p-3 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
+                                    <a
+                                      href="/pdfs/moxi-website-dns-changes.pdf"
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-sm font-medium text-black hover:text-blue-600 flex-1"
+                                    >
+                                      Moxi Website DNS Changes
+                                    </a>
+                                    <Badge variant="outline">PDF</Badge>
+                                  </li>
+                                  <li className="flex items-center justify-between p-3 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
+                                    <a
+                                      href="/pdfs/moxi-website-quick-start.pdf"
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-sm font-medium text-black hover:text-blue-600 flex-1"
+                                    >
+                                      Quick Start Guide
+                                    </a>
+                                    <Badge variant="outline">PDF</Badge>
+                                  </li>
+                                </ul>
+                              </CardContent>
+                            </Card>
+
+                            <Card>
+                              <CardHeader>
+                                <CardTitle className="text-black">Support & Community</CardTitle>
+                              </CardHeader>
+                              <CardContent>
+                                <ul className="space-y-3">
+                                  <li className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                                    <span className="text-sm font-medium text-black">Live Q&A Sessions</span>
+                                    <Badge variant="outline">Weekly</Badge>
+                                  </li>
+                                  <li className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                                    <span className="text-sm font-medium text-black">Community Forum</span>
+                                    <Badge variant="outline">24/7</Badge>
+                                  </li>
+                                  <li className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                                    <span className="text-sm font-medium text-black">Expert Office Hours</span>
+                                    <Badge variant="outline">Daily</Badge>
+                                  </li>
+                                  <li className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                                    <span className="text-sm font-medium text-black">Implementation Support</span>
+                                    <Badge variant="outline">1-on-1</Badge>
+                                  </li>
+                                </ul>
+                              </CardContent>
+                            </Card>
+
+                            {/* Moxi Login Button for Websites */}
                             <Card className="md:col-span-2">
                               <CardHeader>
                                 <CardTitle className="text-black">Access Moxi Platform</CardTitle>
