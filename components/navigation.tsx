@@ -95,6 +95,11 @@ const navigationItems = [
     href: "/training-hub",
     submenu: [
       {
+        title: "Elicitation & Human Behavior Mastery",
+        href: "/training-hub/elicitation-human-behavior-mastery",
+        description: "Modern behavioral skills for ethical influence, clarity, and trust",
+      },
+      {
         title: "Social Media Mastery",
         href: "/training-hub/social-media-mastery",
         description: "Build a magnetic brand and convert attention ethically",
