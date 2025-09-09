@@ -204,6 +204,7 @@ export default function NegotiationMasteryPage() {
     {
       title: "Negotiation One-Pager",
       description: "Fill-in template for deal preparation",
+      pdfFile: "Negotiation_One_Pager.pdf",
       items: [
         "Deal goal, minimum acceptable, walk-away",
         "Stakeholders + interests",
@@ -217,6 +218,7 @@ export default function NegotiationMasteryPage() {
     {
       title: "Offer Optimization Checklist",
       description: "Ensure your offers get accepted",
+      pdfFile: "Offer_Optimization_Checklist.pdf",
       items: [
         "Financing strength verified",
         "Clean contingencies with clear scopes",
@@ -228,6 +230,7 @@ export default function NegotiationMasteryPage() {
     {
       title: "Commission Value Map",
       description: "Defend your value without discounting",
+      pdfFile: "Commission_Value_Map.pdf",
       items: [
         "Marketing assets, negotiation strategy, risk shields",
         "Case study: price-to-net gap you routinely achieve",
@@ -237,6 +240,7 @@ export default function NegotiationMasteryPage() {
     {
       title: "Inspection Negotiation Script",
       description: "Call + follow-up email template",
+      pdfFile: "Inspection_Negotiation_Script.pdf",
       items: [
         "Call open: accusation audit → label → calibrated question",
         "Email: bullet the essentials, propose 1–2 high-probability structures, invite collaboration"
@@ -245,10 +249,21 @@ export default function NegotiationMasteryPage() {
     {
       title: "Appraisal Gap Options Tree",
       description: "Visual menu of concessions and coverage levels",
+      pdfFile: "Appraisal_Gap_Options_Tree.pdf",
       items: [
         "Buyer and seller versions",
         "Gap coverage levels",
         "Timing moves and concessions"
+      ]
+    },
+    {
+      title: "Quick-Start One-Pager",
+      description: "Print and keep by your phone",
+      pdfFile: "Quick_Start_One_Pager.pdf",
+      items: [
+        "8-step negotiation process",
+        "Key phrases and questions",
+        "Emergency reference guide"
       ]
     }
   ];
@@ -450,6 +465,15 @@ export default function NegotiationMasteryPage() {
                         </li>
                       ))}
                     </ul>
+                    <a 
+                      href={`/pdfs/${tool.pdfFile}`} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                    >
+                      <FileText className="h-4 w-4" />
+                      Download PDF
+                    </a>
                   </CardContent>
                 </Card>
               ))}
