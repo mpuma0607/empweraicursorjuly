@@ -59,61 +59,49 @@ export default function SOCiSocialMediaAutomationPage() {
   const howItWorks = [
     {
       step: "1",
-      title: "Connect your accounts",
-      description: "Securely link your social profiles to SOCi. It takes a few clicks.",
+      title: "Sign up and set up billing",
+      description: "Complete your registration and payment to get started with SOCi.",
       icon: Settings
     },
     {
       step: "2", 
-      title: "Pick your plan",
-      description: "Choose a recommended posting cadence (e.g., 3x weekly) and content mix for your goals.",
-      icon: Target
+      title: "Receive your registration link",
+      description: "You'll receive a link (may go to spam) to register your SOCi account and connect your socials and select your local markets.",
+      icon: Mail
     },
     {
       step: "3",
-      title: "Personalize & schedule", 
-      description: "Use branded templates and optional AI caption suggestions. Approve or edit in seconds.",
-      icon: MessageSquare
-    },
-    {
-      step: "4",
-      title: "Publish everywhere",
-      description: "Push to multiple networks at once. Queue content for peak engagement times.",
-      icon: Share2
-    },
-    {
-      step: "5",
-      title: "Measure & improve",
-      description: "See performance by post, channel, and week. Double down on what resonates.",
-      icon: BarChart3
+      title: "Your social media is now on autopilot",
+      description: "SOCi automatically distributes company listings and local real estate content across all your social accounts without you having to do a single thing.",
+      icon: Zap
     }
   ]
 
   const c21Features = [
     {
-      icon: Image,
-      title: "Branded template library",
-      description: "Listing spotlights, local market updates, tips for buyers and sellers, and seasonal pieces—already styled for C21."
-    },
-    {
-      icon: CheckCircle,
-      title: "One-click approvals",
-      description: "Stay compliant without the back-and-forth. Pre-approved assets keep your brand tight."
+      icon: Building2,
+      title: "Moxi Works Integration",
+      description: "All company listings and real estate content that is local to your selected market gets distributed across your social accounts automatically without you having to do a single thing."
     },
     {
       icon: Calendar,
-      title: "Calendar view",
-      description: "Glanceable monthly and weekly calendars with drag-and-drop control."
+      title: "Automated Daily Branded Posts",
+      description: "Schedule out your own content in minutes with automated daily branded posts that keep your social presence consistent."
     },
     {
-      icon: Zap,
-      title: "AI caption assist (optional)",
-      description: "Generate conversational captions you can tweak in seconds."
+      icon: MessageSquare,
+      title: "Respond to Comments",
+      description: "Start conversations and respond to comments across all platforms from one central location."
     },
     {
-      icon: Users,
-      title: "Team and assistant access",
-      description: "Let your admin or marketing support help build and schedule posts with role-based permissions."
+      icon: BarChart3,
+      title: "Improved Analytics",
+      description: "Know what your audience likes and doesn't like with detailed analytics that help you optimize your content strategy."
+    },
+    {
+      icon: Share2,
+      title: "Automatic Distribution",
+      description: "Be visible on multiple platforms without having to do anything - SOCi handles the distribution automatically."
     }
   ]
 
@@ -173,11 +161,11 @@ export default function SOCiSocialMediaAutomationPage() {
   ]
 
   const gettingStarted = [
-    "Click Connect SOCi and sign in.",
-    "Link your social profiles.",
-    "Choose your posting cadence and content categories.",
-    "Approve your first week's calendar.",
-    "Check performance after seven days and adjust."
+    "Click Connect SOCi and complete your registration and billing setup.",
+    "Check your email (including spam folder) for the SOCi registration link.",
+    "Use the link to register your SOCi account and connect your social media profiles.",
+    "Select your local markets for automated content distribution.",
+    "Your social media is now on autopilot - SOCi handles the rest!"
   ]
 
   return (
@@ -205,24 +193,25 @@ export default function SOCiSocialMediaAutomationPage() {
           {/* Video Section */}
           <div className="mb-12">
             <div className="bg-white rounded-2xl shadow-xl p-8 max-w-4xl mx-auto">
-              <div className="aspect-video bg-gray-100 rounded-xl flex items-center justify-center mb-4">
-                <div className="text-center">
-                  <Play className="h-16 w-16 text-blue-600 mx-auto mb-4" />
-                  <p className="text-gray-600">SOCi + C21 Beggins Demo Video</p>
-                  <p className="text-sm text-gray-500">Video will be embedded here</p>
-                </div>
+              <div className="aspect-video bg-gray-100 rounded-xl overflow-hidden">
+                <iframe
+                  src="https://drive.google.com/file/d/1Fru1T0_tFqw0kIegZEsiwG3smJroNTkM/preview"
+                  width="100%"
+                  height="100%"
+                  allow="autoplay"
+                  className="rounded-xl"
+                  title="SOCi + C21 Beggins Demo Video"
+                />
               </div>
+              <p className="text-center text-gray-600 mt-4 font-medium">SOCi + C21 Beggins Demo Video</p>
             </div>
           </div>
 
-          {/* CTAs */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+          {/* CTA */}
+          <div className="flex justify-center mb-16">
             <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-lg px-8 py-4">
               Connect SOCi
               <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-            <Button size="lg" variant="outline" className="text-lg px-8 py-4">
-              Book a 15-minute Setup
             </Button>
           </div>
         </div>
@@ -405,9 +394,9 @@ export default function SOCiSocialMediaAutomationPage() {
                 <div className="text-left">
                   <p className="text-sm text-yellow-800 font-medium mb-1">Important Setup Information</p>
                   <p className="text-sm text-yellow-700">
-                    Once you have signed up and paid, within 24 hours you will receive an email to your company email 
-                    (will likely go to spam) from the SOCi platform. This email contains the instructions you need to 
-                    actually connect SOCi and get your social media accounts connected.
+                    After completing your registration and billing setup, you will receive a link to your company email 
+                    (may go to spam) from the SOCi platform. This link allows you to register your SOCi account, 
+                    connect your social media profiles, and select your local markets for automated content distribution.
                   </p>
                 </div>
               </div>
