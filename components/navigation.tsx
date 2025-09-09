@@ -89,6 +89,11 @@ const navigationItems = [
     href: "/training-hub",
     submenu: [
       {
+        title: "Negotiation Mastery",
+        href: "/training-hub/negotiation-mastery",
+        description: "Tactical empathy + dealcraft for real estate",
+      },
+      {
         title: "Moxi Works Training",
         href: "/training-hub/moxi-works",
         description: "Complete Moxi platform training",

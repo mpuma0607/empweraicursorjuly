@@ -1,11 +1,18 @@
 "use client"
 
 import { Card, CardContent } from "@/components/ui/card"
-import { GraduationCap, ArrowRight, Monitor, BookOpen, Users, Target, Video, FileText, Settings } from "lucide-react"
+import { GraduationCap, ArrowRight, Monitor, BookOpen, Users, Target, Video, FileText, Settings, MessageSquare } from "lucide-react"
 import Link from "next/link"
 import { useTenantConfig } from "@/contexts/tenant-context"
 
 const trainingModules = [
+  {
+    title: "Negotiation Mastery",
+    href: "/training-hub/negotiation-mastery",
+    description: "Tactical empathy + dealcraft for listings, buyers, and everything in between",
+    icon: MessageSquare,
+    color: "bg-gradient-to-br from-emerald-500 to-teal-500",
+  },
   {
     title: "Moxi Works Training",
     href: "/training-hub/moxi-works",
