@@ -1,11 +1,18 @@
 "use client"
 
 import { Card, CardContent } from "@/components/ui/card"
-import { GraduationCap, ArrowRight, Monitor, BookOpen, Users, Target, Video, FileText, Settings, MessageSquare } from "lucide-react"
+import { GraduationCap, ArrowRight, Monitor, BookOpen, Users, Target, Video, FileText, Settings, MessageSquare, Share2 } from "lucide-react"
 import Link from "next/link"
 import { useTenantConfig } from "@/contexts/tenant-context"
 
 const trainingModules = [
+  {
+    title: "Social Media Mastery",
+    href: "/training-hub/social-media-mastery",
+    description: "Build a magnetic brand, win attention daily, and convert it ethically",
+    icon: Share2,
+    color: "bg-gradient-to-br from-pink-500 to-purple-500",
+  },
   {
     title: "Negotiation Mastery",
     href: "/training-hub/negotiation-mastery",

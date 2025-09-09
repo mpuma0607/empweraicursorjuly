@@ -89,6 +89,11 @@ const navigationItems = [
     href: "/training-hub",
     submenu: [
       {
+        title: "Social Media Mastery",
+        href: "/training-hub/social-media-mastery",
+        description: "Build a magnetic brand and convert attention ethically",
+      },
+      {
         title: "Negotiation Mastery",
         href: "/training-hub/negotiation-mastery",
         description: "Tactical empathy + dealcraft for real estate",
