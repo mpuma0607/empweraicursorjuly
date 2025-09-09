@@ -1,7 +1,7 @@
 "use client"
 
 import { Card, CardContent } from "@/components/ui/card"
-import { Megaphone, ArrowRight, TrendingUp, Building2, Waves } from "lucide-react"
+import { Megaphone, ArrowRight, TrendingUp, Building2, Waves, Share2 } from "lucide-react"
 import Link from "next/link"
 import { useTenantConfig } from "@/contexts/tenant-context"
 
@@ -60,6 +60,13 @@ const begginsMarketingTools = [
     description: "Marketing materials for premium beach development projects",
     icon: Waves,
     color: "bg-gradient-to-br from-blue-600 to-cyan-600",
+  },
+  {
+    title: "SOCi Social Media Automation",
+    href: "/marketing-hub/soci-social-media-automation",
+    description: "Automate your social media. Stay on brand. Win back your time.",
+    icon: Share2,
+    color: "bg-gradient-to-br from-green-500 to-emerald-500",
   },
 ]
 
