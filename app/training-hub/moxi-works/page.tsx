@@ -532,7 +532,7 @@ export default function MoxiWorksTrainingPage() {
                                     ? "ring-2 ring-blue-500 ring-opacity-50"
                                     : ""
                                 }`}
-                                ref={(el) => (videoRefs.current[index] = el)}
+                                ref={(el) => { videoRefs.current[index] = el }}
                               >
                                 <CardContent className="p-4">
                                   <div className="flex items-center gap-4 mb-4">
@@ -598,7 +598,7 @@ export default function MoxiWorksTrainingPage() {
                                 <ul className="space-y-3">
                                   <li className="flex items-center justify-between p-3 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
                                     <a
-                                      href="/pdfs/Moxi Engage - how to add person to running campaign.pdf"
+                                      href="/pdfs/engage-running-campaign.pdf"
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="text-sm font-medium text-black hover:text-blue-600 flex-1"
@@ -609,7 +609,7 @@ export default function MoxiWorksTrainingPage() {
                                   </li>
                                   <li className="flex items-center justify-between p-3 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
                                     <a
-                                      href="/pdfs/Moxi Engage - How to update tasks in Sales Flow (1).pdf"
+                                      href="/pdfs/engage-sales-flow.pdf"
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="text-sm font-medium text-black hover:text-blue-600 flex-1"
@@ -674,7 +674,7 @@ export default function MoxiWorksTrainingPage() {
                                 <ul className="space-y-3">
                                   <li className="flex items-center justify-between p-3 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
                                     <a
-                                      href="/pdfs/How to add person to favs and saves  (1).pdf"
+                                      href="/pdfs/favs-and-saves.pdf"
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="text-sm font-medium text-black hover:text-blue-600 flex-1"
@@ -685,7 +685,7 @@ export default function MoxiWorksTrainingPage() {
                                   </li>
                                   <li className="flex items-center justify-between p-3 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
                                     <a
-                                      href="/pdfs/Moxi Website - Quick Start Guide (2).pdf"
+                                      href="/pdfs/website-quick-start.pdf"
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="text-sm font-medium text-black hover:text-blue-600 flex-1"
@@ -696,7 +696,7 @@ export default function MoxiWorksTrainingPage() {
                                   </li>
                                   <li className="flex items-center justify-between p-3 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
                                     <a
-                                      href="/pdfs/Moxi Website DNS Setting Change - Instructions (5).pdf"
+                                      href="/pdfs/website-dns-changes.pdf"
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="text-sm font-medium text-black hover:text-blue-600 flex-1"
