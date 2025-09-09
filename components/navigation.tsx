@@ -11,6 +11,11 @@ import { isFeatureHidden } from "@/lib/tenant-config"
 
 const navigationItems = [
   {
+    title: "Resource Center",
+    href: "/resource-center",
+    description: "Find all tools, training, and resources in one place",
+  },
+  {
     title: "AI Hub",
     href: "/ai-hub",
     submenu: [
