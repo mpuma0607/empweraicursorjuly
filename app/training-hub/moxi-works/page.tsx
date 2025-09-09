@@ -642,7 +642,7 @@ export default function MoxiWorksTrainingPage() {
                                   </li>
                                   <li className="flex items-center justify-between p-3 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
                                     <a
-                                      href="/pdfs/How to add person to favs and saves  (1).pdf"
+                                      href="/pdfs/How to add person to favs and saves (1).pdf"
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="text-sm font-medium text-black hover:text-blue-600 flex-1"
