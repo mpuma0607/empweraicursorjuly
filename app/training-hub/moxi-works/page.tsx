@@ -598,7 +598,7 @@ export default function MoxiWorksTrainingPage() {
                                 <ul className="space-y-3">
                                   <li className="flex items-center justify-between p-3 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
                                     <a
-                                      href="/pdfs/engage-running-campaign.pdf"
+                                      href="/pdfs/engage-running-campaign.pdf.pdf"
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="text-sm font-medium text-black hover:text-blue-600 flex-1"
@@ -609,7 +609,7 @@ export default function MoxiWorksTrainingPage() {
                                   </li>
                                   <li className="flex items-center justify-between p-3 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
                                     <a
-                                      href="/pdfs/engage-sales-flow.pdf"
+                                      href="/pdfs/engage-sales-flow.pdf.pdf"
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="text-sm font-medium text-black hover:text-blue-600 flex-1"
@@ -674,7 +674,7 @@ export default function MoxiWorksTrainingPage() {
                                 <ul className="space-y-3">
                                   <li className="flex items-center justify-between p-3 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
                                     <a
-                                      href="/pdfs/favs-and-saves.pdf"
+                                      href="/pdfs/favs-and-saves.pdf.pdf"
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="text-sm font-medium text-black hover:text-blue-600 flex-1"
@@ -685,7 +685,7 @@ export default function MoxiWorksTrainingPage() {
                                   </li>
                                   <li className="flex items-center justify-between p-3 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
                                     <a
-                                      href="/pdfs/website-quick-start.pdf"
+                                      href="/pdfs/website-quick-start.pdf.pdf"
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="text-sm font-medium text-black hover:text-blue-600 flex-1"
@@ -696,7 +696,7 @@ export default function MoxiWorksTrainingPage() {
                                   </li>
                                   <li className="flex items-center justify-between p-3 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
                                     <a
-                                      href="/pdfs/website-dns-changes.pdf"
+                                      href="/pdfs/website-dns-changes.pdf.pdf"
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="text-sm font-medium text-black hover:text-blue-600 flex-1"
