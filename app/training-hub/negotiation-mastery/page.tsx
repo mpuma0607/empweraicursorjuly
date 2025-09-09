@@ -3,9 +3,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { 
   BookOpen, 
   Target, 
@@ -14,7 +12,6 @@ import {
   CheckCircle, 
   PlayCircle, 
   FileText, 
-  Download,
   Star,
   Lightbulb,
   MessageSquare,
@@ -453,10 +450,6 @@ export default function NegotiationMasteryPage() {
                         </li>
                       ))}
                     </ul>
-                    <Button className="w-full mt-4" variant="outline">
-                      <Download className="h-4 w-4 mr-2" />
-                      Download Template
-                    </Button>
                   </CardContent>
                 </Card>
               ))}

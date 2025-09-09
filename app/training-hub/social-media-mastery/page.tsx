@@ -3,9 +3,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { 
   BookOpen, 
   Target, 
@@ -14,7 +12,6 @@ import {
   CheckCircle, 
   PlayCircle, 
   FileText, 
-  Download,
   Star,
   Lightbulb,
   MessageSquare,
@@ -23,12 +20,11 @@ import {
   Zap,
   Share2,
   Heart,
-  Eye,
   BarChart3,
   Calendar,
   Camera,
-  PenTool,
-  Hash
+  Hash,
+  Video
 } from "lucide-react";
 
 export default function SocialMediaMasteryPage() {
