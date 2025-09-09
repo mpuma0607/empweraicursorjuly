@@ -620,7 +620,7 @@ export default function MoxiWorksTrainingPage() {
                                   </li>
                                   <li className="flex items-center justify-between p-3 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
                                     <a
-                                      href="/pdfs/moxi-engage-task-list.pdf"
+                                      href="/pdfs/Moxi Engage - How to update tasks in Sales Flow (1).pdf"
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="text-sm font-medium text-black hover:text-blue-600 flex-1"
@@ -631,7 +631,7 @@ export default function MoxiWorksTrainingPage() {
                                   </li>
                                   <li className="flex items-center justify-between p-3 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
                                     <a
-                                      href="/pdfs/add-person-to-campaign.pdf"
+                                      href="/pdfs/Moxi Engage - how to add person to running campaign.pdf"
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="text-sm font-medium text-black hover:text-blue-600 flex-1"
@@ -642,7 +642,7 @@ export default function MoxiWorksTrainingPage() {
                                   </li>
                                   <li className="flex items-center justify-between p-3 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
                                     <a
-                                      href="/pdfs/add-to-favs-and-saves.pdf"
+                                      href="/pdfs/How to add person to favs and saves  (1).pdf"
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="text-sm font-medium text-black hover:text-blue-600 flex-1"
@@ -707,7 +707,7 @@ export default function MoxiWorksTrainingPage() {
                                 <ul className="space-y-3">
                                   <li className="flex items-center justify-between p-3 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
                                     <a
-                                      href="/pdfs/moxi-website-dns-changes.pdf"
+                                      href="/pdfs/Moxi Website DNS Setting Change - Instructions (5).pdf"
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="text-sm font-medium text-black hover:text-blue-600 flex-1"
@@ -718,7 +718,7 @@ export default function MoxiWorksTrainingPage() {
                                   </li>
                                   <li className="flex items-center justify-between p-3 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
                                     <a
-                                      href="/pdfs/moxi-website-quick-start.pdf"
+                                      href="/pdfs/Moxi Website - Quick Start Guide (2).pdf"
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="text-sm font-medium text-black hover:text-blue-600 flex-1"
