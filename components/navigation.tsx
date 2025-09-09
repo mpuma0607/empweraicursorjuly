@@ -11,11 +11,6 @@ import { isFeatureHidden } from "@/lib/tenant-config"
 
 const navigationItems = [
   {
-    title: "Resource Center",
-    href: "/resource-center",
-    description: "Find all tools, training, and resources in one place",
-  },
-  {
     title: "AI Hub",
     href: "/ai-hub",
     submenu: [
@@ -215,6 +210,22 @@ const navigationItems = [
         title: "Creations Dashboard",
         href: "/creations-dashboard",
         description: "View your saved AI creations",
+      },
+    ],
+  },
+  {
+    title: "Support",
+    href: "/support",
+    submenu: [
+      {
+        title: "Resource Center",
+        href: "/resource-center",
+        description: "Find all tools, training, and resources in one place",
+      },
+      {
+        title: "Get Support",
+        href: "/support",
+        description: "Get help with any questions or issues",
       },
     ],
   },
@@ -511,11 +522,6 @@ export default function Navigation() {
                   </div>
                 ),
             )}
-
-            {/* Get Support Link */}
-            <Link href="/support" className="text-gray-700 hover:text-green-600 font-medium transition-colors">
-              Get Support
-            </Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -627,15 +633,6 @@ export default function Navigation() {
                     </div>
                   ),
               )}
-
-              {/* Mobile Get Support Link */}
-              <Link
-                href="/support"
-                className="flex items-center gap-2 py-2 text-gray-700 hover:text-green-600 font-medium"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Get Support
-              </Link>
             </div>
           </div>
         )}
