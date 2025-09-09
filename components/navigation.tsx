@@ -60,6 +60,12 @@ const navigationItems = [
         href: "/marketing-hub/brokerage-logos",
         description: "Access Century 21 Beggins logos and branding assets",
       },
+      {
+        title: "SOCi Social Media Automation",
+        href: "/marketing-hub/soci-social-media-automation",
+        description: "Automate your social media. Stay on brand. Win back your time.",
+        tenantSpecific: "century21-beggins",
+      },
     ],
   },
   {
