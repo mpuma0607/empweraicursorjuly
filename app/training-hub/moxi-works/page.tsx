@@ -598,23 +598,12 @@ export default function MoxiWorksTrainingPage() {
                                 <ul className="space-y-3">
                                   <li className="flex items-center justify-between p-3 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
                                     <a
-                                      href="/pdfs/moxi-initial-setup.pdf"
+                                      href="/pdfs/Moxi Engage - how to add person to running campaign.pdf"
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="text-sm font-medium text-black hover:text-blue-600 flex-1"
                                     >
-                                      Initial Set Up
-                                    </a>
-                                    <Badge variant="outline">PDF</Badge>
-                                  </li>
-                                  <li className="flex items-center justify-between p-3 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
-                                    <a
-                                      href="/pdfs/export-contacts.pdf"
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="text-sm font-medium text-black hover:text-blue-600 flex-1"
-                                    >
-                                      How To Export Contacts
+                                      Moxi Engage - how to add person to running campaign
                                     </a>
                                     <Badge variant="outline">PDF</Badge>
                                   </li>
@@ -625,29 +614,7 @@ export default function MoxiWorksTrainingPage() {
                                       rel="noopener noreferrer"
                                       className="text-sm font-medium text-black hover:text-blue-600 flex-1"
                                     >
-                                      Moxi Engage Task List
-                                    </a>
-                                    <Badge variant="outline">PDF</Badge>
-                                  </li>
-                                  <li className="flex items-center justify-between p-3 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
-                                    <a
-                                      href="/pdfs/Moxi Engage - how to add person to running campaign.pdf"
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="text-sm font-medium text-black hover:text-blue-600 flex-1"
-                                    >
-                                      How to add a person to a running campaign
-                                    </a>
-                                    <Badge variant="outline">PDF</Badge>
-                                  </li>
-                                  <li className="flex items-center justify-between p-3 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
-                                    <a
-                                      href="/pdfs/How to add person to favs and saves (1).pdf"
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="text-sm font-medium text-black hover:text-blue-600 flex-1"
-                                    >
-                                      How to add to favs and saves
+                                      Moxi Engage - How to update tasks in Sales Flow
                                     </a>
                                     <Badge variant="outline">PDF</Badge>
                                   </li>
@@ -707,12 +674,12 @@ export default function MoxiWorksTrainingPage() {
                                 <ul className="space-y-3">
                                   <li className="flex items-center justify-between p-3 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
                                     <a
-                                      href="/pdfs/Moxi Website DNS Setting Change - Instructions (5).pdf"
+                                      href="/pdfs/How to add person to favs and saves  (1).pdf"
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="text-sm font-medium text-black hover:text-blue-600 flex-1"
                                     >
-                                      Moxi Website DNS Changes
+                                      How to add person to favs and saves
                                     </a>
                                     <Badge variant="outline">PDF</Badge>
                                   </li>
@@ -723,7 +690,18 @@ export default function MoxiWorksTrainingPage() {
                                       rel="noopener noreferrer"
                                       className="text-sm font-medium text-black hover:text-blue-600 flex-1"
                                     >
-                                      Quick Start Guide
+                                      Moxi Website - Quick Start Guide
+                                    </a>
+                                    <Badge variant="outline">PDF</Badge>
+                                  </li>
+                                  <li className="flex items-center justify-between p-3 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
+                                    <a
+                                      href="/pdfs/Moxi Website DNS Setting Change - Instructions (5).pdf"
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-sm font-medium text-black hover:text-blue-600 flex-1"
+                                    >
+                                      Moxi Website DNS Setting Change - Instructions
                                     </a>
                                     <Badge variant="outline">PDF</Badge>
                                   </li>
