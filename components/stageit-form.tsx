@@ -186,16 +186,25 @@ export function StageItForm() {
         })
 
         if (!response.ok) {
-          // Try to get error details if available
+          // Try to get detailed error information
           let errorMessage = 'Staging failed'
+          let errorDetails = null
+          
           try {
             const errorData = await response.json()
             errorMessage = errorData.error || errorMessage
+            errorDetails = errorData.details || errorData
+            console.error('Detailed error:', errorData)
           } catch {
             // If response isn't JSON, use status text
             errorMessage = response.statusText || errorMessage
           }
-          throw new Error(errorMessage)
+          
+          // Log additional details for debugging
+          console.error('Response status:', response.status)
+          console.error('Response headers:', Object.fromEntries(response.headers.entries()))
+          
+          throw new Error(`${errorMessage}${errorDetails ? ` - Details: ${JSON.stringify(errorDetails)}` : ''}`)
         }
 
         // Handle binary image response

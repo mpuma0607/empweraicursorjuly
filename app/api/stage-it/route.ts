@@ -124,6 +124,25 @@ export async function POST(req: Request) {
       `Photorealistic, listing-quality output.`
     ].filter(Boolean).join(" ");
 
+    // Validate image before processing
+    console.log(`Image validation: ${imageBlob.size} bytes, type: ${imageBlob.type}`);
+    
+    // Check file size (OpenAI has limits)
+    if (imageBlob.size > 20 * 1024 * 1024) { // 20MB limit
+      return NextResponse.json(
+        { error: "Image too large. Please use an image smaller than 20MB." },
+        { status: 400 }
+      );
+    }
+    
+    // Check file type
+    if (!imageBlob.type.startsWith('image/')) {
+      return NextResponse.json(
+        { error: "Invalid file type. Please upload an image file." },
+        { status: 400 }
+      );
+    }
+
     // Validate and normalize size parameter
     const SUPPORTED_SIZES = new Set(["1024x1024", "1024x1536", "1536x1024", "auto"]);
     const finalSize = SUPPORTED_SIZES.has(size) ? size : "auto";
@@ -147,11 +166,29 @@ export async function POST(req: Request) {
     console.log(`OpenAI response status: ${aiRes.status} ${aiRes.statusText}`);
 
     if (!aiRes.ok) {
-      // Return the real error from OpenAI so you can see what's wrong
-      const err = await aiRes.json().catch(async () => ({ text: await aiRes.text() }));
-      console.error("OpenAI images.edit error:", err);
+      // Get detailed error information
+      let errorDetails;
+      try {
+        errorDetails = await aiRes.json();
+        console.error("OpenAI JSON error response:", errorDetails);
+      } catch (jsonError) {
+        try {
+          const errorText = await aiRes.text();
+          console.error("OpenAI text error response:", errorText);
+          errorDetails = { text: errorText };
+        } catch (textError) {
+          console.error("Failed to read error response:", textError);
+          errorDetails = { message: `OpenAI error ${aiRes.status}: ${aiRes.statusText}` };
+        }
+      }
+      
       return NextResponse.json(
-        { error: err?.error?.message || `OpenAI error ${aiRes.status}`, details: err },
+        { 
+          error: errorDetails?.error?.message || errorDetails?.text || `OpenAI error ${aiRes.status}`, 
+          details: errorDetails,
+          status: aiRes.status,
+          statusText: aiRes.statusText
+        },
         { status: 502 }
       );
     }
