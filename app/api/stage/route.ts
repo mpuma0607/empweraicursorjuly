@@ -128,9 +128,11 @@ export async function POST(req: Request) {
     const SUPPORTED_SIZES = new Set(["1024x1024", "1024x1536", "1536x1024", "auto"]);
     const finalSize = SUPPORTED_SIZES.has(size) ? size : "auto";
 
+    // Log image details for debugging
+    console.log(`Processing image: ${imageBlob.size} bytes, type: ${imageBlob.type}`);
+
     // Build outbound form to OpenAI (use plain fetch to avoid SDK file quirks)
     const aiForm = new FormData();
-    // Note: images/edits endpoint doesn't use a model parameter
     aiForm.append("prompt", prompt);
     aiForm.append("size", finalSize);
     aiForm.append("image", imageBlob!, "image.png");
@@ -147,16 +149,27 @@ export async function POST(req: Request) {
     console.log(`OpenAI response status: ${aiRes.status} ${aiRes.statusText}`);
 
     if (!aiRes.ok) {
-      // Try to get JSON error first, fallback to text if it fails
+      // Check content type to determine how to read the response
+      const contentType = aiRes.headers.get('content-type');
       let errorData;
-      try {
-        errorData = await aiRes.json();
-        console.error("OpenAI JSON error response:", errorData);
-      } catch (jsonError) {
-        // If JSON parsing fails, get the text response
-        const errorText = await aiRes.text();
-        console.error("OpenAI text error response:", errorText);
-        errorData = { error: { message: errorText } };
+      
+      if (contentType && contentType.includes('application/json')) {
+        try {
+          errorData = await aiRes.json();
+          console.error("OpenAI JSON error response:", errorData);
+        } catch (jsonError) {
+          console.error("Failed to parse JSON error response:", jsonError);
+          errorData = { error: { message: `OpenAI error ${aiRes.status}: ${aiRes.statusText}` } };
+        }
+      } else {
+        try {
+          const errorText = await aiRes.text();
+          console.error("OpenAI text error response:", errorText);
+          errorData = { error: { message: errorText } };
+        } catch (textError) {
+          console.error("Failed to read text error response:", textError);
+          errorData = { error: { message: `OpenAI error ${aiRes.status}: ${aiRes.statusText}` } };
+        }
       }
       
       return NextResponse.json(

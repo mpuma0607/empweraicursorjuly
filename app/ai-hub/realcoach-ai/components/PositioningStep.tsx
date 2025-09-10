@@ -24,10 +24,12 @@ import {
   Award,
   Info,
   AlertCircle,
-  Zap
+  Zap,
+  Mic,
+  MicOff
 } from "lucide-react"
 import { AgentProfile } from "../page"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 interface PositioningStepProps {
   profile: AgentProfile
@@ -36,6 +38,50 @@ interface PositioningStepProps {
 
 export default function PositioningStep({ profile, updateProfile }: PositioningStepProps) {
   const [selectedSegments, setSelectedSegments] = useState<string[]>([])
+  const [isListening, setIsListening] = useState(false)
+  const [recognition, setRecognition] = useState<any>(null)
+
+  // Initialize speech recognition
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'webkitSpeechRecognition' in window) {
+      const SpeechRecognition = (window as any).webkitSpeechRecognition
+      const recognition = new SpeechRecognition()
+      recognition.continuous = false
+      recognition.interimResults = false
+      recognition.lang = 'en-US'
+      
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript
+        handleUspChange(profile.usp + ' ' + transcript)
+        setIsListening(false)
+      }
+      
+      recognition.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error)
+        setIsListening(false)
+      }
+      
+      recognition.onend = () => {
+        setIsListening(false)
+      }
+      
+      setRecognition(recognition)
+    }
+  }, [])
+
+  const startListening = () => {
+    if (recognition && !isListening) {
+      setIsListening(true)
+      recognition.start()
+    }
+  }
+
+  const stopListening = () => {
+    if (recognition && isListening) {
+      recognition.stop()
+      setIsListening(false)
+    }
+  }
 
   const segmentOptions = [
     {
@@ -321,17 +367,38 @@ export default function PositioningStep({ profile, updateProfile }: PositioningS
             <Label className="text-base font-medium mb-3 block">
               What would your best client say you do exceptionally well?
             </Label>
-            <Textarea
-              placeholder="Describe what makes you unique in your market..."
-              value={profile.usp}
-              onChange={(e) => handleUspChange(e.target.value)}
-              className="min-h-[100px] text-base"
-            />
+            <div className="relative">
+              <Textarea
+                placeholder="Describe what makes you unique in your market..."
+                value={profile.usp}
+                onChange={(e) => handleUspChange(e.target.value)}
+                className="min-h-[100px] text-base pr-12"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="absolute top-2 right-2 h-8 w-8 p-0"
+                onClick={isListening ? stopListening : startListening}
+                disabled={!recognition}
+              >
+                {isListening ? (
+                  <MicOff className="h-4 w-4 text-red-500" />
+                ) : (
+                  <Mic className="h-4 w-4 text-gray-500" />
+                )}
+              </Button>
+            </div>
+            {recognition && (
+              <p className="text-xs text-gray-500 mt-1">
+                Click the microphone to add voice input
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {uspCategories.map((category) => (
-              <Card key={category.id} className="hover:bg-gray-50 cursor-pointer">
+              <Card key={category.id} className="bg-gray-50">
                 <CardContent className="p-4">
                   <h4 className="font-semibold text-gray-900 mb-2">{category.title}</h4>
                   <p className="text-gray-600 text-sm mb-3">{category.description}</p>

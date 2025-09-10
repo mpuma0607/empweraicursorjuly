@@ -88,29 +88,38 @@ export function StageItForm() {
         return
       }
       
-      // Validate file dimensions (basic check)
-      const img = new Image()
-      img.onload = () => {
-        if (img.width < 100 || img.height < 100) {
-          alert('Image too small. Please select an image at least 100x100 pixels')
-          return
-        }
-        if (img.width > 4096 || img.height > 4096) {
-          alert('Image too large. Please select an image smaller than 4096x4096 pixels')
-          return
+      // Convert to PNG if needed (OpenAI edits requires PNG)
+      if (file.type !== 'image/png') {
+        console.log(`Converting ${file.type} to PNG`)
+        const canvas = document.createElement('canvas')
+        const ctx = canvas.getContext('2d')
+        const img = new Image()
+        
+        img.onload = () => {
+          canvas.width = img.width
+          canvas.height = img.height
+          ctx?.drawImage(img, 0, 0)
+          
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const pngFile = new File([blob], file.name.replace(/\.[^/.]+$/, '.png'), { type: 'image/png' })
+              setImageFile(pngFile)
+              const url = URL.createObjectURL(pngFile)
+              setImageUrl(url)
+              setImageName(pngFile.name.replace(/\.[^/.]+$/, ''))
+              setCurrentStep('configure')
+            }
+          }, 'image/png')
         }
         
+        img.src = URL.createObjectURL(file)
+      } else {
         setImageFile(file)
         const url = URL.createObjectURL(file)
         setImageUrl(url)
         setImageName(file.name.replace(/\.[^/.]+$/, ''))
         setCurrentStep('configure')
       }
-      img.onerror = () => {
-        alert('Invalid image file. Please try a different image.')
-        return
-      }
-      img.src = URL.createObjectURL(file)
     }
   }
 
@@ -136,29 +145,38 @@ export function StageItForm() {
         return
       }
       
-      // Validate file dimensions (basic check)
-      const img = new Image()
-      img.onload = () => {
-        if (img.width < 100 || img.height < 100) {
-          alert('Image too small. Please select an image at least 100x100 pixels')
-          return
-        }
-        if (img.width > 4096 || img.height > 4096) {
-          alert('Image too large. Please select an image smaller than 4096x4096 pixels')
-          return
+      // Convert to PNG if needed (OpenAI edits requires PNG)
+      if (file.type !== 'image/png') {
+        console.log(`Converting ${file.type} to PNG`)
+        const canvas = document.createElement('canvas')
+        const ctx = canvas.getContext('2d')
+        const img = new Image()
+        
+        img.onload = () => {
+          canvas.width = img.width
+          canvas.height = img.height
+          ctx?.drawImage(img, 0, 0)
+          
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const pngFile = new File([blob], file.name.replace(/\.[^/.]+$/, '.png'), { type: 'image/png' })
+              setImageFile(pngFile)
+              const url = URL.createObjectURL(pngFile)
+              setImageUrl(url)
+              setImageName(pngFile.name.replace(/\.[^/.]+$/, ''))
+              setCurrentStep('configure')
+            }
+          }, 'image/png')
         }
         
+        img.src = URL.createObjectURL(file)
+      } else {
         setImageFile(file)
         const url = URL.createObjectURL(file)
         setImageUrl(url)
         setImageName(file.name.replace(/\.[^/.]+$/, ''))
         setCurrentStep('configure')
       }
-      img.onerror = () => {
-        alert('Invalid image file. Please try a different image.')
-        return
-      }
-      img.src = URL.createObjectURL(file)
     }
   }, [])
 
@@ -221,13 +239,22 @@ export function StageItForm() {
 
         if (!response.ok) {
           let errorMessage = 'Staging failed'
-          try {
-            const errorData = await response.json()
-            errorMessage = errorData.error || errorMessage
-          } catch {
-            // If JSON parsing fails, try to get text
-            const errorText = await response.text()
-            errorMessage = errorText || errorMessage
+          const contentType = response.headers.get('content-type')
+          
+          if (contentType && contentType.includes('application/json')) {
+            try {
+              const errorData = await response.json()
+              errorMessage = errorData.error || errorMessage
+            } catch {
+              errorMessage = response.statusText || errorMessage
+            }
+          } else {
+            try {
+              const errorText = await response.text()
+              errorMessage = errorText || errorMessage
+            } catch {
+              errorMessage = response.statusText || errorMessage
+            }
           }
           throw new Error(errorMessage)
         }
