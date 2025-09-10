@@ -88,38 +88,12 @@ export function StageItForm() {
         return
       }
       
-      // Convert to PNG if needed (OpenAI edits requires PNG)
-      if (file.type !== 'image/png') {
-        console.log(`Converting ${file.type} to PNG`)
-        const canvas = document.createElement('canvas')
-        const ctx = canvas.getContext('2d')
-        const img = new Image()
-        
-        img.onload = () => {
-          canvas.width = img.width
-          canvas.height = img.height
-          ctx?.drawImage(img, 0, 0)
-          
-          canvas.toBlob((blob) => {
-            if (blob) {
-              const pngFile = new File([blob], file.name.replace(/\.[^/.]+$/, '.png'), { type: 'image/png' })
-              setImageFile(pngFile)
-              const url = URL.createObjectURL(pngFile)
-              setImageUrl(url)
-              setImageName(pngFile.name.replace(/\.[^/.]+$/, ''))
-              setCurrentStep('configure')
-            }
-          }, 'image/png')
-        }
-        
-        img.src = URL.createObjectURL(file)
-      } else {
-        setImageFile(file)
-        const url = URL.createObjectURL(file)
-        setImageUrl(url)
-        setImageName(file.name.replace(/\.[^/.]+$/, ''))
-        setCurrentStep('configure')
-      }
+      // Simple approach - just proceed with the file
+      setImageFile(file)
+      const url = URL.createObjectURL(file)
+      setImageUrl(url)
+      setImageName(file.name.replace(/\.[^/.]+$/, ''))
+      setCurrentStep('configure')
     }
   }
 
@@ -145,38 +119,12 @@ export function StageItForm() {
         return
       }
       
-      // Convert to PNG if needed (OpenAI edits requires PNG)
-      if (file.type !== 'image/png') {
-        console.log(`Converting ${file.type} to PNG`)
-        const canvas = document.createElement('canvas')
-        const ctx = canvas.getContext('2d')
-        const img = new Image()
-        
-        img.onload = () => {
-          canvas.width = img.width
-          canvas.height = img.height
-          ctx?.drawImage(img, 0, 0)
-          
-          canvas.toBlob((blob) => {
-            if (blob) {
-              const pngFile = new File([blob], file.name.replace(/\.[^/.]+$/, '.png'), { type: 'image/png' })
-              setImageFile(pngFile)
-              const url = URL.createObjectURL(pngFile)
-              setImageUrl(url)
-              setImageName(pngFile.name.replace(/\.[^/.]+$/, ''))
-              setCurrentStep('configure')
-            }
-          }, 'image/png')
-        }
-        
-        img.src = URL.createObjectURL(file)
-      } else {
-        setImageFile(file)
-        const url = URL.createObjectURL(file)
-        setImageUrl(url)
-        setImageName(file.name.replace(/\.[^/.]+$/, ''))
-        setCurrentStep('configure')
-      }
+      // Simple approach - just proceed with the file
+      setImageFile(file)
+      const url = URL.createObjectURL(file)
+      setImageUrl(url)
+      setImageName(file.name.replace(/\.[^/.]+$/, ''))
+      setCurrentStep('configure')
     }
   }, [])
 
@@ -232,29 +180,20 @@ export function StageItForm() {
         formData.append('notes', `Furniture density: ${stagingRequest.furnitureDensity}, Lighting: ${stagingRequest.lighting}, Target market: ${stagingRequest.targetMarket}, Property value: ${stagingRequest.propertyValue}, Additional features: ${stagingRequest.additionalFeatures.join(', ')}`)
         formData.append('size', "1536x1024") // landscape format for real estate photos
 
-        const response = await fetch('/api/stage', {
+        const response = await fetch('/api/stage-it', {
           method: 'POST',
           body: formData
         })
 
         if (!response.ok) {
+          // Try to get error details if available
           let errorMessage = 'Staging failed'
-          const contentType = response.headers.get('content-type')
-          
-          if (contentType && contentType.includes('application/json')) {
-            try {
-              const errorData = await response.json()
-              errorMessage = errorData.error || errorMessage
-            } catch {
-              errorMessage = response.statusText || errorMessage
-            }
-          } else {
-            try {
-              const errorText = await response.text()
-              errorMessage = errorText || errorMessage
-            } catch {
-              errorMessage = response.statusText || errorMessage
-            }
+          try {
+            const errorData = await response.json()
+            errorMessage = errorData.error || errorMessage
+          } catch {
+            // If response isn't JSON, use status text
+            errorMessage = response.statusText || errorMessage
           }
           throw new Error(errorMessage)
         }
