@@ -55,6 +55,10 @@ import CommitmentStep from "./components/CommitmentStep"
 import PlanOutput from "./components/PlanOutput"
 
 export interface AgentProfile {
+  // Personal Information
+  name: string
+  email: string
+  
   // Session & Style
   sessionGoal: string
   coachPreference: 'direct' | 'empathetic' | 'data-driven'
@@ -131,6 +135,8 @@ const steps = [
 export default function RealCoachAIPage() {
   const [currentStep, setCurrentStep] = useState(1)
   const [agentProfile, setAgentProfile] = useState<AgentProfile>({
+    name: '',
+    email: '',
     sessionGoal: '',
     coachPreference: 'empathetic',
     experienceMonths: 0,

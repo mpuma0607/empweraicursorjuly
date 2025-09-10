@@ -3,6 +3,8 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { 
   Heart, 
   Target, 
@@ -157,6 +159,49 @@ export default function RapportStep({ profile, updateProfile }: RapportStepProps
           I'm going to ask you some questions to understand your situation and create a personalized plan that actually works for you.
         </p>
       </div>
+
+      {/* Personal Information */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-6 w-6 text-blue-600" />
+            Personal Information
+          </CardTitle>
+          <CardDescription>
+            Let's start with some basic information about you
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="name" className="text-base font-medium">
+                Your Name
+              </Label>
+              <Input
+                id="name"
+                type="text"
+                placeholder="Enter your full name"
+                value={profile.name}
+                onChange={(e) => updateProfile({ name: e.target.value })}
+                className="mt-2"
+              />
+            </div>
+            <div>
+              <Label htmlFor="email" className="text-base font-medium">
+                Email Address
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="Enter your email address"
+                value={profile.email}
+                onChange={(e) => updateProfile({ email: e.target.value })}
+                className="mt-2"
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Session Goal */}
       <div>
