@@ -255,7 +255,7 @@ export default function SkillsStep({ profile, updateProfile }: SkillsStepProps) 
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="text-center">
+      <div className="text-center" data-step-header>
         <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <Award className="h-8 w-8 text-yellow-600" />
         </div>

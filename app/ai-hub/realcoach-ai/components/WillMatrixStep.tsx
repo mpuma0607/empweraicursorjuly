@@ -31,7 +31,8 @@ import {
   TrendingUp,
   BarChart3,
   Award,
-  Info
+  Info,
+  ArrowRight
 } from "lucide-react"
 import { AgentProfile } from "../page"
 import { useState } from "react"
@@ -42,7 +43,8 @@ interface WillMatrixStepProps {
 }
 
 export default function WillMatrixStep({ profile, updateProfile }: WillMatrixStepProps) {
-  const [matrixView, setMatrixView] = useState<'willing' | 'hard-nos' | 'energizing' | 'draining'>('willing')
+  const [currentSection, setCurrentSection] = useState<'willing' | 'hard-nos' | 'energizing' | 'draining'>('willing')
+  const [completedSections, setCompletedSections] = useState<string[]>([])
 
   const activityOptions = [
     {
@@ -147,18 +149,75 @@ export default function WillMatrixStep({ profile, updateProfile }: WillMatrixSte
 
   const handleActivityToggle = (activityId: string, category: keyof Pick<AgentProfile, 'willingActivities' | 'hardNos' | 'energizingActivities' | 'drainingActivities'>) => {
     try {
-      const current = profile[category] || []
+      // Validate inputs
+      if (!activityId || !category) {
+        console.warn('Invalid activityId or category:', { activityId, category })
+        return
+      }
+
+      // Create a safe copy of the current array
+      const current = Array.isArray(profile[category]) ? [...(profile[category] as string[])] : []
+      
+      // Validate the current array
+      if (!Array.isArray(current)) {
+        console.warn('Profile category is not an array:', { category, value: profile[category] })
+        return
+      }
+
       const updated = current.includes(activityId)
         ? current.filter(a => a !== activityId)
         : [...current, activityId]
       
+      // Validate the updated array
+      if (!Array.isArray(updated)) {
+        console.warn('Updated array is not valid:', updated)
+        return
+      }
+
       updateProfile({ [category]: updated })
     } catch (error) {
-      console.error('Error toggling activity:', error)
-      // Fallback: just update the profile without the problematic activity
-      const current = profile[category] || []
-      const updated = current.filter(a => a !== activityId)
-      updateProfile({ [category]: updated })
+      console.error('Error toggling activity:', error, { activityId, category })
+      // Don't update anything if there's an error to prevent data loss
+    }
+  }
+
+  const handleNextSection = () => {
+    // Mark current section as completed
+    if (!completedSections.includes(currentSection)) {
+      setCompletedSections(prev => [...prev, currentSection])
+    }
+
+    // Move to next section
+    const sections = ['willing', 'hard-nos', 'energizing', 'draining']
+    const currentIndex = sections.indexOf(currentSection)
+    if (currentIndex < sections.length - 1) {
+      setCurrentSection(sections[currentIndex + 1] as any)
+      // Scroll to top of new section
+      setTimeout(() => {
+        const sectionHeader = document.querySelector('[data-section-header]')
+        if (sectionHeader) {
+          sectionHeader.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      }, 100)
+    } else {
+      // All sections completed, trigger next step
+      const event = new CustomEvent('nextStep')
+      window.dispatchEvent(event)
+    }
+  }
+
+  const handlePrevSection = () => {
+    const sections = ['willing', 'hard-nos', 'energizing', 'draining']
+    const currentIndex = sections.indexOf(currentSection)
+    if (currentIndex > 0) {
+      setCurrentSection(sections[currentIndex - 1] as any)
+      // Scroll to top of previous section
+      setTimeout(() => {
+        const sectionHeader = document.querySelector('[data-section-header]')
+        if (sectionHeader) {
+          sectionHeader.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      }, 100)
     }
   }
 
@@ -180,49 +239,101 @@ export default function WillMatrixStep({ profile, updateProfile }: WillMatrixSte
   }
 
   const getMatrixCount = (category: keyof Pick<AgentProfile, 'willingActivities' | 'hardNos' | 'energizingActivities' | 'drainingActivities'>) => {
-    return profile[category]?.length || 0
+    return Array.isArray(profile[category]) ? profile[category]?.length || 0 : 0
+  }
+
+  const getCurrentSectionInfo = () => {
+    const sections = {
+      'willing': {
+        title: 'Activities You\'re Willing to Do',
+        description: 'Select all activities you\'re open to doing regularly',
+        icon: CheckCircle,
+        color: 'bg-green-500',
+        category: 'willingActivities' as const
+      },
+      'hard-nos': {
+        title: 'Activities You Won\'t Do',
+        description: 'Select activities that are completely off the table',
+        icon: XCircle,
+        color: 'bg-red-500',
+        category: 'hardNos' as const
+      },
+      'energizing': {
+        title: 'Activities That Energize You',
+        description: 'Select activities that give you energy and motivation',
+        icon: Zap,
+        color: 'bg-yellow-500',
+        category: 'energizingActivities' as const
+      },
+      'draining': {
+        title: 'Activities That Drain You',
+        description: 'Select activities that exhaust or demotivate you',
+        icon: AlertTriangle,
+        color: 'bg-gray-500',
+        category: 'drainingActivities' as const
+      }
+    }
+    return sections[currentSection]
   }
 
   const renderActivityGrid = (category: keyof Pick<AgentProfile, 'willingActivities' | 'hardNos' | 'energizingActivities' | 'drainingActivities'>) => {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {activityOptions.map((activity) => {
-          const Icon = activity.icon
-          const isSelected = profile[category]?.includes(activity.id) || false
-          
-          return (
-            <Card 
-              key={activity.id}
-              className={`cursor-pointer transition-all hover:shadow-md ${
-                isSelected ? 'ring-2 ring-purple-500 bg-purple-50' : 'hover:bg-gray-50'
-              }`}
-              onClick={() => handleActivityToggle(activity.id, category)}
-            >
-              <CardContent className="p-4">
-                <div className="flex items-start gap-3">
-                  <div className={`p-2 rounded-lg ${activity.color} text-white`}>
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-gray-900 text-sm">{activity.title}</h4>
-                    <p className="text-gray-600 text-xs">{activity.description}</p>
-                  </div>
-                  {isSelected && (
-                    <CheckCircle className="h-5 w-5 text-purple-600" />
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )
-        })}
-      </div>
-    )
+    try {
+      return (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {activityOptions.map((activity) => {
+            try {
+              const Icon = activity.icon
+              const isSelected = Array.isArray(profile[category]) ? profile[category]?.includes(activity.id) || false : false
+              
+              return (
+                <Card 
+                  key={activity.id}
+                  className={`cursor-pointer transition-all hover:shadow-md ${
+                    isSelected ? 'ring-2 ring-purple-500 bg-purple-50' : 'hover:bg-gray-50'
+                  }`}
+                  onClick={() => handleActivityToggle(activity.id, category)}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-3">
+                      <div className={`p-2 rounded-lg ${activity.color} text-white`}>
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-gray-900 text-sm">{activity.title}</h4>
+                        <p className="text-gray-600 text-xs">{activity.description}</p>
+                      </div>
+                      {isSelected && (
+                        <CheckCircle className="h-5 w-5 text-purple-600" />
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            } catch (error) {
+              console.error(`Error rendering activity ${activity.id}:`, error)
+              return null
+            }
+          })}
+        </div>
+      )
+    } catch (error) {
+      console.error('Error rendering activity grid:', error)
+      return (
+        <div className="text-center py-8 text-red-500">
+          <AlertTriangle className="h-12 w-12 mx-auto mb-4" />
+          <p>Error loading activities. Please refresh the page.</p>
+        </div>
+      )
+    }
   }
+
+  const currentSectionInfo = getCurrentSectionInfo()
+  const Icon = currentSectionInfo.icon
 
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="text-center">
+      <div className="text-center" data-step-header>
         <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <Shield className="h-8 w-8 text-purple-600" />
         </div>
@@ -232,89 +343,62 @@ export default function WillMatrixStep({ profile, updateProfile }: WillMatrixSte
         </p>
       </div>
 
-      {/* Matrix Navigation */}
+      {/* Progress Indicator */}
+      <div className="flex justify-center">
+        <div className="flex space-x-2">
+          {['willing', 'hard-nos', 'energizing', 'draining'].map((section, index) => {
+            const isActive = currentSection === section
+            const isCompleted = completedSections.includes(section)
+            return (
+              <div
+                key={section}
+                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                  isActive ? 'bg-purple-600 text-white' :
+                  isCompleted ? 'bg-green-600 text-white' :
+                  'bg-gray-200 text-gray-500'
+                }`}
+              >
+                {index + 1}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Current Section */}
       <Card>
-        <CardHeader>
+        <CardHeader data-section-header>
           <CardTitle className="flex items-center gap-2">
-            <Target className="h-6 w-6 text-purple-600" />
-            Activity Preferences
+            <div className={`p-2 rounded-lg ${currentSectionInfo.color} text-white`}>
+              <Icon className="h-6 w-6" />
+            </div>
+            {currentSectionInfo.title}
           </CardTitle>
           <CardDescription>
-            Categorize each activity based on your preferences and constraints
+            {currentSectionInfo.description}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <Button
-              variant={matrixView === 'willing' ? 'default' : 'outline'}
-              className={`flex items-center gap-2 ${
-                matrixView === 'willing' ? 'bg-green-600 hover:bg-green-700' : ''
-              }`}
-              onClick={() => setMatrixView('willing')}
-            >
-              <CheckCircle className="h-4 w-4" />
-              Willing ({getMatrixCount('willingActivities')})
-            </Button>
-            <Button
-              variant={matrixView === 'hard-nos' ? 'default' : 'outline'}
-              className={`flex items-center gap-2 ${
-                matrixView === 'hard-nos' ? 'bg-red-600 hover:bg-red-700' : ''
-              }`}
-              onClick={() => setMatrixView('hard-nos')}
-            >
-              <XCircle className="h-4 w-4" />
-              Hard No ({getMatrixCount('hardNos')})
-            </Button>
-            <Button
-              variant={matrixView === 'energizing' ? 'default' : 'outline'}
-              className={`flex items-center gap-2 ${
-                matrixView === 'energizing' ? 'bg-yellow-600 hover:bg-yellow-700' : ''
-              }`}
-              onClick={() => setMatrixView('energizing')}
-            >
-              <Zap className="h-4 w-4" />
-              Energizing ({getMatrixCount('energizingActivities')})
-            </Button>
-            <Button
-              variant={matrixView === 'draining' ? 'default' : 'outline'}
-              className={`flex items-center gap-2 ${
-                matrixView === 'draining' ? 'bg-gray-600 hover:bg-gray-700' : ''
-              }`}
-              onClick={() => setMatrixView('draining')}
-            >
-              <AlertTriangle className="h-4 w-4" />
-              Draining ({getMatrixCount('drainingActivities')})
-            </Button>
-          </div>
-
-          {/* Matrix Instructions */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <div className="flex items-start gap-3">
-              <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-1" />
-              <div>
-                <h4 className="font-semibold text-blue-900 mb-2">
-                  {matrixView === 'willing' && 'Willing to Do'}
-                  {matrixView === 'hard-nos' && 'Hard No - Never'}
-                  {matrixView === 'energizing' && 'Energizes Me'}
-                  {matrixView === 'draining' && 'Drains My Energy'}
-                </h4>
-                <p className="text-blue-800 text-sm">
-                  {matrixView === 'willing' && 'Activities you\'re open to doing regularly'}
-                  {matrixView === 'hard-nos' && 'Activities you absolutely won\'t do, no matter what'}
-                  {matrixView === 'energizing' && 'Activities that give you energy and motivation'}
-                  {matrixView === 'draining' && 'Activities that exhaust you or demotivate you'}
-                </p>
-              </div>
-            </div>
-          </div>
-
           {/* Activity Grid */}
-          {renderActivityGrid(
-            matrixView === 'willing' ? 'willingActivities' :
-            matrixView === 'hard-nos' ? 'hardNos' :
-            matrixView === 'energizing' ? 'energizingActivities' :
-            'drainingActivities'
-          )}
+          {renderActivityGrid(currentSectionInfo.category)}
+          
+          {/* Navigation */}
+          <div className="flex justify-between mt-6 pt-4 border-t">
+            <Button
+              variant="outline"
+              onClick={handlePrevSection}
+              disabled={currentSection === 'willing'}
+            >
+              Previous
+            </Button>
+            
+            <Button
+              onClick={handleNextSection}
+              className="bg-purple-600 hover:bg-purple-700"
+            >
+              {currentSection === 'draining' ? 'Next Step' : 'Next Section'}
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
@@ -400,35 +484,59 @@ export default function WillMatrixStep({ profile, updateProfile }: WillMatrixSte
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {profile.hardNos?.map((hardNo) => {
-              const activity = activityOptions.find(a => a.id === hardNo)
-              if (!activity) return null
+            {Array.isArray(profile.hardNos) && profile.hardNos.length > 0 ? (
+              profile.hardNos.map((hardNo) => {
+                try {
+                  const activity = activityOptions.find(a => a.id === hardNo)
+                  if (!activity) {
+                    console.warn(`Activity not found for ID: ${hardNo}`)
+                    return null
+                  }
 
-              const alternatives = {
-                'door_knocking': 'Community events + neighbor DM playbook',
-                'cold_calling': 'Warm referrals + social media outreach',
-                'social_dms': 'Email sequences + content marketing',
-                'open_houses': 'Virtual tours + video content',
-                'mailers': 'Digital marketing + social media ads',
-                'fsbo_expired': 'Referral network + past client reactivation'
-              }
+                  const alternatives = {
+                    'door_knocking': 'Community events + neighbor DM playbook',
+                    'phone_calls': 'Warm referrals + social media outreach',
+                    'social_dms': 'Email sequences + content marketing',
+                    'open_houses': 'Virtual tours + video content',
+                    'mailers': 'Digital marketing + social media ads',
+                    'fsbo_expired': 'Referral network + past client reactivation',
+                    'text_messaging': 'Email sequences + social media outreach',
+                    'events': 'Virtual events + online networking',
+                    'short_form_video': 'Long-form content + written posts',
+                    'long_form_video': 'Short-form content + written posts',
+                    'farming': 'Referral network + past client reactivation',
+                    'investor_outreach': 'Referral network + past client reactivation',
+                    'content_creation': 'Curated content + repurposing',
+                    'referral_asks': 'Automated follow-up sequences'
+                  }
 
-              const alternative = alternatives[hardNo as keyof typeof alternatives] || 'Referral-based approach'
+                  const alternative = alternatives[hardNo as keyof typeof alternatives] || 'Referral-based approach'
 
-              return (
-                <div key={hardNo} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <XCircle className="h-5 w-5 text-red-500" />
-                    <span className="font-medium text-gray-900">{activity.title}</span>
-                  </div>
-                  <ArrowRight className="h-4 w-4 text-gray-400" />
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                    <span className="text-gray-700">{alternative}</span>
-                  </div>
-                </div>
-              )
-            })}
+                  return (
+                    <div key={hardNo} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <XCircle className="h-5 w-5 text-red-500" />
+                        <span className="font-medium text-gray-900">{activity.title}</span>
+                      </div>
+                      <ArrowRight className="h-4 w-4 text-gray-400" />
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="h-5 w-5 text-green-500" />
+                        <span className="text-gray-700">{alternative}</span>
+                      </div>
+                    </div>
+                  )
+                } catch (error) {
+                  console.error(`Error rendering alternative for ${hardNo}:`, error)
+                  return null
+                }
+              })
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <XCircle className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                <p>No activities marked as "hard no" yet</p>
+                <p className="text-sm">Complete the activity selection above to see alternatives</p>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

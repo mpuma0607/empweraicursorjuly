@@ -191,20 +191,30 @@ export default function RealCoachAIPage() {
   const nextStep = () => {
     if (currentStep < steps.length) {
       setCurrentStep(prev => prev + 1)
-      // Scroll to top when moving to next step
+      // Scroll to the main header of the new step
       setTimeout(() => {
-        window.scrollTo({ top: 0, behavior: 'smooth' })
-      }, 100)
+        const stepHeader = document.querySelector('[data-step-header]')
+        if (stepHeader) {
+          stepHeader.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        } else {
+          window.scrollTo({ top: 0, behavior: 'smooth' })
+        }
+      }, 200)
     }
   }
 
   const prevStep = () => {
     if (currentStep > 1) {
       setCurrentStep(prev => prev - 1)
-      // Scroll to top when moving to previous step
+      // Scroll to the main header of the previous step
       setTimeout(() => {
-        window.scrollTo({ top: 0, behavior: 'smooth' })
-      }, 100)
+        const stepHeader = document.querySelector('[data-step-header]')
+        if (stepHeader) {
+          stepHeader.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        } else {
+          window.scrollTo({ top: 0, behavior: 'smooth' })
+        }
+      }, 200)
     }
   }
 

@@ -102,7 +102,7 @@ export default function ProductionMathStep({ profile, updateProfile }: Productio
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="text-center">
+      <div className="text-center" data-step-header>
         <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <Target className="h-8 w-8 text-green-600" />
         </div>

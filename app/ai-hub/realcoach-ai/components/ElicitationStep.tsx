@@ -170,7 +170,7 @@ export default function ElicitationStep({ profile, updateProfile }: ElicitationS
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="text-center">
+      <div className="text-center" data-step-header>
         <div className="w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <Brain className="h-8 w-8 text-pink-600" />
         </div>

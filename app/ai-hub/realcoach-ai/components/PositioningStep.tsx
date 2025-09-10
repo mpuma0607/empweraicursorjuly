@@ -194,7 +194,7 @@ export default function PositioningStep({ profile, updateProfile }: PositioningS
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="text-center">
+      <div className="text-center" data-step-header>
         <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <Building2 className="h-8 w-8 text-blue-600" />
         </div>
