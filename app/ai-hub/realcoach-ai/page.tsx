@@ -175,15 +175,36 @@ export default function RealCoachAIPage() {
     setAgentProfile(prev => ({ ...prev, ...updates }))
   }
 
+  useEffect(() => {
+    // Listen for custom events from child components
+    const handleNextStep = () => {
+      nextStep()
+    }
+
+    window.addEventListener('nextStep', handleNextStep)
+    
+    return () => {
+      window.removeEventListener('nextStep', handleNextStep)
+    }
+  }, [])
+
   const nextStep = () => {
     if (currentStep < steps.length) {
       setCurrentStep(prev => prev + 1)
+      // Scroll to top when moving to next step
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      }, 100)
     }
   }
 
   const prevStep = () => {
     if (currentStep > 1) {
       setCurrentStep(prev => prev - 1)
+      // Scroll to top when moving to previous step
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      }, 100)
     }
   }
 

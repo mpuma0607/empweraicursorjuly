@@ -121,10 +121,24 @@ export default function RapportStep({ profile, updateProfile }: RapportStepProps
 
   const handleSessionGoalSelect = (goalId: string) => {
     updateProfile({ sessionGoal: goalId })
+    // Auto-scroll to next section after selection
+    setTimeout(() => {
+      document.getElementById('coach-style-section')?.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start' 
+      })
+    }, 300)
   }
 
   const handleCoachStyleSelect = (style: 'direct' | 'empathetic' | 'data-driven') => {
     updateProfile({ coachPreference: style })
+    // Auto-scroll to next section after selection
+    setTimeout(() => {
+      document.getElementById('experience-section')?.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start' 
+      })
+    }, 300)
   }
 
   const handleExperienceSelect = (level: 'new' | 'intermediate' | 'experienced' | 'expert') => {
@@ -185,7 +199,7 @@ export default function RapportStep({ profile, updateProfile }: RapportStepProps
       </div>
 
       {/* Coach Style Preference */}
-      <div>
+      <div id="coach-style-section">
         <h3 className="text-xl font-semibold text-gray-900 mb-4">
           How do you prefer to receive coaching?
         </h3>
@@ -236,7 +250,7 @@ export default function RapportStep({ profile, updateProfile }: RapportStepProps
       </div>
 
       {/* Experience Level */}
-      <div>
+      <div id="experience-section">
         <h3 className="text-xl font-semibold text-gray-900 mb-4">
           How would you describe your experience level?
         </h3>

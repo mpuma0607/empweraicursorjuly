@@ -20,7 +20,9 @@ import {
   Home,
   Star,
   Shield,
-  Zap
+  Zap,
+  Mic,
+  MicOff
 } from "lucide-react"
 import { AgentProfile } from "../page"
 import { useState } from "react"
@@ -32,6 +34,8 @@ interface ElicitationStepProps {
 
 export default function ElicitationStep({ profile, updateProfile }: ElicitationStepProps) {
   const [currentQuestion, setCurrentQuestion] = useState(0)
+  const [isListening, setIsListening] = useState(false)
+  const [recognition, setRecognition] = useState<any>(null)
 
   const elicitationQuestions = [
     {
@@ -98,15 +102,66 @@ export default function ElicitationStep({ profile, updateProfile }: ElicitationS
     updateProfile({ nonNegotiables: updated })
   }
 
+  // Initialize speech recognition
+  useState(() => {
+    if (typeof window !== 'undefined' && 'webkitSpeechRecognition' in window) {
+      const recognition = new (window as any).webkitSpeechRecognition()
+      recognition.continuous = false
+      recognition.interimResults = false
+      recognition.lang = 'en-US'
+      
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript
+        const currentQ = elicitationQuestions[currentQuestion]
+        if (currentQ && currentQ.id !== 'non_negotiables') {
+          handleTextResponse(currentQ.id, transcript)
+        }
+        setIsListening(false)
+      }
+      
+      recognition.onerror = () => {
+        setIsListening(false)
+      }
+      
+      recognition.onend = () => {
+        setIsListening(false)
+      }
+      
+      setRecognition(recognition)
+    }
+  })
+
+  const startListening = () => {
+    if (recognition) {
+      setIsListening(true)
+      recognition.start()
+    }
+  }
+
+  const stopListening = () => {
+    if (recognition) {
+      recognition.stop()
+      setIsListening(false)
+    }
+  }
+
   const nextQuestion = () => {
     if (currentQuestion < elicitationQuestions.length - 1) {
       setCurrentQuestion(prev => prev + 1)
+      // Scroll to top of new question
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      }, 100)
     }
   }
 
   const prevQuestion = () => {
     if (currentQuestion > 0) {
       setCurrentQuestion(prev => prev - 1)
+      // Scroll to top of previous question
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      }, 100)
     }
   }
 
@@ -190,14 +245,29 @@ export default function ElicitationStep({ profile, updateProfile }: ElicitationS
             </div>
           ) : (
             <div>
-              <Textarea
-                placeholder={currentQ.placeholder}
-                value={profile[currentQ.id as keyof AgentProfile] as string || ''}
-                onChange={(e) => handleTextResponse(currentQ.id, e.target.value)}
-                className="min-h-[120px] text-base"
-              />
+              <div className="relative">
+                <Textarea
+                  placeholder={currentQ.placeholder}
+                  value={profile[currentQ.id as keyof AgentProfile] as string || ''}
+                  onChange={(e) => handleTextResponse(currentQ.id, e.target.value)}
+                  className="min-h-[120px] text-base pr-12"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute top-2 right-2 h-8 w-8 p-0"
+                  onClick={isListening ? stopListening : startListening}
+                >
+                  {isListening ? (
+                    <MicOff className="h-4 w-4 text-red-500" />
+                  ) : (
+                    <Mic className="h-4 w-4 text-gray-500" />
+                  )}
+                </Button>
+              </div>
               <p className="text-sm text-gray-500 mt-2">
-                Don't overthink it - just write what comes to mind
+                Don't overthink it - just write what comes to mind or use the mic to speak your answer
               </p>
             </div>
           )}
@@ -212,13 +282,25 @@ export default function ElicitationStep({ profile, updateProfile }: ElicitationS
               Previous
             </Button>
             
-            <Button
-              onClick={nextQuestion}
-              disabled={currentQuestion === elicitationQuestions.length - 1}
-              className="bg-pink-600 hover:bg-pink-700"
-            >
-              Next Question
-            </Button>
+            {currentQuestion === elicitationQuestions.length - 1 ? (
+              <Button
+                onClick={() => {
+                  // This will be handled by the parent component
+                  const event = new CustomEvent('nextStep')
+                  window.dispatchEvent(event)
+                }}
+                className="bg-purple-600 hover:bg-purple-700"
+              >
+                Next Step
+              </Button>
+            ) : (
+              <Button
+                onClick={nextQuestion}
+                className="bg-pink-600 hover:bg-pink-700"
+              >
+                Next Question
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>

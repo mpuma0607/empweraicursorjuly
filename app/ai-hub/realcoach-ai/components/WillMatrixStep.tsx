@@ -46,18 +46,25 @@ export default function WillMatrixStep({ profile, updateProfile }: WillMatrixSte
 
   const activityOptions = [
     {
-      id: 'calls_texts',
-      title: 'Calls & Texts',
-      description: 'Phone calls and text messaging',
+      id: 'phone_calls',
+      title: 'Phone Calls',
+      description: 'Making phone calls to prospects and clients',
       icon: Phone,
       color: 'bg-green-500'
+    },
+    {
+      id: 'text_messaging',
+      title: 'Text Messaging',
+      description: 'Sending text messages to prospects and clients',
+      icon: MessageSquare,
+      color: 'bg-blue-500'
     },
     {
       id: 'social_dms',
       title: 'Social Media DMs',
       description: 'Direct messaging on social platforms',
-      icon: MessageSquare,
-      color: 'bg-blue-500'
+      icon: Share2,
+      color: 'bg-purple-500'
     },
     {
       id: 'open_houses',
@@ -139,12 +146,20 @@ export default function WillMatrixStep({ profile, updateProfile }: WillMatrixSte
   ]
 
   const handleActivityToggle = (activityId: string, category: keyof Pick<AgentProfile, 'willingActivities' | 'hardNos' | 'energizingActivities' | 'drainingActivities'>) => {
-    const current = profile[category] || []
-    const updated = current.includes(activityId)
-      ? current.filter(a => a !== activityId)
-      : [...current, activityId]
-    
-    updateProfile({ [category]: updated })
+    try {
+      const current = profile[category] || []
+      const updated = current.includes(activityId)
+        ? current.filter(a => a !== activityId)
+        : [...current, activityId]
+      
+      updateProfile({ [category]: updated })
+    } catch (error) {
+      console.error('Error toggling activity:', error)
+      // Fallback: just update the profile without the problematic activity
+      const current = profile[category] || []
+      const updated = current.filter(a => a !== activityId)
+      updateProfile({ [category]: updated })
+    }
   }
 
   const handleTimeChange = (hours: number) => {

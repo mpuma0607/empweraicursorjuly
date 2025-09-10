@@ -19,7 +19,9 @@ import {
   Home,
   Users,
   AlertCircle,
-  Info
+  Info,
+  Mic,
+  MicOff
 } from "lucide-react"
 import { AgentProfile } from "../page"
 import { useState, useEffect } from "react"
