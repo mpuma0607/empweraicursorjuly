@@ -74,12 +74,43 @@ export function StageItForm() {
   // Handle image upload
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
-    if (file && file.type.startsWith('image/')) {
-      setImageFile(file)
-      const url = URL.createObjectURL(file)
-      setImageUrl(url)
-      setImageName(file.name.replace(/\.[^/.]+$/, ''))
-      setCurrentStep('configure')
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        alert('Please select a valid image file (JPG, PNG, etc.)')
+        return
+      }
+      
+      // Validate file size (20MB limit)
+      const maxSize = 20 * 1024 * 1024 // 20MB
+      if (file.size > maxSize) {
+        alert(`Image too large. Please select an image smaller than ${maxSize / (1024 * 1024)}MB`)
+        return
+      }
+      
+      // Validate file dimensions (basic check)
+      const img = new Image()
+      img.onload = () => {
+        if (img.width < 100 || img.height < 100) {
+          alert('Image too small. Please select an image at least 100x100 pixels')
+          return
+        }
+        if (img.width > 4096 || img.height > 4096) {
+          alert('Image too large. Please select an image smaller than 4096x4096 pixels')
+          return
+        }
+        
+        setImageFile(file)
+        const url = URL.createObjectURL(file)
+        setImageUrl(url)
+        setImageName(file.name.replace(/\.[^/.]+$/, ''))
+        setCurrentStep('configure')
+      }
+      img.onerror = () => {
+        alert('Invalid image file. Please try a different image.')
+        return
+      }
+      img.src = URL.createObjectURL(file)
     }
   }
 
@@ -91,12 +122,43 @@ export function StageItForm() {
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     const file = e.dataTransfer.files[0]
-    if (file && file.type.startsWith('image/')) {
-      setImageFile(file)
-      const url = URL.createObjectURL(file)
-      setImageUrl(url)
-      setImageName(file.name.replace(/\.[^/.]+$/, ''))
-      setCurrentStep('configure')
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        alert('Please select a valid image file (JPG, PNG, etc.)')
+        return
+      }
+      
+      // Validate file size (20MB limit)
+      const maxSize = 20 * 1024 * 1024 // 20MB
+      if (file.size > maxSize) {
+        alert(`Image too large. Please select an image smaller than ${maxSize / (1024 * 1024)}MB`)
+        return
+      }
+      
+      // Validate file dimensions (basic check)
+      const img = new Image()
+      img.onload = () => {
+        if (img.width < 100 || img.height < 100) {
+          alert('Image too small. Please select an image at least 100x100 pixels')
+          return
+        }
+        if (img.width > 4096 || img.height > 4096) {
+          alert('Image too large. Please select an image smaller than 4096x4096 pixels')
+          return
+        }
+        
+        setImageFile(file)
+        const url = URL.createObjectURL(file)
+        setImageUrl(url)
+        setImageName(file.name.replace(/\.[^/.]+$/, ''))
+        setCurrentStep('configure')
+      }
+      img.onerror = () => {
+        alert('Invalid image file. Please try a different image.')
+        return
+      }
+      img.src = URL.createObjectURL(file)
     }
   }, [])
 
@@ -158,8 +220,16 @@ export function StageItForm() {
         })
 
         if (!response.ok) {
-          const errorData = await response.json()
-          throw new Error(errorData.error || 'Staging failed')
+          let errorMessage = 'Staging failed'
+          try {
+            const errorData = await response.json()
+            errorMessage = errorData.error || errorMessage
+          } catch {
+            // If JSON parsing fails, try to get text
+            const errorText = await response.text()
+            errorMessage = errorText || errorMessage
+          }
+          throw new Error(errorMessage)
         }
 
         // Handle binary image response
@@ -182,7 +252,9 @@ export function StageItForm() {
         setCurrentStep('results')
     } catch (error) {
       console.error('Error generating staging:', error)
-      alert('Failed to generate staging. Please try again.')
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+      console.error('Detailed error:', errorMessage)
+      alert(`Failed to generate staging: ${errorMessage}`)
     } finally {
       setIsProcessing(false)
     }

@@ -96,6 +96,25 @@ export async function POST(req: Request) {
       );
     }
 
+    // Validate image blob
+    if (!imageBlob) {
+      return NextResponse.json(
+        { error: "No image provided." },
+        { status: 400 }
+      );
+    }
+
+    // Check image size and type
+    const maxSize = 20 * 1024 * 1024; // 20MB limit
+    if (imageBlob.size > maxSize) {
+      return NextResponse.json(
+        { error: `Image too large. Maximum size is ${maxSize / (1024 * 1024)}MB.` },
+        { status: 400 }
+      );
+    }
+
+    console.log(`Processing image: ${imageBlob.size} bytes, type: ${imageBlob.type}`);
+
     const prompt = [
       `Virtual-stage this ${roomType} in ${style} style.`,
       colors ? `Palette: ${colors}.` : null,
@@ -111,24 +130,37 @@ export async function POST(req: Request) {
 
     // Build outbound form to OpenAI (use plain fetch to avoid SDK file quirks)
     const aiForm = new FormData();
-    aiForm.append("model", "gpt-image-1");
+    // Note: images/edits endpoint doesn't use a model parameter
     aiForm.append("prompt", prompt);
     aiForm.append("size", finalSize);
     aiForm.append("image", imageBlob!, "image.png");
     if (maskBlob) aiForm.append("mask", maskBlob, "mask.png");
 
+    console.log(`Sending request to OpenAI with prompt: ${prompt.substring(0, 100)}...`);
+    
     const aiRes = await fetch("https://api.openai.com/v1/images/edits", {
       method: "POST",
       headers: { Authorization: `Bearer ${OPENAI_API_KEY}` },
       body: aiForm,
     });
 
+    console.log(`OpenAI response status: ${aiRes.status} ${aiRes.statusText}`);
+
     if (!aiRes.ok) {
-      // Return the real error from OpenAI so you can see what's wrong
-      const err = await aiRes.json().catch(async () => ({ text: await aiRes.text() }));
-      console.error("OpenAI images.edit error:", err);
+      // Try to get JSON error first, fallback to text if it fails
+      let errorData;
+      try {
+        errorData = await aiRes.json();
+        console.error("OpenAI JSON error response:", errorData);
+      } catch (jsonError) {
+        // If JSON parsing fails, get the text response
+        const errorText = await aiRes.text();
+        console.error("OpenAI text error response:", errorText);
+        errorData = { error: { message: errorText } };
+      }
+      
       return NextResponse.json(
-        { error: err?.error?.message || `OpenAI error ${aiRes.status}`, details: err },
+        { error: errorData?.error?.message || `OpenAI error ${aiRes.status}`, details: errorData },
         { status: 502 }
       );
     }
