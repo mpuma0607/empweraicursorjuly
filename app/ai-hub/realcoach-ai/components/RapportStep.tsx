@@ -1,10 +1,13 @@
 "use client"
 
+import { useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { useMemberSpaceUser } from "@/hooks/useMemberSpaceUser"
+import { Check } from "lucide-react"
 import { 
   Heart, 
   Target, 
@@ -28,6 +31,18 @@ interface RapportStepProps {
 }
 
 export default function RapportStep({ profile, updateProfile }: RapportStepProps) {
+  const { user, loading: isUserLoading } = useMemberSpaceUser()
+  const isLoggedIn = !!user && !isUserLoading
+
+  // Auto-populate user data when available
+  useEffect(() => {
+    if (user && !isUserLoading) {
+      updateProfile({
+        name: profile.name || user.name || `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+        email: profile.email || user.email || "",
+      })
+    }
+  }, [user, isUserLoading, profile.name, profile.email, updateProfile])
   const sessionGoals = [
     {
       id: 'clarity',
@@ -174,8 +189,20 @@ export default function RapportStep({ profile, updateProfile }: RapportStepProps
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="name" className="text-base font-medium">
+              <Label htmlFor="name" className="flex items-center gap-2 text-base font-medium">
                 Your Name
+                {isUserLoading && (
+                  <span className="flex items-center gap-1 text-blue-600 text-xs">
+                    <div className="animate-spin w-3 h-3 border border-blue-600 border-t-transparent rounded-full"></div>
+                    Loading...
+                  </span>
+                )}
+                {isLoggedIn && user && (user.name || user.firstName) && !isUserLoading && (
+                  <span className="flex items-center gap-1 text-green-600 text-xs">
+                    <Check className="h-3 w-3" />
+                    Auto-filled
+                  </span>
+                )}
               </Label>
               <Input
                 id="name"
@@ -187,8 +214,20 @@ export default function RapportStep({ profile, updateProfile }: RapportStepProps
               />
             </div>
             <div>
-              <Label htmlFor="email" className="text-base font-medium">
+              <Label htmlFor="email" className="flex items-center gap-2 text-base font-medium">
                 Email Address
+                {isUserLoading && (
+                  <span className="flex items-center gap-1 text-blue-600 text-xs">
+                    <div className="animate-spin w-3 h-3 border border-blue-600 border-t-transparent rounded-full"></div>
+                    Loading...
+                  </span>
+                )}
+                {isLoggedIn && user?.email && !isUserLoading && (
+                  <span className="flex items-center gap-1 text-green-600 text-xs">
+                    <Check className="h-3 w-3" />
+                    Auto-filled
+                  </span>
+                )}
               </Label>
               <Input
                 id="email"
