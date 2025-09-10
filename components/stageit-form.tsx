@@ -229,6 +229,7 @@ export function StageItForm() {
       console.error('Error generating staging:', error)
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
       console.error('Detailed error:', errorMessage)
+      console.error('Full error object:', error)
       alert(`Failed to generate staging: ${errorMessage}`)
     } finally {
       setIsProcessing(false)

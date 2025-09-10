@@ -28,6 +28,7 @@ function dataUrlToBlob(dataUrl: string) {
 }
 
 export async function POST(req: Request) {
+  console.log('StageIT API called with method:', req.method);
   try {
     const OPENAI_API_KEY = need("OPENAI_API_KEY");
     const contentType = req.headers.get("content-type") || "";
@@ -129,6 +130,7 @@ export async function POST(req: Request) {
     
     // Check file size (OpenAI has limits)
     if (imageBlob.size > 20 * 1024 * 1024) { // 20MB limit
+      console.log('Image too large:', imageBlob.size);
       return NextResponse.json(
         { error: "Image too large. Please use an image smaller than 20MB." },
         { status: 400 }
@@ -137,11 +139,14 @@ export async function POST(req: Request) {
     
     // Check file type
     if (!imageBlob.type.startsWith('image/')) {
+      console.log('Invalid file type:', imageBlob.type);
       return NextResponse.json(
         { error: "Invalid file type. Please upload an image file." },
         { status: 400 }
       );
     }
+    
+    console.log('Image validation passed, proceeding with OpenAI request...');
 
     // Validate and normalize size parameter
     const SUPPORTED_SIZES = new Set(["1024x1024", "1024x1536", "1536x1024", "auto"]);
@@ -156,7 +161,8 @@ export async function POST(req: Request) {
     if (maskBlob) aiForm.append("mask", maskBlob, "mask.png");
 
     console.log(`Sending request to OpenAI with prompt: ${prompt.substring(0, 100)}...`);
-    
+    console.log(`OpenAI request details: size=${finalSize}, imageSize=${imageBlob.size}, imageType=${imageBlob.type}`);
+
     const aiRes = await fetch("https://api.openai.com/v1/images/edits", {
       method: "POST",
       headers: { Authorization: `Bearer ${OPENAI_API_KEY}` },
