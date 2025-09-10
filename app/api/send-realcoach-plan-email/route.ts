@@ -7,11 +7,39 @@ export async function POST(request: NextRequest) {
   try {
     const { to, name, profile, planData } = await request.json()
 
-    if (!to || !name || !profile || !planData) {
+    if (!to || !name || !profile) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
     console.log("Sending RealCoach plan email via Resend to:", to)
+
+    // Generate PDF buffer
+    const { jsPDF } = await import("jspdf")
+    const pdf = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4",
+    })
+    
+    // Generate the PDF content (simplified version)
+    pdf.setFont("helvetica")
+    pdf.setFontSize(24)
+    pdf.text("RealCoach AI - Action Plan", 105, 20, { align: "center" })
+    pdf.setFontSize(12)
+    pdf.text(`Generated for ${name} - ${new Date().toLocaleDateString()}`, 105, 30, { align: "center" })
+    
+    let currentY = 50
+    pdf.setFontSize(14)
+    pdf.text("YOUR NORTH STAR", 20, currentY)
+    currentY += 10
+    pdf.setFontSize(10)
+    pdf.text(`Annual Closings: ${profile.targetUnits}`, 20, currentY)
+    currentY += 6
+    pdf.text(`Annual GCI: $${(profile.targetUnits * profile.avgPricePoint * 0.03).toLocaleString()}`, 20, currentY)
+    currentY += 6
+    pdf.text(`Weekly Closings: ${Math.round((profile.targetUnits / 12 / 4.33) * 10) / 10}`, 20, currentY)
+    
+    const pdfBuffer = Buffer.from(pdf.output("arraybuffer"))
 
     const emailHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
@@ -29,7 +57,7 @@ export async function POST(request: NextRequest) {
           </p>
           
           <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #b6a888;">
-            <h4 style="color: #1e3a8a; margin: 0 0 15px 0; font-size: 16px;">🎯 Your North Star Goals:</h4>
+            <h4 style="color: #1e3a8a; margin: 0 0 15px 0; font-size: 16px;">Your North Star Goals:</h4>
             <ul style="color: #1e40af; margin: 0; padding-left: 20px; line-height: 1.6;">
               <li style="margin-bottom: 5px;">Annual Closings: ${profile.targetUnits}</li>
               <li style="margin-bottom: 5px;">Annual GCI: $${(profile.targetUnits * profile.avgPricePoint * 0.03).toLocaleString()}</li>
@@ -38,7 +66,7 @@ export async function POST(request: NextRequest) {
           </div>
           
           <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin: 25px 0; border: 1px solid #f59e0b;">
-            <h4 style="color: #92400e; margin: 0 0 15px 0; font-size: 16px;">💡 What's Included in Your Plan:</h4>
+            <h4 style="color: #92400e; margin: 0 0 15px 0; font-size: 16px;">What's Included in Your Plan:</h4>
             <ul style="color: #78350f; margin: 0; padding-left: 20px; line-height: 1.6;">
               <li style="margin-bottom: 5px;">Personalized channel recommendations based on your preferences</li>
               <li style="margin-bottom: 5px;">Weekly playbook with specific activities for each channel</li>
@@ -50,7 +78,7 @@ export async function POST(request: NextRequest) {
           </div>
           
           <div style="background: #ecfdf5; padding: 20px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #10b981;">
-            <h4 style="color: #065f46; margin: 0 0 15px 0; font-size: 16px;">🚀 Your Next Steps:</h4>
+            <h4 style="color: #065f46; margin: 0 0 15px 0; font-size: 16px;">Your Next Steps:</h4>
             <ol style="color: #047857; margin: 0; padding-left: 20px; line-height: 1.6;">
               <li style="margin-bottom: 5px;">Start with your primary channel this week</li>
               <li style="margin-bottom: 5px;">Add your time blocks to your calendar</li>
@@ -66,7 +94,7 @@ export async function POST(request: NextRequest) {
           </p>
 
           <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 25px 0; text-align: center;">
-            <h4 style="color: #374151; margin: 0 0 10px 0; font-size: 16px;">📊 Your Recommended Channels:</h4>
+            <h4 style="color: #374151; margin: 0 0 10px 0; font-size: 16px;">Your Recommended Channels:</h4>
             <p style="color: #6b7280; margin: 0; font-size: 14px;">
               ${planData.recommendedChannels?.map((channel: any, index: number) => 
                 `${index + 1}. ${channel.name} (Score: ${channel.score}/3)`
@@ -98,7 +126,7 @@ export async function POST(request: NextRequest) {
       attachments: [
         {
           filename: `RealCoach_Action_Plan_${name.replace(/\s+/g, "_")}.pdf`,
-          content: planData.pdfBuffer, // This will be the PDF buffer from the frontend
+          content: pdfBuffer,
         },
       ],
     })

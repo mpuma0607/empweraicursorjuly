@@ -15,6 +15,16 @@ export async function POST(request: NextRequest) {
       unit: "mm",
       format: "a4",
     })
+    
+    // Helper function to add new page if needed
+    const checkPageBreak = (requiredSpace: number) => {
+      if (currentY + requiredSpace > 280) {
+        pdf.addPage()
+        currentY = 20
+        return true
+      }
+      return false
+    }
 
     // Set up fonts and colors
     pdf.setFont("helvetica")
@@ -42,7 +52,7 @@ export async function POST(request: NextRequest) {
     pdf.setFontSize(14)
     pdf.setFont("helvetica", "bold")
     pdf.setTextColor(30, 64, 175) // Blue-800
-    pdf.text("🎯 YOUR NORTH STAR", 20, currentY + 3)
+    pdf.text("YOUR NORTH STAR", 20, currentY + 3)
     currentY += 15
 
     // North Star metrics
@@ -84,7 +94,7 @@ export async function POST(request: NextRequest) {
       pdf.setFontSize(12)
       pdf.setFont("helvetica", "bold")
       pdf.setTextColor(22, 101, 52) // Green-800
-      pdf.text("📊 WEEKLY KPI TARGETS", 20, currentY + 3)
+      pdf.text("WEEKLY KPI TARGETS", 20, currentY + 3)
       currentY += 15
 
       pdf.setFontSize(10)
@@ -107,7 +117,7 @@ export async function POST(request: NextRequest) {
       pdf.setFontSize(12)
       pdf.setFont("helvetica", "bold")
       pdf.setTextColor(153, 27, 27) // Red-800
-      pdf.text("📈 RECOMMENDED CHANNELS", 20, currentY + 3)
+      pdf.text("RECOMMENDED CHANNELS", 20, currentY + 3)
       currentY += 15
 
       pdf.setFontSize(10)
@@ -128,7 +138,7 @@ export async function POST(request: NextRequest) {
       pdf.setFontSize(12)
       pdf.setFont("helvetica", "bold")
       pdf.setTextColor(146, 64, 14) // Yellow-800
-      pdf.text("📅 WEEKLY PLAYBOOK", 20, currentY + 3)
+      pdf.text("WEEKLY PLAYBOOK", 20, currentY + 3)
       currentY += 15
 
       pdf.setFontSize(10)
@@ -156,7 +166,7 @@ export async function POST(request: NextRequest) {
       pdf.setFontSize(12)
       pdf.setFont("helvetica", "bold")
       pdf.setTextColor(91, 33, 182) // Purple-800
-      pdf.text("🎯 MICRO-SKILLS TRAINING", 20, currentY + 3)
+      pdf.text("MICRO-SKILLS TRAINING", 20, currentY + 3)
       currentY += 15
 
       pdf.setFontSize(10)
@@ -181,7 +191,7 @@ export async function POST(request: NextRequest) {
       pdf.setFontSize(12)
       pdf.setFont("helvetica", "bold")
       pdf.setTextColor(154, 52, 18) // Orange-800
-      pdf.text("⏰ WEEKLY SCHEDULE", 20, currentY + 3)
+      pdf.text("WEEKLY SCHEDULE", 20, currentY + 3)
       currentY += 15
 
       pdf.setFontSize(10)
@@ -200,7 +210,7 @@ export async function POST(request: NextRequest) {
     pdf.setFontSize(12)
     pdf.setFont("helvetica", "bold")
     pdf.setTextColor(22, 101, 52) // Green-800
-    pdf.text("🚀 NEXT STEPS", 20, currentY + 3)
+    pdf.text("NEXT STEPS", 20, currentY + 3)
     currentY += 15
 
     pdf.setFontSize(10)
