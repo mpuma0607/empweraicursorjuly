@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useMemberSpaceUser } from "@/hooks/useMemberSpaceUser"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
@@ -134,6 +135,7 @@ const steps = [
 
 export default function RealCoachAIPage() {
   const [currentStep, setCurrentStep] = useState(1)
+  const { user, loading: isUserLoading } = useMemberSpaceUser()
   const [agentProfile, setAgentProfile] = useState<AgentProfile>({
     name: '',
     email: '',
@@ -180,6 +182,17 @@ export default function RealCoachAIPage() {
   const updateProfile = (updates: Partial<AgentProfile>) => {
     setAgentProfile(prev => ({ ...prev, ...updates }))
   }
+
+  // Auto-populate user data when available - exactly like other tools
+  useEffect(() => {
+    if (user && !isUserLoading) {
+      setAgentProfile(prev => ({
+        ...prev,
+        name: prev.name || user.name || `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+        email: prev.email || user.email || "",
+      }))
+    }
+  }, [user, isUserLoading])
 
   useEffect(() => {
     // Listen for custom events from child components

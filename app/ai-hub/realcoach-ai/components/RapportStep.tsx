@@ -1,6 +1,5 @@
 "use client"
 
-import { useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -33,16 +32,6 @@ interface RapportStepProps {
 export default function RapportStep({ profile, updateProfile }: RapportStepProps) {
   const { user, loading: isUserLoading } = useMemberSpaceUser()
   const isLoggedIn = !!user && !isUserLoading
-
-  // Auto-populate user data when available
-  useEffect(() => {
-    if (user && !isUserLoading) {
-      updateProfile({
-        name: profile.name || user.name || `${user.firstName || ""} ${user.lastName || ""}`.trim(),
-        email: profile.email || user.email || "",
-      })
-    }
-  }, [user, isUserLoading, profile.name, profile.email, updateProfile])
   const sessionGoals = [
     {
       id: 'clarity',
