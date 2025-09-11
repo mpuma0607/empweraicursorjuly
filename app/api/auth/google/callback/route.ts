@@ -12,9 +12,35 @@ export async function GET(request: NextRequest) {
     const storedState = request.cookies.get('oauth_state')?.value
     const codeVerifier = request.cookies.get('oauth_code_verifier')?.value
     
+    // Parse state to get tenant and origin info
+    let stateData = null
+    let targetOrigin = process.env.NEXT_PUBLIC_APP_URL || 'https://getempowerai.com'
+    
+    try {
+      if (state) {
+        stateData = JSON.parse(Buffer.from(state, 'base64url').toString())
+        targetOrigin = stateData.origin || targetOrigin
+        console.log('Parsed state data:', stateData)
+        console.log('Target origin:', targetOrigin)
+      }
+    } catch (parseError) {
+      console.warn('Failed to parse state, using fallback origin:', parseError)
+    }
+    
+    // Parse stored state for validation
+    let storedStateData = null
+    try {
+      if (storedState) {
+        storedStateData = JSON.parse(storedState)
+        console.log('Stored state data:', storedStateData)
+      }
+    } catch (parseError) {
+      console.warn('Failed to parse stored state:', parseError)
+    }
+    
     // Clear OAuth cookies
     const response = NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL || 'https://getempowerai.com'}/profile/email-integration`
+      `${targetOrigin}/profile/email-integration`
     )
     
     response.cookies.delete('oauth_state')
@@ -24,15 +50,23 @@ export async function GET(request: NextRequest) {
     if (error) {
       console.error('OAuth error:', error)
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || 'https://getempowerai.com'}/profile/email-integration?error=oauth_denied`
+        `${targetOrigin}/profile/email-integration?error=oauth_denied`
       )
     }
     
-    // Validate state parameter
-    if (!state || !storedState || state !== storedState) {
-      console.error('OAuth state mismatch')
+    // Validate state parameter - check CSRF token matches stored state
+    if (!state || !stateData || !stateData.csrf || !storedStateData || !storedStateData.csrf) {
+      console.error('OAuth state missing or invalid')
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || 'https://getempowerai.com'}/profile/email-integration?error=oauth_state_mismatch`
+        `${targetOrigin}/profile/email-integration?error=oauth_state_mismatch`
+      )
+    }
+    
+    // Validate CSRF token matches
+    if (stateData.csrf !== storedStateData.csrf) {
+      console.error('OAuth CSRF token mismatch')
+      return NextResponse.redirect(
+        `${targetOrigin}/profile/email-integration?error=oauth_state_mismatch`
       )
     }
     
@@ -40,11 +74,12 @@ export async function GET(request: NextRequest) {
     if (!code || !codeVerifier) {
       console.error('Missing OAuth code or verifier')
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || 'https://getempowerai.com'}/profile/email-integration?error=oauth_invalid_request`
+        `${targetOrigin}/profile/email-integration?error=oauth_invalid_request`
       )
     }
     
     // Exchange code for tokens
+    const redirectUri = `${targetOrigin}/api/auth/google/callback`
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: {
@@ -56,7 +91,7 @@ export async function GET(request: NextRequest) {
         code,
         code_verifier: codeVerifier,
         grant_type: 'authorization_code',
-        redirect_uri: process.env.GOOGLE_OAUTH_REDIRECT_URI || 'https://getempowerai.com/api/auth/google/callback',
+        redirect_uri: redirectUri,
       }),
     })
     
@@ -64,7 +99,7 @@ export async function GET(request: NextRequest) {
       const errorData = await tokenResponse.text()
       console.error('Token exchange failed:', errorData)
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || 'https://getempowerai.com'}/profile/email-integration?error=token_exchange_failed`
+        `${targetOrigin}/profile/email-integration?error=token_exchange_failed`
       )
     }
     
@@ -90,7 +125,7 @@ export async function GET(request: NextRequest) {
       console.error('Failed to get user info:', userInfoResponse.status, errorText)
       console.error('Full error response:', errorText)
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || 'https://getempowerai.com'}/profile/email-integration?error=user_info_failed&details=${encodeURIComponent(errorText)}`
+        `${targetOrigin}/profile/email-integration?error=user_info_failed&details=${encodeURIComponent(errorText)}`
       )
     }
     
@@ -118,13 +153,17 @@ export async function GET(request: NextRequest) {
      // Always redirect back to email integration page with success
      // This ensures the main page gets the OAuth result regardless of popup/redirect
      return NextResponse.redirect(
-       `${process.env.NEXT_PUBLIC_APP_URL || 'https://getempowerai.com'}/profile/email-integration?success=oauth_completed&email=${encodeURIComponent(userInfo.email)}`
+       `${targetOrigin}/profile/email-integration?success=oauth_completed&email=${encodeURIComponent(userInfo.email)}`
      )
     
   } catch (error) {
     console.error('Error in OAuth callback:', error)
+    // Try to get target origin from request if available
+    const host = request.headers.get('host') || 'getempowerai.com'
+    const protocol = request.headers.get('x-forwarded-proto') || 'https'
+    const fallbackOrigin = `${protocol}://${host}`
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL || 'https://getempowerai.com'}/profile/email-integration?error=oauth_callback_failed`
+      `${fallbackOrigin}/profile/email-integration?error=oauth_callback_failed`
     )
   }
 }
