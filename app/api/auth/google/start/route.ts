@@ -26,12 +26,13 @@ export async function GET(request: NextRequest) {
       csrf: randomBytes(16).toString('hex'),
       tenant: host.includes('beggins') ? 'century21-beggins' : 
               host.includes('empowerai') ? 'empower-ai' : 'empower-ai',
-      origin: currentOrigin
+      origin: currentOrigin,
+      returnUrl: `${currentOrigin}/profile/email-integration`
     }
     const state = Buffer.from(JSON.stringify(stateData)).toString('base64url')
     
-    // Build OAuth URL with dynamic redirect URI
-    const redirectUri = `${currentOrigin}/api/auth/google/callback`
+    // Build OAuth URL - use registered redirect URI from environment
+    const redirectUri = process.env.GOOGLE_OAUTH_REDIRECT_URI || 'https://getempowerai.com/api/auth/google/callback'
     const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
       `client_id=${process.env.GOOGLE_OAUTH_CLIENT_ID}` +
       `&redirect_uri=${encodeURIComponent(redirectUri)}` +

@@ -15,13 +15,16 @@ export async function GET(request: NextRequest) {
     // Parse state to get tenant and origin info
     let stateData = null
     let targetOrigin = process.env.NEXT_PUBLIC_APP_URL || 'https://getempowerai.com'
+    let returnUrl = `${targetOrigin}/profile/email-integration`
     
     try {
       if (state) {
         stateData = JSON.parse(Buffer.from(state, 'base64url').toString())
         targetOrigin = stateData.origin || targetOrigin
+        returnUrl = stateData.returnUrl || returnUrl
         console.log('Parsed state data:', stateData)
         console.log('Target origin:', targetOrigin)
+        console.log('Return URL:', returnUrl)
       }
     } catch (parseError) {
       console.warn('Failed to parse state, using fallback origin:', parseError)
@@ -39,9 +42,7 @@ export async function GET(request: NextRequest) {
     }
     
     // Clear OAuth cookies
-    const response = NextResponse.redirect(
-      `${targetOrigin}/profile/email-integration`
-    )
+    const response = NextResponse.redirect(returnUrl)
     
     response.cookies.delete('oauth_state')
     response.cookies.delete('oauth_code_verifier')
@@ -50,7 +51,7 @@ export async function GET(request: NextRequest) {
     if (error) {
       console.error('OAuth error:', error)
       return NextResponse.redirect(
-        `${targetOrigin}/profile/email-integration?error=oauth_denied`
+        `${returnUrl}?error=oauth_denied`
       )
     }
     
@@ -58,7 +59,7 @@ export async function GET(request: NextRequest) {
     if (!state || !stateData || !stateData.csrf || !storedStateData || !storedStateData.csrf) {
       console.error('OAuth state missing or invalid')
       return NextResponse.redirect(
-        `${targetOrigin}/profile/email-integration?error=oauth_state_mismatch`
+        `${returnUrl}?error=oauth_state_mismatch`
       )
     }
     
@@ -66,7 +67,7 @@ export async function GET(request: NextRequest) {
     if (stateData.csrf !== storedStateData.csrf) {
       console.error('OAuth CSRF token mismatch')
       return NextResponse.redirect(
-        `${targetOrigin}/profile/email-integration?error=oauth_state_mismatch`
+        `${returnUrl}?error=oauth_state_mismatch`
       )
     }
     
@@ -74,12 +75,12 @@ export async function GET(request: NextRequest) {
     if (!code || !codeVerifier) {
       console.error('Missing OAuth code or verifier')
       return NextResponse.redirect(
-        `${targetOrigin}/profile/email-integration?error=oauth_invalid_request`
+        `${returnUrl}?error=oauth_invalid_request`
       )
     }
     
-    // Exchange code for tokens
-    const redirectUri = `${targetOrigin}/api/auth/google/callback`
+    // Exchange code for tokens - use registered redirect URI
+    const redirectUri = process.env.GOOGLE_OAUTH_REDIRECT_URI || 'https://getempowerai.com/api/auth/google/callback'
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: {
@@ -99,7 +100,7 @@ export async function GET(request: NextRequest) {
       const errorData = await tokenResponse.text()
       console.error('Token exchange failed:', errorData)
       return NextResponse.redirect(
-        `${targetOrigin}/profile/email-integration?error=token_exchange_failed`
+        `${returnUrl}?error=token_exchange_failed`
       )
     }
     
@@ -125,7 +126,7 @@ export async function GET(request: NextRequest) {
       console.error('Failed to get user info:', userInfoResponse.status, errorText)
       console.error('Full error response:', errorText)
       return NextResponse.redirect(
-        `${targetOrigin}/profile/email-integration?error=user_info_failed&details=${encodeURIComponent(errorText)}`
+        `${returnUrl}?error=user_info_failed&details=${encodeURIComponent(errorText)}`
       )
     }
     
@@ -153,7 +154,7 @@ export async function GET(request: NextRequest) {
      // Always redirect back to email integration page with success
      // This ensures the main page gets the OAuth result regardless of popup/redirect
      return NextResponse.redirect(
-       `${targetOrigin}/profile/email-integration?success=oauth_completed&email=${encodeURIComponent(userInfo.email)}`
+       `${returnUrl}?success=oauth_completed&email=${encodeURIComponent(userInfo.email)}`
      )
     
   } catch (error) {
