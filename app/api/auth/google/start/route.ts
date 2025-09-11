@@ -31,8 +31,15 @@ export async function GET(request: NextRequest) {
     }
     const state = Buffer.from(JSON.stringify(stateData)).toString('base64url')
     
-    // Build OAuth URL - use registered redirect URI from environment
-    const redirectUri = process.env.GOOGLE_OAUTH_REDIRECT_URI || 'https://getempowerai.com/api/auth/google/callback'
+    // Build OAuth URL - use tenant-specific redirect URI
+    let redirectUri = process.env.GOOGLE_OAUTH_REDIRECT_URI || 'https://getempowerai.com/api/auth/google/callback'
+    
+    // Use tenant-specific redirect URI for BegginsU
+    if (host.includes('begginsuniversity.com')) {
+      redirectUri = 'https://begginsuniversity.com/api/beggins/auth/google/callback'
+    }
+    
+    console.log('Using redirect URI:', redirectUri)
     const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
       `client_id=${process.env.GOOGLE_OAUTH_CLIENT_ID}` +
       `&redirect_uri=${encodeURIComponent(redirectUri)}` +
@@ -61,6 +68,10 @@ export async function GET(request: NextRequest) {
     })
     
     // Store the original state data for validation
+    console.log('=== STORING STATE DATA ===')
+    console.log('State data to store:', stateData)
+    console.log('State data JSON:', JSON.stringify(stateData))
+    
     response.cookies.set('oauth_state', JSON.stringify(stateData), {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
