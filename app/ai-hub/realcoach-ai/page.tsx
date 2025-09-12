@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Link from "next/link"
 import { useMemberSpaceUser } from "@/hooks/use-memberspace-user"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -282,9 +283,18 @@ export default function RealCoachAIPage() {
             Personalized business coaching that adapts to your style, goals, and constraints
           </p>
           
-          <p className="text-lg text-gray-600 mb-12 max-w-3xl mx-auto">
+          <p className="text-lg text-gray-600 mb-8 max-w-3xl mx-auto">
             Get a customized 4-week action plan based on your unique situation, preferences, and commitments.
           </p>
+          
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link href="/ai-hub/realcoach-ai/plans">
+              <Button variant="outline" className="flex items-center gap-2">
+                <Eye className="h-4 w-4" />
+                View My Plans
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Progress Bar */}
