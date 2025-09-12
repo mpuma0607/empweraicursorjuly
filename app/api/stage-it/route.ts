@@ -29,8 +29,10 @@ function dataUrlToBlob(dataUrl: string) {
 
 export async function POST(req: Request) {
   console.log('StageIT API called with method:', req.method);
+  console.log('Request headers:', Object.fromEntries(req.headers.entries()));
   try {
     const OPENAI_API_KEY = need("OPENAI_API_KEY");
+    console.log('OpenAI API key found, length:', OPENAI_API_KEY.length);
     const contentType = req.headers.get("content-type") || "";
 
     // Inputs
@@ -127,6 +129,11 @@ export async function POST(req: Request) {
 
     // Validate image before processing
     console.log(`Image validation: ${imageBlob.size} bytes, type: ${imageBlob.type}`);
+    console.log('Image blob details:', {
+      size: imageBlob.size,
+      type: imageBlob.type,
+      sizeInMB: (imageBlob.size / (1024 * 1024)).toFixed(2)
+    });
     
     // Check file size (OpenAI has limits)
     if (imageBlob.size > 20 * 1024 * 1024) { // 20MB limit

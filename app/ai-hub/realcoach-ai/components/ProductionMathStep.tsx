@@ -120,7 +120,7 @@ export default function ProductionMathStep({ profile, updateProfile }: Productio
             Your 12-Month Goals
           </CardTitle>
           <CardDescription>
-            What do you want to achieve in the next year?
+            Let's set realistic targets based on your current performance and market conditions.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -129,6 +129,10 @@ export default function ProductionMathStep({ profile, updateProfile }: Productio
               <Label htmlFor="targetUnits" className="text-base font-medium">
                 How many closings do you want this year?
               </Label>
+              <p className="text-sm text-gray-600 mt-1 mb-3">
+                Context: How many closings have you had so far this year? What's your average price point? 
+                How many months remain in the year?
+              </p>
               <div className="mt-2">
                 <Slider
                   value={[profile.targetUnits]}

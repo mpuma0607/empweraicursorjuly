@@ -43,9 +43,9 @@ export default function CommitmentStep({ profile, updateProfile }: CommitmentSte
   ]
 
   const timeSlots = [
-    '6:00 AM', '7:00 AM', '8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM',
-    '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM',
-    '6:00 PM', '7:00 PM', '8:00 PM'
+    '06:00', '07:00', '08:00', '09:00', '10:00', '11:00',
+    '12:00', '13:00', '14:00', '15:00', '16:00', '17:00',
+    '18:00', '19:00', '20:00'
   ]
 
   const activityOptions = [
@@ -170,9 +170,15 @@ export default function CommitmentStep({ profile, updateProfile }: CommitmentSte
                       className="w-full mt-1 p-2 border rounded-md"
                     >
                       <option value="">Select time</option>
-                      {timeSlots.map(time => (
-                        <option key={time} value={time}>{time}</option>
-                      ))}
+                      {timeSlots.map(time => {
+                        // Convert 24-hour format to 12-hour format for display
+                        const [hours, minutes] = time.split(':')
+                        const hour = parseInt(hours)
+                        const ampm = hour >= 12 ? 'PM' : 'AM'
+                        const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour
+                        const displayTime = `${displayHour}:${minutes} ${ampm}`
+                        return <option key={time} value={time}>{displayTime}</option>
+                      })}
                     </select>
                   </div>
                   <div>
@@ -211,7 +217,16 @@ export default function CommitmentStep({ profile, updateProfile }: CommitmentSte
                       <Clock className="h-5 w-5 text-blue-600" />
                     </div>
                     <div>
-                      <div className="font-semibold text-gray-900">{block.day} at {block.time}</div>
+                      <div className="font-semibold text-gray-900">
+                        {block.day} at {(() => {
+                          // Convert 24-hour format to 12-hour format for display
+                          const [hours, minutes] = block.time.split(':')
+                          const hour = parseInt(hours)
+                          const ampm = hour >= 12 ? 'PM' : 'AM'
+                          const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour
+                          return `${displayHour}:${minutes} ${ampm}`
+                        })()}
+                      </div>
                       <div className="text-gray-600 text-sm">{block.activity}</div>
                     </div>
                   </div>
@@ -244,7 +259,7 @@ export default function CommitmentStep({ profile, updateProfile }: CommitmentSte
             Your Weekly KPI Targets
           </CardTitle>
           <CardDescription>
-            What numbers will you track to measure success?
+            What numbers will you track to measure success? Consider how many hours you can dedicate to each activity.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -265,7 +280,7 @@ export default function CommitmentStep({ profile, updateProfile }: CommitmentSte
                     <Slider
                       value={[value]}
                       onValueChange={([val]) => handleKpiChange(kpi.id, val)}
-                      max={50}
+                      max={10}
                       min={0}
                       step={1}
                       className="w-full"
@@ -273,7 +288,10 @@ export default function CommitmentStep({ profile, updateProfile }: CommitmentSte
                     <div className="flex justify-between text-sm text-gray-600 mt-1">
                       <span>0</span>
                       <span className="font-semibold">{value}</span>
-                      <span>50</span>
+                      <span>10</span>
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      Scale: 1-2 hours (1-3), 3-5 hours (4-6), 6+ hours (7-10)
                     </div>
                   </div>
                 </div>

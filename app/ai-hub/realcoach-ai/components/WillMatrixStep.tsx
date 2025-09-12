@@ -50,98 +50,98 @@ export default function WillMatrixStep({ profile, updateProfile }: WillMatrixSte
     {
       id: 'phone_calls',
       title: 'Phone Calls',
-      description: 'Making phone calls to prospects and clients',
+      description: 'Call prospects',
       icon: Phone,
       color: 'bg-green-500'
     },
     {
       id: 'text_messaging',
       title: 'Text Messaging',
-      description: 'Sending text messages to prospects and clients',
+      description: 'Text prospects',
       icon: MessageSquare,
       color: 'bg-blue-500'
     },
     {
       id: 'social_dms',
       title: 'Social Media DMs',
-      description: 'Direct messaging on social platforms',
+      description: 'Social outreach',
       icon: Share2,
       color: 'bg-purple-500'
     },
     {
       id: 'open_houses',
       title: 'Open Houses',
-      description: 'Hosting and attending open houses',
+      description: 'Host events',
       icon: Home,
       color: 'bg-purple-500'
     },
     {
       id: 'door_knocking',
       title: 'Door Knocking',
-      description: 'Going door-to-door in neighborhoods',
+      description: 'Door-to-door',
       icon: Building2,
       color: 'bg-red-500'
     },
     {
       id: 'events',
       title: 'Events & Networking',
-      description: 'Community events and networking',
+      description: 'Network events',
       icon: Calendar,
       color: 'bg-orange-500'
     },
     {
       id: 'short_form_video',
       title: 'Short-Form Video',
-      description: 'TikTok, Instagram Reels, YouTube Shorts',
+      description: 'Quick videos',
       icon: Video,
       color: 'bg-pink-500'
     },
     {
       id: 'long_form_video',
       title: 'Long-Form Video',
-      description: 'YouTube videos, webinars, tutorials',
+      description: 'Long videos',
       icon: Video,
       color: 'bg-indigo-500'
     },
     {
       id: 'mailers',
       title: 'Mailers & Postcards',
-      description: 'Direct mail marketing',
+      description: 'Direct mail',
       icon: Mail,
       color: 'bg-yellow-500'
     },
     {
       id: 'farming',
       title: 'Geographic Farming',
-      description: 'Targeting specific neighborhoods',
+      description: 'Area farming',
       icon: Target,
       color: 'bg-teal-500'
     },
     {
       id: 'fsbo_expired',
       title: 'FSBO & Expireds',
-      description: 'For Sale By Owner and expired listings',
+      description: 'FSBO leads',
       icon: AlertTriangle,
       color: 'bg-red-600'
     },
     {
       id: 'investor_outreach',
       title: 'Investor Outreach',
-      description: 'Working with real estate investors',
+      description: 'Investor leads',
       icon: TrendingUp,
       color: 'bg-gray-500'
     },
     {
       id: 'content_creation',
       title: 'Content Creation',
-      description: 'Blogs, articles, social media posts',
+      description: 'Create content',
       icon: FileText,
       color: 'bg-cyan-500'
     },
     {
       id: 'referral_asks',
       title: 'Referral Asks',
-      description: 'Asking for referrals from clients',
+      description: 'Ask referrals',
       icon: Star,
       color: 'bg-amber-500'
     }

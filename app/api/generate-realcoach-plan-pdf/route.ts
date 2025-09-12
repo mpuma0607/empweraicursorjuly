@@ -186,6 +186,10 @@ export async function POST(request: NextRequest) {
 
     // Time Blocks
     if (profile.weeklyBlocks && profile.weeklyBlocks.length > 0) {
+      // Check for page break before adding schedule
+      const scheduleHeight = 20 + (profile.weeklyBlocks.length * 5) + 8
+      checkPageBreak(scheduleHeight)
+      
       pdf.setFillColor(255, 247, 237) // Orange-50
       pdf.rect(15, currentY - 5, 180, 12, "F")
       pdf.setFontSize(12)
@@ -198,13 +202,16 @@ export async function POST(request: NextRequest) {
       pdf.setFont("helvetica", "normal")
       pdf.setTextColor(55, 65, 81)
       profile.weeklyBlocks.forEach(block => {
+        checkPageBreak(8) // Check before each block
         pdf.text(`${block.day} at ${block.time}: ${block.activity}`, 20, currentY)
         currentY += 5
       })
       currentY += 8
     }
 
-    // Next Steps
+    // Next Steps - Check for page break first
+    checkPageBreak(30) // Reserve space for Next Steps section
+    
     pdf.setFillColor(236, 253, 245) // Green-50
     pdf.rect(15, currentY - 5, 180, 12, "F")
     pdf.setFontSize(12)
@@ -216,13 +223,20 @@ export async function POST(request: NextRequest) {
     pdf.setFontSize(10)
     pdf.setFont("helvetica", "normal")
     pdf.setTextColor(55, 65, 81)
-    pdf.text("1. Start This Week: Begin with your primary channel and focus on consistency", 20, currentY)
-    currentY += 5
-    pdf.text("2. Track Your Progress: Use the KPI targets to measure what's working", 20, currentY)
-    currentY += 5
-    pdf.text("3. Weekly Check-ins: Review your progress and adjust the plan", 20, currentY)
-    currentY += 5
-    pdf.text("4. Calendar Integration: Add your time blocks to your calendar", 20, currentY)
+    
+    // Add each step with page break check
+    const nextSteps = [
+      "1. Start This Week: Begin with your primary channel and focus on consistency",
+      "2. Track Your Progress: Use the KPI targets to measure what's working", 
+      "3. Weekly Check-ins: Review your progress and adjust the plan",
+      "4. Calendar Integration: Add your time blocks to your calendar"
+    ]
+    
+    nextSteps.forEach(step => {
+      checkPageBreak(8) // Reserve space for each step
+      pdf.text(step, 20, currentY)
+      currentY += 5
+    })
 
     // Add footer
     const pageCount = pdf.getNumberOfPages()
