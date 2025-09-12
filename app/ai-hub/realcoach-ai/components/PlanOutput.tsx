@@ -30,7 +30,8 @@ import {
   Mail,
   PlayCircle,
   BookOpen,
-  Eye
+  Eye,
+  ArrowLeft
 } from "lucide-react"
 import { AgentProfile } from "../page"
 import { useState } from "react"
@@ -78,10 +79,13 @@ export default function PlanOutput({ profile, onBack }: PlanOutputProps) {
   const [planName, setPlanName] = useState('')
   const [showSaveDialog, setShowSaveDialog] = useState(false)
   const router = useRouter()
-  const { user, loading: isUserLoading } = useMemberSpaceUser()
+  const { user, isLoggedIn, loading: isUserLoading } = useMemberSpaceUser()
   const [isEmailing, setIsEmailing] = useState(false)
   const [emailAddress, setEmailAddress] = useState('')
   const [showEmailInput, setShowEmailInput] = useState(false)
+
+  // Debug logging
+  console.log('PlanOutput - MemberSpace user data:', { user, isLoggedIn, isUserLoading, profileEmail: profile.email })
 
   // Show loading if user data is still being fetched
   if (isUserLoading) {
@@ -95,10 +99,17 @@ export default function PlanOutput({ profile, onBack }: PlanOutputProps) {
     )
   }
 
-  // Save plan to database
+  // Note: Removed login required screen since user is clearly logged in (email/name populated)
+
+  // Save plan to database using the same authentication pattern as creations dashboard
   const handleSavePlan = async () => {
     if (!planName.trim()) {
       alert('Please enter a plan name')
+      return
+    }
+
+    if (!isLoggedIn || !user) {
+      alert('Please log in to save your plan')
       return
     }
 
@@ -114,22 +125,18 @@ export default function PlanOutput({ profile, onBack }: PlanOutputProps) {
         weeklyBlocks: profile.weeklyBlocks || []
       }
 
-      // Get user ID from MemberSpace
-      if (!user?.id) {
-        alert('Please log in to save your plan')
-        return
-      }
+      console.log('Saving RealCoach plan with user data:', { 
+        userId: user.id.toString(), 
+        userEmail: user.email,
+        planName: planName.trim() 
+      })
       
-      const userId = user.id
-      
-      console.log('Attempting to save plan:', { userId, planName: planName.trim(), profile, planData })
-      
-      const result = await saveRealCoachPlan(userId, planName.trim(), profile, planData)
+      const result = await saveRealCoachPlan(user.id.toString(), planName.trim(), profile, planData)
       
       console.log('Save result:', result)
       
       if (result.success && result.planId) {
-        // Redirect to the dedicated plan page
+        // Redirect to the dedicated plan page with interactive features
         router.push(`/ai-hub/realcoach-ai/plan/${result.planId}`)
       } else {
         alert(`Failed to save plan: ${result.error || 'Unknown error'}. Please check that the database tables are created.`)
