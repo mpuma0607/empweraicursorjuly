@@ -259,7 +259,7 @@ export default function RealCoachAIPage() {
       case 8:
         return <CommitmentStep profile={agentProfile} updateProfile={updateProfile} />
       case 9:
-        return <PlanOutput profile={agentProfile} />
+        return <PlanOutput profile={agentProfile} onBack={() => setCurrentStep(8)} />
       default:
         return null
     }
