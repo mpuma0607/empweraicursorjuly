@@ -22,14 +22,20 @@ export async function GET(request: NextRequest) {
     }
     
     // Check if this specific user has valid tokens
-    if (await oauthTokens.hasValidTokens(userEmail)) {
+    console.log(`🔍 Checking if ${userEmail} has valid tokens...`)
+    const hasValidTokens = await oauthTokens.hasValidTokens(userEmail)
+    console.log(`✅ Has valid tokens: ${hasValidTokens}`)
+    
+    if (hasValidTokens) {
       const tokens = await oauthTokens.get(userEmail)
+      console.log(`🔑 Retrieved tokens for ${userEmail}:`, tokens ? 'Found' : 'Not found')
       
       if (tokens) {
         // Update last used time
         await oauthTokens.updateLastUsed(userEmail)
         
-        console.log(`Found valid tokens for ${userEmail}`)
+        console.log(`✅ Found valid tokens for ${userEmail}`)
+        console.log(`📧 Token email: ${tokens.userEmail}`)
         
         return NextResponse.json({
           status: {
@@ -42,6 +48,10 @@ export async function GET(request: NextRequest) {
         })
       }
     }
+    
+    // Let's also check what emails are actually in the database
+    const allEmails = await oauthTokens.getAllEmails()
+    console.log(`📋 All emails in database:`, allEmails)
     
     // No valid tokens found for this user
     console.log(`No valid OAuth tokens found for ${userEmail}`)

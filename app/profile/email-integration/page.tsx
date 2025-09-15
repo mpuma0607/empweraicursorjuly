@@ -42,8 +42,18 @@ export default function EmailIntegrationPage() {
     try {
       setIsLoading(true)
       
-      // Use the user email from the hook
-      const userEmail = user?.email
+      // Try to get user email from multiple sources
+      let userEmail = user?.email
+      
+      // If no user email from hook, try to get it from URL params (OAuth success)
+      if (!userEmail) {
+        const urlParams = new URLSearchParams(window.location.search)
+        userEmail = urlParams.get('email')
+        console.log('📧 Got email from URL params:', userEmail)
+      }
+      
+      console.log('🔍 Checking connection status for user email:', userEmail)
+      console.log('👤 User object:', user)
       
       if (!userEmail) {
         console.log('No user email found, showing disconnected status')
@@ -57,10 +67,14 @@ export default function EmailIntegrationPage() {
         }
       })
       
+      console.log('📡 Status API response:', response.status)
+      
       if (response.ok) {
         const data = await response.json()
+        console.log('✅ Status data received:', data)
         setConnectionStatus(data.status)
       } else {
+        console.log('❌ Status API failed:', response.status)
         setConnectionStatus({ connected: false })
       }
     } catch (error) {

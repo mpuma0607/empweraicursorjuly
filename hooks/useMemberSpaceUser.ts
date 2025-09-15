@@ -60,6 +60,8 @@ export function useMemberSpaceUser() {
           if (isBegginsTenant) {
             // For Beggins tenant, use getMemberInfo() method (Google OAuth flow)
             console.log("📞 Using Beggins-specific getMemberInfo() method...")
+            console.log("🔍 Available MemberSpace methods:", Object.keys(memberspace))
+            console.log("🔍 MemberSpace object:", memberspace)
 
             if (typeof memberspace.getMemberInfo === "function") {
               memberspace
