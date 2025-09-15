@@ -17,17 +17,20 @@ interface RecurringEventConfig {
 
 export async function POST(request: NextRequest) {
   try {
-    const config: RecurringEventConfig = await request.json()
+    const config: Omit<RecurringEventConfig, 'userEmail'> = await request.json()
 
-    if (!config.title || !config.description || !config.startDateTime || !config.duration || !config.userEmail) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
+    // Get user email from the request headers
+    const userEmail = request.headers.get('x-user-email') || request.headers.get('user-email')
+
+    if (!userEmail || !config.title || !config.description || !config.startDateTime || !config.duration) {
+      return NextResponse.json({ error: "Missing required fields or user not authenticated" }, { status: 400 })
     }
 
     // Get user's OAuth tokens
     const tokens = await sql`
       SELECT access_token, refresh_token, expires_at 
       FROM oauth_tokens 
-      WHERE user_email = ${config.userEmail} 
+      WHERE user_email = ${userEmail} 
       AND provider = 'google' 
       AND 'https://www.googleapis.com/auth/calendar.events' = ANY(scopes)
       ORDER BY created_at DESC 
@@ -69,7 +72,7 @@ export async function POST(request: NextRequest) {
         UPDATE oauth_tokens 
         SET access_token = ${refreshData.access_token}, 
             expires_at = ${new Date(Date.now() + refreshData.expires_in * 1000).toISOString()}
-        WHERE user_email = ${config.userEmail} AND provider = 'google'
+        WHERE user_email = ${userEmail} AND provider = 'google'
       `
     }
 

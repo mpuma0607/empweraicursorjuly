@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState } from "react"
+import { useMemberSpaceUser } from "@/hooks/use-memberspace-user"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -23,6 +24,7 @@ export default function CalendarSchedulingModal({
   children,
   onEventCreated
 }: CalendarSchedulingModalProps) {
+  const { user } = useMemberSpaceUser()
   const [isOpen, setIsOpen] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
   const [formData, setFormData] = useState({
@@ -37,6 +39,12 @@ export default function CalendarSchedulingModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!user?.email) {
+      alert("Please log in to schedule calendar events")
+      return
+    }
+    
     setIsCreating(true)
 
     try {
@@ -51,15 +59,17 @@ export default function CalendarSchedulingModal({
 
       const response = await fetch('/api/calendar/create-event', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-user-email': user.email
+        },
         body: JSON.stringify({
           title: formData.eventTitle,
           description: formData.description,
           startDateTime: startDateTime.toISOString(),
           duration: formData.duration,
           attendees: attendeeList,
-          location: formData.location || undefined,
-          userEmail: "" // Will be filled by the API from the user context
+          location: formData.location || undefined
         })
       })
 

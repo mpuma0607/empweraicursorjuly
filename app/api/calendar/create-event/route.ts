@@ -15,12 +15,15 @@ interface CreateEventRequest {
 
 export async function POST(request: NextRequest) {
   try {
-    const { title, description, startDateTime, duration, attendees, location, userEmail }: CreateEventRequest = await request.json()
+    const { title, description, startDateTime, duration, attendees, location }: Omit<CreateEventRequest, 'userEmail'> = await request.json()
 
+    // Get user email from the request headers (set by middleware or session)
+    const userEmail = request.headers.get('x-user-email') || request.headers.get('user-email')
+    
     console.log('Calendar API called with:', { title, userEmail, startDateTime, duration })
 
     if (!title || !description || !startDateTime || !duration || !userEmail) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
+      return NextResponse.json({ error: "Missing required fields or user not authenticated" }, { status: 400 })
     }
 
     // Test database connection

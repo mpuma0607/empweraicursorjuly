@@ -19,10 +19,13 @@ interface BulkCreateRequest {
 
 export async function POST(request: NextRequest) {
   try {
-    const { events, userEmail }: BulkCreateRequest = await request.json()
+    const { events }: Omit<BulkCreateRequest, 'userEmail'> = await request.json()
+
+    // Get user email from the request headers
+    const userEmail = request.headers.get('x-user-email') || request.headers.get('user-email')
 
     if (!events || !Array.isArray(events) || events.length === 0 || !userEmail) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
+      return NextResponse.json({ error: "Missing required fields or user not authenticated" }, { status: 400 })
     }
 
     // Get user's OAuth tokens
