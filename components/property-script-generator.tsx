@@ -106,6 +106,7 @@ export function PropertyScriptGenerator({
   propertyDetails,
   onScriptGenerated
 }: PropertyScriptGeneratorProps) {
+  console.log('🚨 COMPONENT IS RENDERING! 🚨')
   const { toast } = useToast()
   const { user, loading: isUserLoading } = useMemberSpaceUser()
   const { config: tenantConfig } = useTenant()
@@ -708,6 +709,7 @@ export function PropertyScriptGenerator({
       </Card>
 
       {/* Script Results */}
+      {console.log('🚨 CHECKING RESULT:', !!result, 'Result:', result)}
       {result && (
         <div ref={resultsRef} className="space-y-6">
           {/* CALENDAR SECTION - FIRST THING */}
