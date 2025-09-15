@@ -69,9 +69,9 @@ export function useMemberSpaceUser() {
                 .then((memberInfo: any) => {
                   console.log("👤 Beggins MemberSpace member info:", memberInfo)
 
-                  if (memberInfo && memberInfo.id) {
+                  if (memberInfo && memberInfo.email) {
                     const userData = {
-                      id: memberInfo.id,
+                      id: memberInfo.id || memberInfo.memberId || "unknown",
                       email: memberInfo.email || memberInfo.emailAddress || "",
                       name:
                         memberInfo.name ||
@@ -84,7 +84,7 @@ export function useMemberSpaceUser() {
                     console.log("✅ Setting Beggins user data:", userData)
                     setUser(userData)
                   } else {
-                    console.log("❌ No Beggins member info found or missing ID")
+                    console.log("❌ No Beggins member info found or missing email")
                   }
                   setLoading(false)
                 })
@@ -94,7 +94,52 @@ export function useMemberSpaceUser() {
                   setLoading(false)
                 })
             } else {
-              console.log("❌ getMemberInfo method not available for Beggins")
+              console.log("❌ getMemberInfo method not available for Beggins, trying fallbacks...")
+              
+              // Try fallback methods
+              let currentUser = null
+              
+              if (typeof memberspace.getCurrentMember === "function") {
+                try {
+                  currentUser = memberspace.getCurrentMember()
+                  console.log("✅ getCurrentMember() result:", currentUser)
+                } catch (error) {
+                  console.log("❌ getCurrentMember() failed:", error)
+                }
+              }
+              
+              if (!currentUser && typeof memberspace.getMember === "function") {
+                try {
+                  currentUser = memberspace.getMember()
+                  console.log("✅ getMember() result:", currentUser)
+                } catch (error) {
+                  console.log("❌ getMember() failed:", error)
+                }
+              }
+              
+              if (!currentUser && memberspace.member) {
+                currentUser = memberspace.member
+                console.log("✅ memberspace.member result:", currentUser)
+              }
+              
+              if (currentUser && currentUser.email) {
+                const userData = {
+                  id: currentUser.id || currentUser.memberId || "unknown",
+                  email: currentUser.email || currentUser.emailAddress || "",
+                  name:
+                    currentUser.name ||
+                    currentUser.displayName ||
+                    `${currentUser.firstName || ""} ${currentUser.lastName || ""}`.trim(),
+                  firstName: currentUser.firstName || currentUser.first_name,
+                  lastName: currentUser.lastName || currentUser.last_name,
+                  customFields: currentUser.customFields || currentUser.custom_fields,
+                }
+                console.log("✅ Setting Beggins user data from fallback:", userData)
+                setUser(userData)
+              } else {
+                console.log("❌ No user data found with any fallback method")
+              }
+              
               setLoading(false)
             }
           } else {

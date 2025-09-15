@@ -37,36 +37,32 @@ export default function EmailIntegrationPage() {
   useEffect(() => {
     checkConnectionStatus()
     checkOAuthCompletion()
-  }, []) // Only run once on page load
-
-  // Separate effect to handle user data changes
-  useEffect(() => {
-    if (user?.email && !connectionStatus?.connected) {
-      // Only check status if we don't already have a connection status
-      checkConnectionStatus()
-    }
-  }, [user])
+  }, []) // Only run once on page load - NO user dependency
 
   const checkConnectionStatus = async () => {
     try {
       setIsLoading(true)
       
-      // Use stored userEmail or try to get it from multiple sources
-      let currentUserEmail = userEmail || user?.email
+      // Priority 1: Check URL params first (OAuth success)
+      const urlParams = new URLSearchParams(window.location.search)
+      let currentUserEmail = urlParams.get('email')
       
-      // If no user email from state or hook, try to get it from URL params (OAuth success)
-      if (!currentUserEmail) {
-        const urlParams = new URLSearchParams(window.location.search)
-        currentUserEmail = urlParams.get('email')
-        if (currentUserEmail) {
-          setUserEmail(currentUserEmail) // Store it for future use
-          console.log('📧 Got email from URL params and stored:', currentUserEmail)
-        }
+      if (currentUserEmail) {
+        setUserEmail(currentUserEmail) // Store it for future use
+        console.log('📧 Got email from URL params:', currentUserEmail)
+      } else {
+        // Priority 2: Use stored email
+        currentUserEmail = userEmail
+        console.log('💾 Using stored email:', currentUserEmail)
       }
       
-      console.log('🔍 Checking connection status for user email:', currentUserEmail)
-      console.log('👤 User object:', user)
-      console.log('💾 Stored userEmail:', userEmail)
+      // Priority 3: Fall back to user hook (but this often fails for Beggins)
+      if (!currentUserEmail) {
+        currentUserEmail = user?.email
+        console.log('👤 Using user hook email:', currentUserEmail)
+      }
+      
+      console.log('🔍 Final email for status check:', currentUserEmail)
       
       if (!currentUserEmail) {
         console.log('No user email found, showing disconnected status')
