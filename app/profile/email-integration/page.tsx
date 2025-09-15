@@ -49,14 +49,22 @@ export default function EmailIntegrationPage() {
       
       if (currentUserEmail) {
         setUserEmail(currentUserEmail) // Store it for future use
+        localStorage.setItem('gmail_connected_email', currentUserEmail)
         console.log('📧 Got email from URL params:', currentUserEmail)
       } else {
-        // Priority 2: Use stored email
-        currentUserEmail = userEmail
-        console.log('💾 Using stored email:', currentUserEmail)
+        // Priority 2: Check localStorage
+        currentUserEmail = localStorage.getItem('gmail_connected_email')
+        if (currentUserEmail) {
+          setUserEmail(currentUserEmail)
+          console.log('💾 Using localStorage email:', currentUserEmail)
+        } else {
+          // Priority 3: Use stored state
+          currentUserEmail = userEmail
+          console.log('💾 Using stored state email:', currentUserEmail)
+        }
       }
       
-      // Priority 3: Fall back to user hook (but this often fails for Beggins)
+      // Priority 4: Fall back to user hook (but this often fails for Beggins)
       if (!currentUserEmail) {
         currentUserEmail = user?.email
         console.log('👤 Using user hook email:', currentUserEmail)
@@ -119,7 +127,11 @@ export default function EmailIntegrationPage() {
       const email = urlParams.get('email')
       
       if (success === 'oauth_completed' && email) {
+        // Store email in localStorage for persistence
+        localStorage.setItem('gmail_connected_email', email)
+        setUserEmail(email)
         setSuccess(`Gmail connected successfully! Email: ${email}`)
+        
         // Wait a moment for the OAuth callback to complete, then check status
         setTimeout(() => {
           checkConnectionStatus()
@@ -159,6 +171,9 @@ export default function EmailIntegrationPage() {
       if (response.ok) {
         setSuccess('Gmail disconnected successfully!')
         setConnectionStatus({ connected: false })
+        // Clear stored email
+        setUserEmail(null)
+        localStorage.removeItem('gmail_connected_email')
       } else {
         const errorData = await response.json()
         throw new Error(errorData.error || 'Failed to disconnect')
