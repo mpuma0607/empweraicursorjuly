@@ -10,10 +10,12 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { generateActionPlan } from "./actions"
-import { Loader2, Copy, Download, Mail, CheckCircle, Save, UserCheck } from "lucide-react"
+import { Loader2, Copy, Download, Mail, CheckCircle, Save, UserCheck, Calendar, Clock } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useMemberSpaceUser } from "@/hooks/use-memberspace-user"
 import { saveUserCreation } from "@/lib/auto-save-creation"
+import CalendarScheduler from "@/components/calendar/calendar-scheduler"
+import BulkScheduler from "@/components/calendar/bulk-scheduler"
 
 type FormState = {
   name: string
@@ -495,6 +497,71 @@ export default function ActionPlanForm() {
           {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
           <span className="whitespace-nowrap">{!user ? "Login to Save" : "Save"}</span>
         </Button>
+      </div>
+
+      {/* Calendar Integration */}
+      <div className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200">
+        <h5 className="font-medium text-green-900 mb-3 flex items-center gap-2">
+          <Calendar className="h-4 w-4" />
+          📅 Schedule Your Prospecting
+        </h5>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <CalendarScheduler
+            title={`${formData.prospectType === "Other" ? formData.customProspectType : formData.prospectType} Prospecting - ${formData.name}`}
+            description={result?.plan || ""}
+            defaultDuration={120} // 2 hours for prospecting sessions
+            className="w-full"
+          >
+            <Button variant="outline" className="w-full flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              Schedule Prospecting Session
+            </Button>
+          </CalendarScheduler>
+
+          <BulkScheduler
+            events={[
+              {
+                id: "text-outreach",
+                title: "Text Outreach Session",
+                description: "Text outreach activities from your action plan",
+                startDate: "",
+                startTime: "",
+                duration: 60,
+                attendees: "",
+                location: ""
+              },
+              {
+                id: "phone-calls",
+                title: "Phone Call Session", 
+                description: "Phone call activities from your action plan",
+                startDate: "",
+                startTime: "",
+                duration: 90,
+                attendees: "",
+                location: ""
+              },
+              {
+                id: "email-outreach",
+                title: "Email Outreach Session",
+                description: "Email outreach activities from your action plan", 
+                startDate: "",
+                startTime: "",
+                duration: 45,
+                attendees: "",
+                location: ""
+              }
+            ]}
+            className="w-full"
+          >
+            <Button variant="outline" className="w-full flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              Schedule All Activities
+            </Button>
+          </BulkScheduler>
+        </div>
+        <p className="text-xs text-green-700 mt-2">
+          💡 Schedule your prospecting activities directly to your Google Calendar. Break down your action plan into focused time blocks!
+        </p>
       </div>
 
       <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">

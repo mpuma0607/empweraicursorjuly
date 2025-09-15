@@ -22,7 +22,9 @@ import {
   Target,
   Users,
   MapPin,
-  Building
+  Building,
+  Calendar,
+  RotateCcw
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useMemberSpaceUser } from "@/hooks/use-memberspace-user"
@@ -30,6 +32,8 @@ import { useTenant } from "@/contexts/tenant-context"
 import { getUserBrandingProfile } from "@/app/profile/branding/actions"
 import { saveUserCreation, generateCreationTitle } from "@/lib/auto-save-creation"
 import EmailCompositionModal from "@/components/email-composition-modal"
+import CalendarScheduler from "@/components/calendar/calendar-scheduler"
+import RecurringScheduler from "@/components/calendar/recurring-scheduler"
 
 interface PropertyScriptGeneratorProps {
   propertyAddress: string
@@ -815,6 +819,46 @@ export function PropertyScriptGenerator({
                   <span className="whitespace-nowrap">{!isLoggedIn ? "Login to Save" : "Save"}</span>
                 </Button>
               </div>
+
+              {/* Calendar Integration */}
+              {result && (
+                <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <h5 className="font-medium text-blue-900 mb-3 flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    📅 Schedule Your Outreach
+                  </h5>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <CalendarScheduler
+                      title={`${formData.prospectType === "other" ? formData.customProspectType : formData.prospectType.toUpperCase()} Call - ${propertyAddress}`}
+                      description={result.script}
+                      defaultDuration={formData.deliveryMethod === "phone" ? 30 : 15}
+                      className="w-full"
+                    >
+                      <Button variant="outline" className="w-full flex items-center gap-2">
+                        <Calendar className="h-4 w-4" />
+                        Schedule Single Call
+                      </Button>
+                    </CalendarScheduler>
+
+                    {formData.prospectType === "fsbo" && (
+                      <RecurringScheduler
+                        title={`Follow-up - ${propertyAddress}`}
+                        description={result.script}
+                        defaultDuration={30}
+                        className="w-full"
+                      >
+                        <Button variant="outline" className="w-full flex items-center gap-2">
+                          <RotateCcw className="h-4 w-4" />
+                          Schedule Follow-ups
+                        </Button>
+                      </RecurringScheduler>
+                    )}
+                  </div>
+                  <p className="text-xs text-blue-700 mt-2">
+                    💡 Schedule your outreach calls directly to your Google Calendar. Follow-ups are perfect for FSBO properties!
+                  </p>
+                </div>
+              )}
 
               <div className="bg-purple-50 p-4 rounded-lg border border-purple-200 mt-6">
                 <h5 className="font-medium text-purple-900 mb-2 flex items-center gap-2">
