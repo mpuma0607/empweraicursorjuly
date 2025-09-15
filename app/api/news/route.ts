@@ -42,39 +42,17 @@ export async function GET() {
     
     // RSS feed sources for real estate news (FREE and publicly accessible only)
     const rssSources = [
-      // Primary industry news sources (FREE)
+      // Core real estate news sources (FREE)
       {
-        url: "https://feeds.feedburner.com/inmannews",
-        name: "Inman News",
-        category: "industry"
-      },
-      {
-        url: "https://feeds.feedburner.com/realtor-mag-daily-news",
-        name: "REALTOR Magazine",
-        category: "industry"
-      },
-      {
-        url: "https://www.housingwire.com/feed/",
-        name: "HousingWire",
-        category: "industry"
-      },
-      {
-        url: "https://www.nar.realtor/news/rss",
-        name: "NAR News",
-        category: "industry"
-      },
-      // Mortgage and finance news (FREE)
-      {
-        url: "https://www.mortgagenewsdaily.com/rss/full",
+        url: "https://www.mortgagenewsdaily.com/mortgage_rates/feed/",
         name: "Mortgage News Daily",
         category: "mortgage"
       },
       {
-        url: "https://feeds.feedburner.com/CalculatedRisk",
+        url: "https://calculatedriskblog.com/feeds/posts/default",
         name: "Calculated Risk",
-        category: "finance"
+        category: "market"
       },
-      // Real estate investing and market analysis (FREE)
       {
         url: "https://www.biggerpockets.com/blog/feed",
         name: "BiggerPockets",
@@ -85,42 +63,288 @@ export async function GET() {
         name: "Realtor.com News",
         category: "market"
       },
-      // Additional FREE sources
+      
+      // General Buyers/Sellers
       {
-        url: "https://www.apartmenttherapy.com/main.rss",
-        name: "Apartment Therapy",
-        category: "design"
+        url: "https://www.zillow.com/blog/feed/",
+        name: "Zillow Blog",
+        category: "market"
       },
-      // Better real estate news sources
       {
-        url: "https://www.inman.com/feed/",
+        url: "http://rss.cnn.com/rss/money_realestate.rss",
+        name: "CNN Real Estate",
+        category: "market"
+      },
+      {
+        url: "http://feeds.feedburner.com/real-estate-story-ideas",
+        name: "Real Estate Story Ideas",
+        category: "market"
+      },
+      {
+        url: "https://feeds.feedburner.com/resort-second-home",
+        name: "Resort & Second Home",
+        category: "luxury"
+      },
+      {
+        url: "https://feeds2.feedburner.com/StyledStagedSold",
+        name: "Styled Staged Sold",
+        category: "staging"
+      },
+      {
+        url: "http://feeds2.feedburner.com/RismediaConsumerNewsAndAdvice",
+        name: "RISMedia Consumer News",
+        category: "consumer"
+      },
+      {
+        url: "http://feeds2.feedburner.com/RismediaTodaysTopStory-Consumer",
+        name: "RISMedia Top Stories",
+        category: "consumer"
+      },
+      
+      // Luxury Real Estate
+      {
+        url: "https://www.luxurydaily.com/category/sectors/real-estate/feed/",
+        name: "Luxury Daily Real Estate",
+        category: "luxury"
+      },
+      
+      // State-Specific Sources
+      {
+        url: "https://www.akhomeshow.com/blog/rss",
+        name: "Alaska Home Show",
+        category: "alaska"
+      },
+      {
+        url: "http://tucson.com/search/?f=rss&t=article&c=real-estate&l=25&s=start_time&sd=desc",
+        name: "Tucson Real Estate",
+        category: "arizona"
+      },
+      {
+        url: "http://blog.aaronline.com/feed/",
+        name: "AAR Online",
+        category: "arizona"
+      },
+      {
+        url: "http://www.arkansasbusiness.com/rss/real-estate",
+        name: "Arkansas Business Real Estate",
+        category: "arkansas"
+      },
+      {
+        url: "http://www.latimes.com/business/realestate/rss2.0.xml",
+        name: "LA Times Real Estate",
+        category: "california"
+      },
+      {
+        url: "https://feeds.feedburner.com/floridarealtors",
+        name: "Florida Realtors",
+        category: "florida"
+      },
+      {
+        url: "https://www.houstonproperties.com/feed",
+        name: "Houston Properties",
+        category: "texas"
+      },
+      {
+        url: "https://www.seattletimes.com/business/real-estate/feed/",
+        name: "Seattle Times Real Estate",
+        category: "washington"
+      },
+      
+      // For Agents
+      {
+        url: "https://www.century21.com/real-estate-blog/feed/",
+        name: "Century 21 Blog",
+        category: "agents"
+      },
+      {
+        url: "https://feeds.feedburner.com/inmannews",
         name: "Inman News",
-        category: "industry"
+        category: "agents"
       },
+      {
+        url: "https://www.sothebysrealty.com/extraordinary-living-blog/feed/",
+        name: "Sotheby's Realty",
+        category: "luxury"
+      },
+      {
+        url: "https://chicagorealtor.com/category/chicago-realtor-magazine/feed/",
+        name: "Chicago Realtor Magazine",
+        category: "agents"
+      },
+      {
+        url: "https://www.sacrealtor.org/blog/feed/",
+        name: "Sacramento Realtor",
+        category: "agents"
+      },
+      
+      // NAR Feeds
+      {
+        url: "https://feeds.feedburner.com/appraisal-valuation",
+        name: "NAR Appraisal & Valuation",
+        category: "nar"
+      },
+      {
+        url: "https://feeds.feedburner.com/association-executives",
+        name: "NAR Association Executives",
+        category: "nar"
+      },
+      {
+        url: "https://feeds.feedburner.com/nar-commercial",
+        name: "NAR Commercial",
+        category: "nar"
+      },
+      {
+        url: "http://feeds.feedburner.com/data-privacy-security",
+        name: "NAR Data Privacy & Security",
+        category: "nar"
+      },
+      {
+        url: "https://feeds.feedburner.com/nar-education",
+        name: "NAR Education",
+        category: "nar"
+      },
+      {
+        url: "https://feeds.feedburner.com/fair-housing",
+        name: "NAR Fair Housing",
+        category: "nar"
+      },
+      {
+        url: "https://feeds.feedburner.com/nar-legal",
+        name: "NAR Legal",
+        category: "nar"
+      },
+      {
+        url: "https://feeds.feedburner.com/nar-leadership",
+        name: "NAR Leadership",
+        category: "nar"
+      },
+      {
+        url: "https://feeds.feedburner.com/nar-newsroom",
+        name: "NAR Newsroom",
+        category: "nar"
+      },
+      {
+        url: "https://feeds.feedburner.com/nar-advocacy",
+        name: "NAR Advocacy",
+        category: "nar"
+      },
+      {
+        url: "https://feeds.feedburner.com/nar-research",
+        name: "NAR Research",
+        category: "nar"
+      },
+      {
+        url: "https://feeds.feedburner.com/nar-safety",
+        name: "NAR Safety",
+        category: "nar"
+      },
+      {
+        url: "https://feeds.feedburner.com/tax-reform",
+        name: "NAR Tax Reform",
+        category: "nar"
+      },
+      {
+        url: "https://feeds.feedburner.com/washington-report",
+        name: "NAR Washington Report",
+        category: "nar"
+      },
+      {
+        url: "https://feeds.feedburner.com/EconomistsOutlook",
+        name: "NAR Economist's Outlook",
+        category: "nar"
+      },
+      {
+        url: "https://feeds.feedburner.com/narnewsline",
+        name: "NAR Newsline",
+        category: "nar"
+      },
+      {
+        url: "https://feeds.feedburner.com/ypnlounge",
+        name: "NAR YPN Lounge",
+        category: "nar"
+      },
+      
+      // Housing Wire
       {
         url: "https://www.housingwire.com/feed/",
         name: "HousingWire",
         category: "industry"
       },
+      
+      // RIS Media
       {
-        url: "https://www.realestatenews.com/feed/",
-        name: "Real Estate News",
-        category: "industry"
+        url: "http://feeds2.feedburner.com/RismediaBusinessDevelopment",
+        name: "RISMedia Business Development",
+        category: "rismedia"
       },
       {
-        url: "https://www.nar.realtor/news/feed",
-        name: "NAR News",
-        category: "industry"
+        url: "http://feeds2.feedburner.com/RismediaCoaching",
+        name: "RISMedia Coaching",
+        category: "rismedia"
       },
       {
-        url: "https://www.rismedia.com/feed/",
+        url: "http://feeds.feedburner.com/RismediaFinanceAndEconomy",
+        name: "RISMedia Finance & Economy",
+        category: "rismedia"
+      },
+      {
+        url: "http://feeds.feedburner.com/RISMedia",
         name: "RISMedia",
-        category: "industry"
+        category: "rismedia"
       },
       {
-        url: "https://www.realestateagent.com/feed/",
-        name: "Real Estate Agent Magazine",
-        category: "industry"
+        url: "http://feeds2.feedburner.com/rismedia/lgnb",
+        name: "RISMedia LGNB",
+        category: "rismedia"
+      },
+      {
+        url: "http://feeds2.feedburner.com/RismediaMarketing",
+        name: "RISMedia Marketing",
+        category: "rismedia"
+      },
+      {
+        url: "http://feeds2.feedburner.com/RismediaTechnology",
+        name: "RISMedia Technology",
+        category: "rismedia"
+      },
+      {
+        url: "http://feeds2.feedburner.com/RismediaTodaysMarketplace",
+        name: "RISMedia Today's Marketplace",
+        category: "rismedia"
+      },
+      {
+        url: "http://feeds2.feedburner.com/RismediaTodaysTopStory",
+        name: "RISMedia Today's Top Story",
+        category: "rismedia"
+      },
+      
+      // Zillow Press Releases
+      {
+        url: "http://zillow.mediaroom.com/press-releases?pagetemplate=rss&category=819",
+        name: "Zillow Press Releases - Market",
+        category: "zillow"
+      },
+      {
+        url: "http://zillow.mediaroom.com/press-releases?pagetemplate=rss&category=816",
+        name: "Zillow Press Releases - Technology",
+        category: "zillow"
+      },
+      {
+        url: "http://zillow.mediaroom.com/press-releases?pagetemplate=rss&category=820",
+        name: "Zillow Press Releases - Research",
+        category: "zillow"
+      },
+      {
+        url: "http://zillow.mediaroom.com/press-releases?pagetemplate=rss&category=815",
+        name: "Zillow Press Releases - Business",
+        category: "zillow"
+      },
+      
+      // Additional sources
+      {
+        url: "https://www.apartmenttherapy.com/main.rss",
+        name: "Apartment Therapy",
+        category: "design"
       },
       {
         url: "https://www.worldpropertyjournal.com/real-estate-news-rss-feed.php",
