@@ -65,27 +65,26 @@ export default function EmailCompositionModal({
       setIsLoading(false)
     }
       
-      // Parse the script content to extract subject and clean up content
-      const { extractedSubject, cleanedContent } = parseScriptContent(scriptContent)
-      
-      // Set default subject and signature based on content type
-      if (contentType === 'cma') {
-        setSubject(extractedSubject || `CMA Report from ${agentName} - ${brokerageName}`)
-      } else if (contentType === 'listit') {
-        setSubject(extractedSubject || `Listing Description from ${agentName} - ${brokerageName}`)
-      } else if (contentType === 'realbio') {
-        setSubject(extractedSubject || `Agent Bio from ${agentName} - ${brokerageName}`)
-      } else if (contentType === 'ideahub') {
-        setSubject(extractedSubject || `Content from ${agentName} - ${brokerageName}`)
-      } else if (contentType === 'real-img') {
-        setSubject(extractedSubject || `Interactive Image from ${agentName} - ${brokerageName}`)
-      } else {
-        setSubject(extractedSubject || `Script from ${agentName} - ${brokerageName}`)
-      }
-      setSignature(`Best regards,\n${agentName}\n${brokerageName}`)
-      // Set email body to cleaned script content
-      setEmailBody(cleanedContent)
+    // Parse the script content to extract subject and clean up content
+    const { extractedSubject, cleanedContent } = parseScriptContent(scriptContent)
+    
+    // Set default subject and signature based on content type
+    if (contentType === 'cma') {
+      setSubject(extractedSubject || `CMA Report from ${agentName} - ${brokerageName}`)
+    } else if (contentType === 'listit') {
+      setSubject(extractedSubject || `Listing Description from ${agentName} - ${brokerageName}`)
+    } else if (contentType === 'realbio') {
+      setSubject(extractedSubject || `Agent Bio from ${agentName} - ${brokerageName}`)
+    } else if (contentType === 'ideahub') {
+      setSubject(extractedSubject || `Content from ${agentName} - ${brokerageName}`)
+    } else if (contentType === 'real-img') {
+      setSubject(extractedSubject || `Interactive Image from ${agentName} - ${brokerageName}`)
+    } else {
+      setSubject(extractedSubject || `Script from ${agentName} - ${brokerageName}`)
     }
+    setSignature(`Best regards,\n${agentName}\n${brokerageName}`)
+    // Set email body to cleaned script content
+    setEmailBody(cleanedContent)
   }, [isOpen, user?.email, agentName, brokerageName, scriptContent])
 
   // Function to parse script content and extract subject/remove placeholders
