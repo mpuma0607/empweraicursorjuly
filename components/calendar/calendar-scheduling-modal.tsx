@@ -79,20 +79,25 @@ export default function CalendarSchedulingModal({
         .map(email => email.trim())
         .filter(email => email.length > 0)
 
+      const requestBody = {
+        title: formData.eventTitle,
+        description: formData.description,
+        startDateTime: startDateTime.toISOString(),
+        duration: formData.duration,
+        attendees: attendeeList,
+        location: formData.location || undefined,
+        userEmail: user.email
+      }
+      
+      console.log('Calendar modal: Sending request body:', requestBody)
+      console.log('Calendar modal: startDateTime.toISOString():', startDateTime.toISOString())
+
       const response = await fetch('/api/calendar/create-event', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          title: formData.eventTitle,
-          description: formData.description,
-          startDateTime: startDateTime.toISOString(),
-          duration: formData.duration,
-          attendees: attendeeList,
-          location: formData.location || undefined,
-          userEmail: user.email
-        })
+        body: JSON.stringify(requestBody)
       })
 
       const result = await response.json()

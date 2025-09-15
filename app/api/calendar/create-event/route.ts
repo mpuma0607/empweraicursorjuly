@@ -99,9 +99,30 @@ export async function POST(request: NextRequest) {
       `
     }
 
-    // Create calendar event
+    // Create calendar event with validation
+    console.log('Raw startDateTime received:', startDateTime, 'Type:', typeof startDateTime)
+    
     const startDate = new Date(startDateTime)
+    console.log('Parsed startDate:', startDate, 'Valid:', !isNaN(startDate.getTime()))
+    
+    if (isNaN(startDate.getTime())) {
+      console.error('Invalid startDateTime:', startDateTime)
+      return NextResponse.json({ 
+        error: "Invalid date/time format", 
+        details: `Could not parse date: ${startDateTime}` 
+      }, { status: 400 })
+    }
+    
     const endDate = new Date(startDate.getTime() + duration * 60000)
+    console.log('Calculated endDate:', endDate, 'Valid:', !isNaN(endDate.getTime()))
+    
+    if (isNaN(endDate.getTime())) {
+      console.error('Invalid endDate calculated from:', startDate, 'duration:', duration)
+      return NextResponse.json({ 
+        error: "Invalid end date calculation", 
+        details: `Could not calculate end date from start: ${startDate.toISOString()}, duration: ${duration} minutes` 
+      }, { status: 400 })
+    }
 
     const event = {
       summary: title,
