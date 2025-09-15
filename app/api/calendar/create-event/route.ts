@@ -17,23 +17,31 @@ export async function POST(request: NextRequest) {
   try {
     const { title, description, startDateTime, duration, attendees, location, userEmail }: CreateEventRequest = await request.json()
 
+    console.log('Calendar API called with:', { title, userEmail, startDateTime, duration })
+
     if (!title || !description || !startDateTime || !duration || !userEmail) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
-    // Get user's OAuth tokens
+    // Get user's OAuth tokens - check for calendar.events scope specifically
     const tokens = await sql`
-      SELECT access_token, refresh_token, expires_at 
+      SELECT access_token, refresh_token, expires_at, scope
       FROM oauth_tokens 
       WHERE user_email = ${userEmail} 
       AND provider = 'google' 
-      AND scope LIKE '%calendar%'
+      AND scope LIKE '%calendar.events%'
       ORDER BY created_at DESC 
       LIMIT 1
     `
 
+    console.log('Found tokens for user:', userEmail, 'Count:', tokens.length, 'Scope:', tokens[0]?.scope)
+
     if (tokens.length === 0) {
-      return NextResponse.json({ error: "No Google Calendar access found. Please reconnect your email." }, { status: 401 })
+      console.log('No Google Calendar tokens found for user:', userEmail)
+      return NextResponse.json({ 
+        error: "No Google Calendar access found. Please connect your Google account first.", 
+        details: "Go to your profile and connect your Google account to enable calendar integration."
+      }, { status: 401 })
     }
 
     const token = tokens[0]
@@ -80,15 +88,17 @@ export async function POST(request: NextRequest) {
       description: description,
       start: {
         dateTime: startDate.toISOString(),
-        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+        timeZone: 'America/New_York' // Use specific timezone instead of auto-detection
       },
       end: {
         dateTime: endDate.toISOString(),
-        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+        timeZone: 'America/New_York'
       },
       attendees: attendees?.map(email => ({ email })) || [],
       location: location || undefined
     }
+
+    console.log('Creating calendar event with:', event)
 
     const calendarResponse = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
       method: 'POST',
@@ -99,10 +109,16 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify(event)
     })
 
+    console.log('Calendar API response status:', calendarResponse.status)
+
     if (!calendarResponse.ok) {
       const errorData = await calendarResponse.json()
       console.error('Google Calendar API error:', errorData)
-      return NextResponse.json({ error: "Failed to create calendar event" }, { status: 500 })
+      return NextResponse.json({ 
+        error: "Failed to create calendar event", 
+        details: errorData.error?.message || 'Unknown error',
+        status: calendarResponse.status
+      }, { status: 500 })
     }
 
     const eventData = await calendarResponse.json()
