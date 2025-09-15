@@ -85,21 +85,42 @@ export async function GET() {
         name: "Realtor.com News",
         category: "market"
       },
-      {
-        url: "https://www.redfin.com/blog/feed/",
-        name: "Redfin Blog",
-        category: "market"
-      },
       // Additional FREE sources
-      {
-        url: "https://www.zillow.com/blog/feed",
-        name: "Zillow Porchlight",
-        category: "market"
-      },
       {
         url: "https://www.apartmenttherapy.com/main.rss",
         name: "Apartment Therapy",
         category: "design"
+      },
+      // Better real estate news sources
+      {
+        url: "https://www.inman.com/feed/",
+        name: "Inman News",
+        category: "industry"
+      },
+      {
+        url: "https://www.housingwire.com/feed/",
+        name: "HousingWire",
+        category: "industry"
+      },
+      {
+        url: "https://www.realestatenews.com/feed/",
+        name: "Real Estate News",
+        category: "industry"
+      },
+      {
+        url: "https://www.nar.realtor/news/feed",
+        name: "NAR News",
+        category: "industry"
+      },
+      {
+        url: "https://www.rismedia.com/feed/",
+        name: "RISMedia",
+        category: "industry"
+      },
+      {
+        url: "https://www.realestateagent.com/feed/",
+        name: "Real Estate Agent Magazine",
+        category: "industry"
       },
       {
         url: "https://www.worldpropertyjournal.com/real-estate-news-rss-feed.php",
@@ -205,7 +226,26 @@ export async function GET() {
             content.includes("just listed") ||
             content.includes("new listing") ||
             content.includes("price reduced") ||
-            content.includes("price drop")
+            content.includes("price drop") ||
+            // Redfin-specific patterns
+            content.includes("newest listings") ||
+            content.includes("50 newest") ||
+            content.includes("newest homes") ||
+            content.includes("recent listings") ||
+            (content.includes("listings:") && content.includes("september")) ||
+            (content.includes("listings:") && content.includes("2025")) ||
+            // Generic listing patterns
+            (content.includes("property") && content.includes("for sale")) ||
+            (content.includes("home") && content.includes("for sale")) ||
+            (content.includes("condo") && content.includes("for sale")) ||
+            (content.includes("townhouse") && content.includes("for sale")) ||
+            // Location + listing patterns
+            (content.includes("virginia beach") && content.includes("listings")) ||
+            (content.includes("fort lauderdale") && content.includes("listings")) ||
+            (content.includes("san jose") && content.includes("listings")) ||
+            (content.includes("miami") && content.includes("listings")) ||
+            (content.includes("atlanta") && content.includes("listings")) ||
+            (content.includes("dallas") && content.includes("listings"))
           
           // Check if article contains any real estate keywords
           const hasRealEstateKeyword = realEstateKeywords.some(keyword => 
@@ -253,10 +293,10 @@ export async function GET() {
       }
     })
 
-    // Sort by date (newest first) and limit to 50 articles for better variety
+    // Sort by date (newest first) and limit to 100 articles for better variety
     const sortedArticles = recentArticles
       .sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime())
-      .slice(0, 50)
+      .slice(0, 100)
 
     console.log(`Final result: ${sortedArticles.length} unique articles (filtered from ${uniqueArticles.length} total)`)
     console.log("Sources:", [...new Set(sortedArticles.map(a => a.source))])
