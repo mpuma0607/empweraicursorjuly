@@ -838,7 +838,7 @@ export function PropertyScriptGenerator({
             </CardContent>
           </Card>
 
-          {/* Calendar Integration */}
+          {/* Calendar Integration - SIMPLE VERSION */}
           <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
             <h5 className="font-medium text-blue-900 mb-3 flex items-center gap-2">
               <Calendar className="h-4 w-4" />
@@ -848,34 +848,62 @@ export function PropertyScriptGenerator({
               DEBUG: Calendar section is rendering! Result exists: {result ? 'YES' : 'NO'}
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <CalendarScheduler
-                title={`${formData.prospectType === "other" ? formData.customProspectType : formData.prospectType.toUpperCase()} Call - ${propertyAddress}`}
-                description={result.script}
-                defaultDuration={formData.deliveryMethod === "phone" ? 30 : 15}
-                className="w-full"
+              <Button 
+                variant="outline" 
+                className="w-full flex items-center gap-2"
+                onClick={() => {
+                  // Create a smart title based on available data
+                  let eventTitle = `${formData.prospectType === "other" ? formData.customProspectType : formData.prospectType.toUpperCase()} Outreach`
+                  if (propertyAddress) {
+                    eventTitle += ` - ${propertyAddress}`
+                  }
+                  
+                  const eventDescription = `Script for ${formData.prospectType === "other" ? formData.customProspectType : formData.prospectType} outreach:\n\n${result.script}`
+                  const startDate = new Date()
+                  startDate.setDate(startDate.getDate() + 1) // Tomorrow
+                  startDate.setHours(9, 0, 0, 0) // 9 AM
+                  
+                  const endDate = new Date(startDate)
+                  endDate.setHours(startDate.getHours() + 1) // 1 hour duration
+                  
+                  const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(eventTitle)}&dates=${startDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z/${endDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z&details=${encodeURIComponent(eventDescription)}`
+                  
+                  window.open(googleCalendarUrl, '_blank')
+                }}
               >
-                <Button variant="outline" className="w-full flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  Schedule Single Call
-                </Button>
-              </CalendarScheduler>
+                <Calendar className="h-4 w-4" />
+                Schedule Outreach Call
+              </Button>
 
-              {formData.prospectType === "fsbo" && (
-                <RecurringScheduler
-                  title={`Follow-up - ${propertyAddress}`}
-                  description={result.script}
-                  defaultDuration={30}
-                  className="w-full"
-                >
-                  <Button variant="outline" className="w-full flex items-center gap-2">
-                    <RotateCcw className="h-4 w-4" />
-                    Schedule Follow-ups
-                  </Button>
-                </RecurringScheduler>
-              )}
+              <Button 
+                variant="outline" 
+                className="w-full flex items-center gap-2"
+                onClick={() => {
+                  // Create a follow-up title
+                  let eventTitle = `Follow-up Call`
+                  if (propertyAddress) {
+                    eventTitle += ` - ${propertyAddress}`
+                  }
+                  
+                  const eventDescription = `Follow-up script for ${formData.prospectType === "other" ? formData.customProspectType : formData.prospectType}:\n\n${result.script}`
+                  const startDate = new Date()
+                  startDate.setDate(startDate.getDate() + 3) // 3 days from now
+                  startDate.setHours(10, 0, 0, 0) // 10 AM
+                  
+                  const endDate = new Date(startDate)
+                  endDate.setHours(startDate.getHours() + 1) // 1 hour duration
+                  
+                  const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(eventTitle)}&dates=${startDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z/${endDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z&details=${encodeURIComponent(eventDescription)}`
+                  
+                  window.open(googleCalendarUrl, '_blank')
+                }}
+              >
+                <RotateCcw className="h-4 w-4" />
+                Schedule Follow-up
+              </Button>
             </div>
             <p className="text-xs text-blue-700 mt-2">
-              💡 Schedule your outreach calls directly to your Google Calendar. Follow-ups are perfect for FSBO properties!
+              💡 Click to open Google Calendar with your script pre-filled. You can then adjust the date/time as needed!
             </p>
           </div>
         </div>
