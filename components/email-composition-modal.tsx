@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { useMemberSpaceUser } from "@/hooks/use-memberspace-user"
 import { 
   Mail, 
   Send, 
@@ -39,6 +40,7 @@ export default function EmailCompositionModal({
   brokerageName,
   contentType = 'script' // Default to script if not specified
 }: EmailCompositionModalProps) {
+  const { user } = useMemberSpaceUser()
   const [connectionStatus, setConnectionStatus] = useState<EmailConnectionStatus | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSending, setIsSending] = useState(false)
@@ -53,11 +55,15 @@ export default function EmailCompositionModal({
 
   // Check connection status on mount
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && user?.email) {
       // Small delay to ensure OAuth tokens are stored
       setTimeout(() => {
         checkConnectionStatus()
       }, 500)
+    } else if (isOpen && !user?.email) {
+      console.log('Email modal: User not available, setting loading to false')
+      setIsLoading(false)
+    }
       
       // Parse the script content to extract subject and clean up content
       const { extractedSubject, cleanedContent } = parseScriptContent(scriptContent)
@@ -80,7 +86,7 @@ export default function EmailCompositionModal({
       // Set email body to cleaned script content
       setEmailBody(cleanedContent)
     }
-  }, [isOpen, agentName, brokerageName, scriptContent])
+  }, [isOpen, user?.email, agentName, brokerageName, scriptContent])
 
   // Function to parse script content and extract subject/remove placeholders
   const parseScriptContent = (content: string) => {
@@ -164,13 +170,15 @@ export default function EmailCompositionModal({
 
   const checkConnectionStatus = async () => {
     if (!user?.email) {
+      console.log('Email modal: No user email available')
       setConnectionStatus({ connected: false })
+      setIsLoading(false)
       return
     }
     
     try {
       setIsLoading(true)
-      console.log('Email modal: Checking OAuth status...')
+      console.log('Email modal: Checking OAuth status for:', user.email)
       const response = await fetch('/api/auth/google/status', {
         headers: {
           'x-user-email': user.email
