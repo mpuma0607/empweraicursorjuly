@@ -23,18 +23,38 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
-    // Get user's OAuth tokens - check for calendar.events scope specifically
-    const tokens = await sql`
-      SELECT access_token, refresh_token, expires_at, scope
-      FROM oauth_tokens 
-      WHERE user_email = ${userEmail} 
-      AND provider = 'google' 
-      AND scope LIKE '%calendar.events%'
-      ORDER BY created_at DESC 
-      LIMIT 1
-    `
+    // Test database connection
+    try {
+      await sql`SELECT 1 as test`
+      console.log('Database connection successful')
+    } catch (dbTestError) {
+      console.error('Database connection test failed:', dbTestError)
+      return NextResponse.json({ 
+        error: "Database connection failed", 
+        details: dbTestError instanceof Error ? dbTestError.message : 'Unknown database error'
+      }, { status: 500 })
+    }
 
-    console.log('Found tokens for user:', userEmail, 'Count:', tokens.length, 'Scope:', tokens[0]?.scope)
+    // Get user's OAuth tokens - check for calendar.events scope specifically
+    let tokens
+    try {
+      tokens = await sql`
+        SELECT access_token, refresh_token, expires_at, scopes
+        FROM oauth_tokens 
+        WHERE user_email = ${userEmail} 
+        AND provider = 'google' 
+        AND scopes LIKE '%calendar.events%'
+        ORDER BY created_at DESC 
+        LIMIT 1
+      `
+      console.log('Found tokens for user:', userEmail, 'Count:', tokens.length, 'Scopes:', tokens[0]?.scopes)
+    } catch (dbError) {
+      console.error('Database query error:', dbError)
+      return NextResponse.json({ 
+        error: "Database query failed", 
+        details: dbError instanceof Error ? dbError.message : 'Unknown database error'
+      }, { status: 500 })
+    }
 
     if (tokens.length === 0) {
       console.log('No Google Calendar tokens found for user:', userEmail)
@@ -100,16 +120,24 @@ export async function POST(request: NextRequest) {
 
     console.log('Creating calendar event with:', event)
 
-    const calendarResponse = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(event)
-    })
-
-    console.log('Calendar API response status:', calendarResponse.status)
+    let calendarResponse
+    try {
+      calendarResponse = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(event)
+      })
+      console.log('Calendar API response status:', calendarResponse.status)
+    } catch (fetchError) {
+      console.error('Google Calendar API fetch error:', fetchError)
+      return NextResponse.json({ 
+        error: "Failed to call Google Calendar API", 
+        details: fetchError instanceof Error ? fetchError.message : 'Unknown fetch error'
+      }, { status: 500 })
+    }
 
     if (!calendarResponse.ok) {
       const errorData = await calendarResponse.json()
@@ -132,6 +160,11 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Error creating calendar event:', error)
-    return NextResponse.json({ error: "Failed to create calendar event" }, { status: 500 })
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace')
+    return NextResponse.json({ 
+      error: "Failed to create calendar event", 
+      details: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
+    }, { status: 500 })
   }
 }
