@@ -710,6 +710,17 @@ export function PropertyScriptGenerator({
       {/* Script Results */}
       {result && (
         <div ref={resultsRef} className="space-y-6">
+          {/* CALENDAR SECTION - FIRST THING */}
+          <div className="p-4 bg-red-500 text-white rounded-lg border border-red-600">
+            <h5 className="font-medium text-white mb-3 flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              🚨 CALENDAR SECTION IS RENDERING! 🚨
+            </h5>
+            <p className="text-white">If you can see this red box, the calendar section is working!</p>
+            <p className="text-white text-sm">Result exists: {result ? 'YES' : 'NO'}</p>
+            <p className="text-white text-sm">User exists: {user ? 'YES' : 'NO'}</p>
+          </div>
+          
           <Card className="border-purple-200 bg-gradient-to-br from-purple-50 to-indigo-50">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-purple-900">
@@ -839,118 +850,6 @@ export function PropertyScriptGenerator({
             </CardContent>
           </Card>
 
-          {/* CALENDAR SECTION - OUTSIDE CARD */}
-          {console.log('CALENDAR SECTION RENDERING - result exists:', !!result, 'user exists:', !!user)}
-          <div className="mt-6 p-4 bg-red-500 text-white rounded-lg border border-red-600">
-            <h5 className="font-medium text-white mb-3 flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              🚨 CALENDAR SECTION IS RENDERING! 🚨
-            </h5>
-            <p className="text-white">If you can see this red box, the calendar section is working!</p>
-            <p className="text-white text-sm">Result exists: {result ? 'YES' : 'NO'}</p>
-            <p className="text-white text-sm">User exists: {user ? 'YES' : 'NO'}</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Button 
-                variant="outline" 
-                className="w-full flex items-center gap-2"
-                onClick={async () => {
-                  if (!user?.email) {
-                    alert("Please log in to schedule calendar events")
-                    return
-                  }
-                  
-                  try {
-                    let eventTitle = `${formData.prospectType === "other" ? formData.customProspectType : formData.prospectType.toUpperCase()} Outreach`
-                    if (propertyAddress) {
-                      eventTitle += ` - ${propertyAddress}`
-                    }
-                    const eventDescription = `Script for ${formData.prospectType === "other" ? formData.customProspectType : formData.prospectType} outreach:\n\n${result.script}`
-                    const startDate = new Date()
-                    startDate.setDate(startDate.getDate() + 1)
-                    startDate.setHours(9, 0, 0, 0)
-                    const endDate = new Date(startDate)
-                    endDate.setHours(startDate.getHours() + 1)
-                    
-                    const response = await fetch('/api/calendar/create-event', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        title: eventTitle,
-                        description: eventDescription,
-                        startDateTime: startDate.toISOString(),
-                        duration: 60,
-                        userEmail: user.email
-                      })
-                    })
-                    
-                    const result = await response.json()
-                    if (result.success) {
-                      alert(`✅ Event created successfully! Check your Google Calendar.`)
-                    } else {
-                      alert(`❌ Failed to create event: ${result.error}`)
-                    }
-                  } catch (error) {
-                    console.error('Error creating calendar event:', error)
-                    alert('❌ Failed to create calendar event. Please try again.')
-                  }
-                }}
-              >
-                <Calendar className="h-4 w-4" />
-                Schedule Outreach Call
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full flex items-center gap-2"
-                onClick={async () => {
-                  if (!user?.email) {
-                    alert("Please log in to schedule calendar events")
-                    return
-                  }
-                  
-                  try {
-                    let eventTitle = `Follow-up Call`
-                    if (propertyAddress) {
-                      eventTitle += ` - ${propertyAddress}`
-                    }
-                    const eventDescription = `Follow-up script for ${formData.prospectType === "other" ? formData.customProspectType : formData.prospectType}:\n\n${result.script}`
-                    const startDate = new Date()
-                    startDate.setDate(startDate.getDate() + 3)
-                    startDate.setHours(10, 0, 0, 0)
-                    const endDate = new Date(startDate)
-                    endDate.setHours(startDate.getHours() + 1)
-                    
-                    const response = await fetch('/api/calendar/create-event', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        title: eventTitle,
-                        description: eventDescription,
-                        startDateTime: startDate.toISOString(),
-                        duration: 60,
-                        userEmail: user.email
-                      })
-                    })
-                    
-                    const result = await response.json()
-                    if (result.success) {
-                      alert(`✅ Follow-up event created successfully! Check your Google Calendar.`)
-                    } else {
-                      alert(`❌ Failed to create event: ${result.error}`)
-                    }
-                  } catch (error) {
-                    console.error('Error creating calendar event:', error)
-                    alert('❌ Failed to create calendar event. Please try again.')
-                  }
-                }}
-              >
-                <RotateCcw className="h-4 w-4" />
-                Schedule Follow-up
-              </Button>
-            </div>
-            <p className="text-xs text-blue-700 mt-2">
-              💡 Events are created directly in your Google Calendar using OAuth API!
-            </p>
-          </div>
         </div>
       )}
 
