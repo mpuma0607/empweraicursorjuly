@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
       FROM oauth_tokens 
       WHERE user_email = ${config.userEmail} 
       AND provider = 'google' 
-      AND scope LIKE '%calendar%'
+      AND scopes LIKE '%calendar.events%'
       ORDER BY created_at DESC 
       LIMIT 1
     `
