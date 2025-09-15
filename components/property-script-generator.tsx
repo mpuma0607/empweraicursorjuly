@@ -821,6 +821,115 @@ export function PropertyScriptGenerator({
               </div>
 
 
+              {/* CALENDAR SECTION - OAUTH API */}
+              <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <h5 className="font-medium text-blue-900 mb-3 flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  📅 Schedule Your Outreach
+                </h5>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <Button 
+                    variant="outline" 
+                    className="w-full flex items-center gap-2"
+                    onClick={async () => {
+                      if (!user?.email) {
+                        alert("Please log in to schedule calendar events")
+                        return
+                      }
+                      
+                      try {
+                        let eventTitle = `${formData.prospectType === "other" ? formData.customProspectType : formData.prospectType.toUpperCase()} Outreach`
+                        if (propertyAddress) {
+                          eventTitle += ` - ${propertyAddress}`
+                        }
+                        const eventDescription = `Script for ${formData.prospectType === "other" ? formData.customProspectType : formData.prospectType} outreach:\n\n${result.script}`
+                        const startDate = new Date()
+                        startDate.setDate(startDate.getDate() + 1)
+                        startDate.setHours(9, 0, 0, 0)
+                        const endDate = new Date(startDate)
+                        endDate.setHours(startDate.getHours() + 1)
+                        
+                        const response = await fetch('/api/calendar/create-event', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            title: eventTitle,
+                            description: eventDescription,
+                            startDateTime: startDate.toISOString(),
+                            duration: 60,
+                            userEmail: user.email
+                          })
+                        })
+                        
+                        const result = await response.json()
+                        if (result.success) {
+                          alert(`✅ Event created successfully! Check your Google Calendar.`)
+                        } else {
+                          alert(`❌ Failed to create event: ${result.error}`)
+                        }
+                      } catch (error) {
+                        console.error('Error creating calendar event:', error)
+                        alert('❌ Failed to create calendar event. Please try again.')
+                      }
+                    }}
+                  >
+                    <Calendar className="h-4 w-4" />
+                    Schedule Outreach Call
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="w-full flex items-center gap-2"
+                    onClick={async () => {
+                      if (!user?.email) {
+                        alert("Please log in to schedule calendar events")
+                        return
+                      }
+                      
+                      try {
+                        let eventTitle = `Follow-up Call`
+                        if (propertyAddress) {
+                          eventTitle += ` - ${propertyAddress}`
+                        }
+                        const eventDescription = `Follow-up script for ${formData.prospectType === "other" ? formData.customProspectType : formData.prospectType}:\n\n${result.script}`
+                        const startDate = new Date()
+                        startDate.setDate(startDate.getDate() + 3)
+                        startDate.setHours(10, 0, 0, 0)
+                        const endDate = new Date(startDate)
+                        endDate.setHours(startDate.getHours() + 1)
+                        
+                        const response = await fetch('/api/calendar/create-event', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            title: eventTitle,
+                            description: eventDescription,
+                            startDateTime: startDate.toISOString(),
+                            duration: 60,
+                            userEmail: user.email
+                          })
+                        })
+                        
+                        const result = await response.json()
+                        if (result.success) {
+                          alert(`✅ Follow-up event created successfully! Check your Google Calendar.`)
+                        } else {
+                          alert(`❌ Failed to create event: ${result.error}`)
+                        }
+                      } catch (error) {
+                        console.error('Error creating calendar event:', error)
+                        alert('❌ Failed to create calendar event. Please try again.')
+                      }
+                    }}
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                    Schedule Follow-up
+                  </Button>
+                </div>
+                <p className="text-xs text-blue-700 mt-2">
+                  💡 Events are created directly in your Google Calendar using OAuth API!
+                </p>
+              </div>
+
               <div className="bg-purple-50 p-4 rounded-lg border border-purple-200 mt-6">
                 <h5 className="font-medium text-purple-900 mb-2 flex items-center gap-2">
                   <FileText className="h-4 w-4" />
@@ -838,74 +947,6 @@ export function PropertyScriptGenerator({
             </CardContent>
           </Card>
 
-          {/* Calendar Integration - SIMPLE VERSION */}
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <h5 className="font-medium text-blue-900 mb-3 flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              📅 Schedule Your Outreach
-            </h5>
-            <div className="mb-2 p-2 bg-yellow-100 border border-yellow-300 rounded text-sm">
-              DEBUG: Calendar section is rendering! Result exists: {result ? 'YES' : 'NO'}
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Button 
-                variant="outline" 
-                className="w-full flex items-center gap-2"
-                onClick={() => {
-                  // Create a smart title based on available data
-                  let eventTitle = `${formData.prospectType === "other" ? formData.customProspectType : formData.prospectType.toUpperCase()} Outreach`
-                  if (propertyAddress) {
-                    eventTitle += ` - ${propertyAddress}`
-                  }
-                  
-                  const eventDescription = `Script for ${formData.prospectType === "other" ? formData.customProspectType : formData.prospectType} outreach:\n\n${result.script}`
-                  const startDate = new Date()
-                  startDate.setDate(startDate.getDate() + 1) // Tomorrow
-                  startDate.setHours(9, 0, 0, 0) // 9 AM
-                  
-                  const endDate = new Date(startDate)
-                  endDate.setHours(startDate.getHours() + 1) // 1 hour duration
-                  
-                  const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(eventTitle)}&dates=${startDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z/${endDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z&details=${encodeURIComponent(eventDescription)}`
-                  
-                  window.open(googleCalendarUrl, '_blank')
-                }}
-              >
-                <Calendar className="h-4 w-4" />
-                Schedule Outreach Call
-              </Button>
-
-              <Button 
-                variant="outline" 
-                className="w-full flex items-center gap-2"
-                onClick={() => {
-                  // Create a follow-up title
-                  let eventTitle = `Follow-up Call`
-                  if (propertyAddress) {
-                    eventTitle += ` - ${propertyAddress}`
-                  }
-                  
-                  const eventDescription = `Follow-up script for ${formData.prospectType === "other" ? formData.customProspectType : formData.prospectType}:\n\n${result.script}`
-                  const startDate = new Date()
-                  startDate.setDate(startDate.getDate() + 3) // 3 days from now
-                  startDate.setHours(10, 0, 0, 0) // 10 AM
-                  
-                  const endDate = new Date(startDate)
-                  endDate.setHours(startDate.getHours() + 1) // 1 hour duration
-                  
-                  const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(eventTitle)}&dates=${startDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z/${endDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z&details=${encodeURIComponent(eventDescription)}`
-                  
-                  window.open(googleCalendarUrl, '_blank')
-                }}
-              >
-                <RotateCcw className="h-4 w-4" />
-                Schedule Follow-up
-              </Button>
-            </div>
-            <p className="text-xs text-blue-700 mt-2">
-              💡 Click to open Google Calendar with your script pre-filled. You can then adjust the date/time as needed!
-            </p>
-          </div>
         </div>
       )}
 
