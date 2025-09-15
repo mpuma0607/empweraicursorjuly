@@ -21,6 +21,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { generateScript } from "./actions"
 
 import { Loader2, Copy, Download, Mail, FileText, MessageSquare, Save, UserCheck, Calendar, RotateCcw } from "lucide-react"
+import CalendarSchedulingModal from "@/components/calendar/calendar-scheduling-modal"
 
 import { useToast } from "@/hooks/use-toast"
 
@@ -1136,100 +1137,33 @@ export default function ScriptForm() {
           Add your script practice sessions directly to your Google Calendar to stay organized and consistent.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Button 
-            variant="outline" 
-            className="w-full flex items-center gap-2 border-green-300 text-green-700 hover:bg-green-100"
-            onClick={async () => {
-              if (!user?.email) {
-                alert("Please log in to schedule calendar events")
-                return
-              }
-              
-              try {
-                const eventTitle = `${formData.scriptType} Script Practice - ${formData.topic === "other" ? formData.customTopic : formData.topic}`
-                const eventDescription = `Script for ${formData.scriptType}:\n\n${result?.script}`
-                const startDate = new Date()
-                startDate.setDate(startDate.getDate() + 1)
-                startDate.setHours(9, 0, 0, 0)
-                
-                const response = await fetch('/api/calendar/create-event', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    title: eventTitle,
-                    description: eventDescription,
-                    startDateTime: startDate.toISOString(),
-                    duration: 60,
-                    userEmail: user.email
-                  })
-                })
-                
-                const apiResult = await response.json()
-                if (apiResult.success) {
-                  alert(`✅ Script practice scheduled! Check your Google Calendar.`)
-                } else {
-                  if (response.status === 401) {
-                    alert(`❌ Google Calendar not connected. Please go to your profile and connect your Google account first.`)
-                  } else {
-                    alert(`❌ Failed to schedule: ${apiResult.error}`)
-                  }
-                }
-              } catch (error) {
-                console.error('Error creating calendar event:', error)
-                alert('❌ Failed to schedule calendar event. Please try again.')
-              }
-            }}
+          <CalendarSchedulingModal
+            title={`${formData.scriptType} Script Practice - ${formData.topic === "other" ? formData.customTopic : formData.topic}`}
+            description={`Script for ${formData.scriptType}:\n\n${result?.script}`}
+            defaultDuration={60}
           >
-            <Calendar className="h-4 w-4" />
-            Schedule Practice Session
-          </Button>
-          <Button 
-            variant="outline" 
-            className="w-full flex items-center gap-2 border-green-300 text-green-700 hover:bg-green-100"
-            onClick={async () => {
-              if (!user?.email) {
-                alert("Please log in to schedule calendar events")
-                return
-              }
-              
-              try {
-                const eventTitle = `Follow-up Call - ${formData.topic === "other" ? formData.customTopic : formData.topic}`
-                const eventDescription = `Follow-up script for ${formData.scriptType}:\n\n${result?.script}`
-                const startDate = new Date()
-                startDate.setDate(startDate.getDate() + 3)
-                startDate.setHours(10, 0, 0, 0)
-                
-                const response = await fetch('/api/calendar/create-event', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    title: eventTitle,
-                    description: eventDescription,
-                    startDateTime: startDate.toISOString(),
-                    duration: 60,
-                    userEmail: user.email
-                  })
-                })
-                
-                const apiResult = await response.json()
-                if (apiResult.success) {
-                  alert(`✅ Follow-up call scheduled! Check your Google Calendar.`)
-                } else {
-                  if (response.status === 401) {
-                    alert(`❌ Google Calendar not connected. Please go to your profile and connect your Google account first.`)
-                  } else {
-                    alert(`❌ Failed to schedule: ${apiResult.error}`)
-                  }
-                }
-              } catch (error) {
-                console.error('Error creating calendar event:', error)
-                alert('❌ Failed to schedule calendar event. Please try again.')
-              }
-            }}
+            <Button 
+              variant="outline" 
+              className="w-full flex items-center gap-2 border-green-300 text-green-700 hover:bg-green-100"
+            >
+              <Calendar className="h-4 w-4" />
+              Schedule Practice Session
+            </Button>
+          </CalendarSchedulingModal>
+          
+          <CalendarSchedulingModal
+            title={`Follow-up Call - ${formData.topic === "other" ? formData.customTopic : formData.topic}`}
+            description={`Follow-up script for ${formData.scriptType}:\n\n${result?.script}`}
+            defaultDuration={60}
           >
-            <RotateCcw className="h-4 w-4" />
-            Schedule Follow-up Call
-          </Button>
+            <Button 
+              variant="outline" 
+              className="w-full flex items-center gap-2 border-green-300 text-green-700 hover:bg-green-100"
+            >
+              <RotateCcw className="h-4 w-4" />
+              Schedule Follow-up
+            </Button>
+          </CalendarSchedulingModal>
         </div>
         <p className="text-xs text-green-600 mt-3">
           💡 Events are created directly in your Google Calendar using OAuth API!
