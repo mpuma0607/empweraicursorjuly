@@ -123,20 +123,37 @@ const QuickCMAResults = ({ data }: QuickCMAResultsProps) => {
   // Check Gmail connection status
   useEffect(() => {
     const checkGmailStatus = async () => {
+      if (!user?.email) {
+        console.log('QuickCMA: No user email, Gmail not connected')
+        setIsGmailConnected(false)
+        return
+      }
+      
       try {
-        const response = await fetch('/api/auth/google/status')
+        console.log('QuickCMA: Checking Gmail status for:', user.email)
+        const response = await fetch('/api/auth/google/status', {
+          headers: {
+            'x-user-email': user.email
+          }
+        })
+        console.log('QuickCMA: Gmail status response:', response.status, response.ok)
+        
         if (response.ok) {
           const data = await response.json()
+          console.log('QuickCMA: Gmail status data:', data)
           setIsGmailConnected(data.status.connected)
+        } else {
+          console.log('QuickCMA: Gmail status response not ok')
+          setIsGmailConnected(false)
         }
       } catch (error) {
-        console.error('Error checking Gmail status:', error)
+        console.error('QuickCMA: Error checking Gmail status:', error)
         setIsGmailConnected(false)
       }
     }
     
     checkGmailStatus()
-  }, [])
+  }, [user?.email])
 
   // Get brand logo with fallback logic
   const brandLogo = useMemo(() => {
@@ -453,7 +470,7 @@ Please review the detailed comparables and market analysis below. If you have an
           </Button>
 
           {/* Gmail Client Email (Only if Gmail Connected) */}
-          {isGmailConnected && (
+          {isGmailConnected ? (
             <Button 
               variant="outline"
               onClick={() => setIsEmailModalOpen(true)} 
@@ -462,6 +479,14 @@ Please review the detailed comparables and market analysis below. If you have an
               <Mail className="h-4 w-4" />
               Send to Client
             </Button>
+          ) : (
+            <div className="text-xs text-gray-500 text-center p-2 border border-gray-200 rounded">
+              Gmail not connected
+              <br />
+              <a href="/profile/email-integration" className="text-blue-600 hover:underline">
+                Connect Gmail
+              </a>
+            </div>
           )}
         </div>
       </div>

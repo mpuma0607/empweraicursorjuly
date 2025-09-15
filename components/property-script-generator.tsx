@@ -172,8 +172,17 @@ export function PropertyScriptGenerator({
   // Check Gmail connection status
   useEffect(() => {
     const checkGmailStatus = async () => {
+      if (!user?.email) {
+        setIsGmailConnected(false)
+        return
+      }
+      
       try {
-        const response = await fetch('/api/auth/google/status')
+        const response = await fetch('/api/auth/google/status', {
+          headers: {
+            'x-user-email': user.email
+          }
+        })
         if (response.ok) {
           const data = await response.json()
           setIsGmailConnected(data.status.connected)
@@ -185,7 +194,7 @@ export function PropertyScriptGenerator({
     }
     
     checkGmailStatus()
-  }, [])
+  }, [user?.email])
 
   // Auto-scroll to results when they're generated
   useEffect(() => {

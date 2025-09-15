@@ -163,10 +163,19 @@ export default function EmailCompositionModal({
   }
 
   const checkConnectionStatus = async () => {
+    if (!user?.email) {
+      setConnectionStatus({ connected: false })
+      return
+    }
+    
     try {
       setIsLoading(true)
       console.log('Email modal: Checking OAuth status...')
-      const response = await fetch('/api/auth/google/status')
+      const response = await fetch('/api/auth/google/status', {
+        headers: {
+          'x-user-email': user.email
+        }
+      })
       console.log('Email modal: Status response:', response.status, response.ok)
       
       if (response.ok) {
