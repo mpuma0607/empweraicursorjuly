@@ -97,7 +97,10 @@ export default function EmailIntegrationPage() {
       
       if (success === 'oauth_completed' && email) {
         setSuccess(`Gmail connected successfully! Email: ${email}`)
-        checkConnectionStatus()
+        // Wait a moment for the OAuth callback to complete, then check status
+        setTimeout(() => {
+          checkConnectionStatus()
+        }, 1000)
         // Clean up URL
         window.history.replaceState({}, document.title, window.location.pathname)
       } else if (error) {
