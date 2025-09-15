@@ -20,7 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { generateScript } from "./actions"
 
-import { Loader2, Copy, Download, Mail, FileText, MessageSquare, Save, UserCheck } from "lucide-react"
+import { Loader2, Copy, Download, Mail, FileText, MessageSquare, Save, UserCheck, Calendar, RotateCcw } from "lucide-react"
 
 import { useToast } from "@/hooks/use-toast"
 
@@ -1124,6 +1124,108 @@ export default function ScriptForm() {
           {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
           <span className="whitespace-nowrap">{!isLoggedIn ? "Login to Save" : "Save"}</span>
         </Button>
+      </div>
+
+      {/* CALENDAR SECTION */}
+      <div className="mt-6 p-4 bg-red-500 text-white rounded-lg border border-red-600">
+        <h5 className="font-medium text-white mb-3 flex items-center gap-2">
+          <Calendar className="h-4 w-4" />
+          🚨 CALENDAR SECTION IS RENDERING! 🚨
+        </h5>
+        <p className="text-white">If you can see this red box, the calendar section is working!</p>
+        <p className="text-white text-sm">Result exists: {result ? 'YES' : 'NO'}</p>
+        <p className="text-white text-sm">User exists: {user ? 'YES' : 'NO'}</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+          <Button 
+            variant="outline" 
+            className="w-full flex items-center gap-2"
+            onClick={async () => {
+              if (!user?.email) {
+                alert("Please log in to schedule calendar events")
+                return
+              }
+              
+              try {
+                const eventTitle = `${formData.scriptType} Script - ${formData.topic === "other" ? formData.customTopic : formData.topic}`
+                const eventDescription = `Script for ${formData.scriptType}:\n\n${result?.script}`
+                const startDate = new Date()
+                startDate.setDate(startDate.getDate() + 1)
+                startDate.setHours(9, 0, 0, 0)
+                
+                const response = await fetch('/api/calendar/create-event', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    title: eventTitle,
+                    description: eventDescription,
+                    startDateTime: startDate.toISOString(),
+                    duration: 60,
+                    userEmail: user.email
+                  })
+                })
+                
+                const apiResult = await response.json()
+                if (apiResult.success) {
+                  alert(`✅ Event created successfully! Check your Google Calendar.`)
+                } else {
+                  alert(`❌ Failed to create event: ${apiResult.error}`)
+                }
+              } catch (error) {
+                console.error('Error creating calendar event:', error)
+                alert('❌ Failed to create calendar event. Please try again.')
+              }
+            }}
+          >
+            <Calendar className="h-4 w-4" />
+            Schedule Script Practice
+          </Button>
+          <Button 
+            variant="outline" 
+            className="w-full flex items-center gap-2"
+            onClick={async () => {
+              if (!user?.email) {
+                alert("Please log in to schedule calendar events")
+                return
+              }
+              
+              try {
+                const eventTitle = `Follow-up Call - ${formData.topic === "other" ? formData.customTopic : formData.topic}`
+                const eventDescription = `Follow-up script for ${formData.scriptType}:\n\n${result?.script}`
+                const startDate = new Date()
+                startDate.setDate(startDate.getDate() + 3)
+                startDate.setHours(10, 0, 0, 0)
+                
+                const response = await fetch('/api/calendar/create-event', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    title: eventTitle,
+                    description: eventDescription,
+                    startDateTime: startDate.toISOString(),
+                    duration: 60,
+                    userEmail: user.email
+                  })
+                })
+                
+                const apiResult = await response.json()
+                if (apiResult.success) {
+                  alert(`✅ Follow-up event created successfully! Check your Google Calendar.`)
+                } else {
+                  alert(`❌ Failed to create event: ${apiResult.error}`)
+                }
+              } catch (error) {
+                console.error('Error creating calendar event:', error)
+                alert('❌ Failed to create calendar event. Please try again.')
+              }
+            }}
+          >
+            <RotateCcw className="h-4 w-4" />
+            Schedule Follow-up
+          </Button>
+        </div>
+        <p className="text-xs text-blue-700 mt-2">
+          💡 Events are created directly in your Google Calendar using OAuth API!
+        </p>
       </div>
 
       <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
