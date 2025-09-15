@@ -31,31 +31,44 @@ export default function EmailIntegrationPage() {
   const [isDisconnecting, setIsDisconnecting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [userEmail, setUserEmail] = useState<string | null>(null)
 
   // Check connection status and OAuth completion on page load
   useEffect(() => {
     checkConnectionStatus()
     checkOAuthCompletion()
-  }, [user]) // Re-run when user data is loaded
+  }, []) // Only run once on page load
+
+  // Separate effect to handle user data changes
+  useEffect(() => {
+    if (user?.email && !connectionStatus?.connected) {
+      // Only check status if we don't already have a connection status
+      checkConnectionStatus()
+    }
+  }, [user])
 
   const checkConnectionStatus = async () => {
     try {
       setIsLoading(true)
       
-      // Try to get user email from multiple sources
-      let userEmail = user?.email
+      // Use stored userEmail or try to get it from multiple sources
+      let currentUserEmail = userEmail || user?.email
       
-      // If no user email from hook, try to get it from URL params (OAuth success)
-      if (!userEmail) {
+      // If no user email from state or hook, try to get it from URL params (OAuth success)
+      if (!currentUserEmail) {
         const urlParams = new URLSearchParams(window.location.search)
-        userEmail = urlParams.get('email')
-        console.log('📧 Got email from URL params:', userEmail)
+        currentUserEmail = urlParams.get('email')
+        if (currentUserEmail) {
+          setUserEmail(currentUserEmail) // Store it for future use
+          console.log('📧 Got email from URL params and stored:', currentUserEmail)
+        }
       }
       
-      console.log('🔍 Checking connection status for user email:', userEmail)
+      console.log('🔍 Checking connection status for user email:', currentUserEmail)
       console.log('👤 User object:', user)
+      console.log('💾 Stored userEmail:', userEmail)
       
-      if (!userEmail) {
+      if (!currentUserEmail) {
         console.log('No user email found, showing disconnected status')
         setConnectionStatus({ connected: false })
         return
@@ -63,7 +76,7 @@ export default function EmailIntegrationPage() {
       
       const response = await fetch('/api/auth/google/status', {
         headers: {
-          'x-user-email': userEmail
+          'x-user-email': currentUserEmail
         }
       })
       
@@ -132,10 +145,10 @@ export default function EmailIntegrationPage() {
       setIsDisconnecting(true)
       setError(null)
       
-      // Use the user email from the hook
-      const userEmail = user?.email
+      // Use stored userEmail or user email from hook
+      const currentUserEmail = userEmail || user?.email
       
-      if (!userEmail) {
+      if (!currentUserEmail) {
         setError('User email required for disconnect')
         return
       }
@@ -143,7 +156,7 @@ export default function EmailIntegrationPage() {
       const response = await fetch('/api/auth/google/disconnect', {
         method: 'POST',
         headers: {
-          'x-user-email': userEmail
+          'x-user-email': currentUserEmail
         }
       })
       
