@@ -3,7 +3,10 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { TrendingUp, ExternalLink, Calendar, RefreshCw, Twitter, Facebook, Linkedin, Copy, Check } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Badge } from "@/components/ui/badge"
+import { TrendingUp, ExternalLink, Calendar, RefreshCw, Twitter, Facebook, Linkedin, Copy, Check, Search, Filter, MapPin, Tag } from "lucide-react"
 import Link from "next/link"
 
 interface Article {
@@ -13,13 +16,20 @@ interface Article {
   pubDate: string
   source: string
   image?: string
+  category?: string
+  location?: string
 }
 
 export default function HotTakesPage() {
   const [articles, setArticles] = useState<Article[]>([])
+  const [filteredArticles, setFilteredArticles] = useState<Article[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [copiedLink, setCopiedLink] = useState<string | null>(null)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [selectedCategory, setSelectedCategory] = useState("all")
+  const [selectedLocation, setSelectedLocation] = useState("all")
+  const [sortBy, setSortBy] = useState("date")
 
   const fetchArticles = async () => {
     try {
@@ -33,6 +43,7 @@ export default function HotTakesPage() {
       if (!response.ok) throw new Error("Failed to fetch articles")
       const data = await response.json()
       setArticles(data.articles || [])
+      setFilteredArticles(data.articles || [])
       setError(null)
     } catch (err) {
       setError("Failed to load articles. Please try again.")
@@ -42,9 +53,59 @@ export default function HotTakesPage() {
     }
   }
 
+  // Filter and sort articles
+  const filterAndSortArticles = () => {
+    let filtered = [...articles]
+
+    // Filter by search term
+    if (searchTerm) {
+      filtered = filtered.filter(article =>
+        article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        article.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        article.source.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    }
+
+    // Filter by category
+    if (selectedCategory !== "all") {
+      filtered = filtered.filter(article => article.category === selectedCategory)
+    }
+
+    // Filter by location
+    if (selectedLocation !== "all") {
+      filtered = filtered.filter(article => 
+        article.location && article.location.toLowerCase().includes(selectedLocation.toLowerCase())
+      )
+    }
+
+    // Sort articles
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case "date":
+          return new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime()
+        case "title":
+          return a.title.localeCompare(b.title)
+        case "source":
+          return a.source.localeCompare(b.source)
+        default:
+          return 0
+      }
+    })
+
+    setFilteredArticles(filtered)
+  }
+
+  // Get unique categories and locations for filter dropdowns
+  const categories = ["all", ...new Set(articles.map(a => a.category).filter(Boolean))]
+  const locations = ["all", ...new Set(articles.map(a => a.location).filter(Boolean))]
+
   useEffect(() => {
     fetchArticles()
   }, [])
+
+  useEffect(() => {
+    filterAndSortArticles()
+  }, [searchTerm, selectedCategory, selectedLocation, sortBy, articles])
 
   const formatDate = (dateString: string) => {
     try {
@@ -104,6 +165,103 @@ export default function HotTakesPage() {
           </Button>
         </div>
 
+        {/* Search and Filter Section */}
+        <Card className="mb-8">
+          <CardContent className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Search */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Search Articles</label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Search articles..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+
+              {/* Category Filter */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Category</label>
+                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                  <SelectTrigger>
+                    <Tag className="h-4 w-4 mr-2" />
+                    <SelectValue placeholder="All Categories" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category === "all" ? "All Categories" : category.charAt(0).toUpperCase() + category.slice(1)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Location Filter */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Location</label>
+                <Select value={selectedLocation} onValueChange={setSelectedLocation}>
+                  <SelectTrigger>
+                    <MapPin className="h-4 w-4 mr-2" />
+                    <SelectValue placeholder="All Locations" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {locations.map((location) => (
+                      <SelectItem key={location} value={location}>
+                        {location === "all" ? "All Locations" : location}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Sort */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Sort By</label>
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger>
+                    <Filter className="h-4 w-4 mr-2" />
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="date">Date (Newest)</SelectItem>
+                    <SelectItem value="title">Title (A-Z)</SelectItem>
+                    <SelectItem value="source">Source</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Results Count */}
+            <div className="mt-4 flex items-center justify-between">
+              <div className="text-sm text-gray-600">
+                <p>Showing {filteredArticles.length} of {articles.length} articles</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  All articles are from the last 90 days • Updated in real-time
+                </p>
+              </div>
+              {(searchTerm || selectedCategory !== "all" || selectedLocation !== "all") && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSearchTerm("")
+                    setSelectedCategory("all")
+                    setSelectedLocation("all")
+                    setSortBy("date")
+                  }}
+                >
+                  Clear Filters
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Loading State */}
         {loading && (
           <div className="text-center py-12">
@@ -127,7 +285,7 @@ export default function HotTakesPage() {
         {/* Articles Grid */}
         {!loading && !error && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {articles.map((article, index) => (
+            {filteredArticles.map((article, index) => (
               <Card key={index} className="h-full hover:shadow-xl transition-all duration-300 border-0 shadow-lg">
                 <CardContent className="p-6 flex flex-col h-full">
                   {/* Article Header */}
@@ -139,6 +297,22 @@ export default function HotTakesPage() {
                       <Calendar className="h-3 w-3 mr-1" />
                       {formatDate(article.pubDate)}
                     </div>
+                  </div>
+
+                  {/* Category and Location Badges */}
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {article.category && (
+                      <Badge variant="secondary" className="text-xs">
+                        <Tag className="h-3 w-3 mr-1" />
+                        {article.category.charAt(0).toUpperCase() + article.category.slice(1)}
+                      </Badge>
+                    )}
+                    {article.location && (
+                      <Badge variant="outline" className="text-xs">
+                        <MapPin className="h-3 w-3 mr-1" />
+                        {article.location}
+                      </Badge>
+                    )}
                   </div>
 
                   {/* Article Content */}
@@ -194,6 +368,26 @@ export default function HotTakesPage() {
             <p className="text-gray-500 mb-4">Try refreshing to load the latest real estate news.</p>
             <Button onClick={fetchArticles} variant="outline">
               Refresh News
+            </Button>
+          </div>
+        )}
+
+        {/* No Filtered Results State */}
+        {!loading && !error && articles.length > 0 && filteredArticles.length === 0 && (
+          <div className="text-center py-12">
+            <Search className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-600 mb-2">No articles match your filters</h3>
+            <p className="text-gray-500 mb-4">Try adjusting your search terms or filters to find more articles.</p>
+            <Button
+              onClick={() => {
+                setSearchTerm("")
+                setSelectedCategory("all")
+                setSelectedLocation("all")
+                setSortBy("date")
+              }}
+              variant="outline"
+            >
+              Clear Filters
             </Button>
           </div>
         )}
