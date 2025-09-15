@@ -3,38 +3,48 @@ import { oauthTokens } from "@/lib/oauth-tokens"
 
 export async function GET(request: NextRequest) {
   try {
-    // For now, we'll check all stored tokens and return the first valid one
-    // TODO: In production, get user ID from session/auth and check specific user's tokens
+    // Get user email from request headers (set by middleware or session)
+    const userEmail = request.headers.get('x-user-email') || request.headers.get('user-email')
     
-    const allEmails = await oauthTokens.getAllEmails()
-    console.log('Checking OAuth status for emails:', allEmails)
+    console.log('Checking OAuth status for user:', userEmail)
     
-    // Find the first user with valid tokens
-    for (const email of allEmails) {
-      if (await oauthTokens.hasValidTokens(email)) {
-        const tokens = await oauthTokens.get(email)
-        
-        if (tokens) {
-          // Update last used time
-          await oauthTokens.updateLastUsed(email)
-          
-          console.log(`Found valid tokens for ${email}`)
-          
-          return NextResponse.json({
-            status: {
-              connected: true,
-              email: tokens.userEmail,
-              connectedAt: tokens.createdAt,
-              scopes: tokens.scopes,
-              lastUsed: tokens.lastUsed
-            }
-          })
+    if (!userEmail) {
+      console.log('No user email provided in request')
+      return NextResponse.json({
+        status: {
+          connected: false,
+          email: undefined,
+          connectedAt: undefined,
+          scopes: undefined,
+          lastUsed: undefined
         }
+      })
+    }
+    
+    // Check if this specific user has valid tokens
+    if (await oauthTokens.hasValidTokens(userEmail)) {
+      const tokens = await oauthTokens.get(userEmail)
+      
+      if (tokens) {
+        // Update last used time
+        await oauthTokens.updateLastUsed(userEmail)
+        
+        console.log(`Found valid tokens for ${userEmail}`)
+        
+        return NextResponse.json({
+          status: {
+            connected: true,
+            email: tokens.userEmail,
+            connectedAt: tokens.createdAt,
+            scopes: tokens.scopes,
+            lastUsed: tokens.lastUsed
+          }
+        })
       }
     }
     
-    // No valid tokens found
-    console.log('No valid OAuth tokens found')
+    // No valid tokens found for this user
+    console.log(`No valid OAuth tokens found for ${userEmail}`)
     return NextResponse.json({
       status: {
         connected: false,

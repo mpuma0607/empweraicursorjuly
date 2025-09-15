@@ -60,8 +60,7 @@ export default function CalendarSchedulingModal({
       const response = await fetch('/api/calendar/create-event', {
         method: 'POST',
         headers: { 
-          'Content-Type': 'application/json',
-          'x-user-email': user.email
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           title: formData.eventTitle,
@@ -69,7 +68,8 @@ export default function CalendarSchedulingModal({
           startDateTime: startDateTime.toISOString(),
           duration: formData.duration,
           attendees: attendeeList,
-          location: formData.location || undefined
+          location: formData.location || undefined,
+          userEmail: user.email
         })
       })
 

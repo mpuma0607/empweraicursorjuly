@@ -39,7 +39,28 @@ export default function EmailIntegrationPage() {
   const checkConnectionStatus = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch('/api/auth/google/status')
+      
+      // Get user email from MemberSpace
+      const memberSpaceResponse = await fetch('/api/memberspace-user')
+      let userEmail = null
+      
+      if (memberSpaceResponse.ok) {
+        const memberData = await memberSpaceResponse.json()
+        userEmail = memberData.email
+      }
+      
+      if (!userEmail) {
+        console.log('No user email found, showing disconnected status')
+        setConnectionStatus({ connected: false })
+        return
+      }
+      
+      const response = await fetch('/api/auth/google/status', {
+        headers: {
+          'x-user-email': userEmail
+        }
+      })
+      
       if (response.ok) {
         const data = await response.json()
         setConnectionStatus(data.status)
@@ -98,8 +119,25 @@ export default function EmailIntegrationPage() {
       setIsDisconnecting(true)
       setError(null)
       
+      // Get user email from MemberSpace
+      const memberSpaceResponse = await fetch('/api/memberspace-user')
+      let userEmail = null
+      
+      if (memberSpaceResponse.ok) {
+        const memberData = await memberSpaceResponse.json()
+        userEmail = memberData.email
+      }
+      
+      if (!userEmail) {
+        setError('User email required for disconnect')
+        return
+      }
+      
       const response = await fetch('/api/auth/google/disconnect', {
-        method: 'POST'
+        method: 'POST',
+        headers: {
+          'x-user-email': userEmail
+        }
       })
       
       if (response.ok) {

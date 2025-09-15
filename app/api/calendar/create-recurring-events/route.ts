@@ -17,13 +17,10 @@ interface RecurringEventConfig {
 
 export async function POST(request: NextRequest) {
   try {
-    const config: Omit<RecurringEventConfig, 'userEmail'> = await request.json()
+    const config: RecurringEventConfig = await request.json()
 
-    // Get user email from the request headers
-    const userEmail = request.headers.get('x-user-email') || request.headers.get('user-email')
-
-    if (!userEmail || !config.title || !config.description || !config.startDateTime || !config.duration) {
-      return NextResponse.json({ error: "Missing required fields or user not authenticated" }, { status: 400 })
+    if (!config.title || !config.description || !config.startDateTime || !config.duration || !config.userEmail) {
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
     // Get user's OAuth tokens
