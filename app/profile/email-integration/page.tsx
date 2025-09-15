@@ -13,6 +13,7 @@ import {
   ExternalLink,
   AlertCircle
 } from "lucide-react"
+import { useMemberSpaceUser } from "@/hooks/useMemberSpaceUser"
 
 interface EmailConnectionStatus {
   connected: boolean
@@ -23,6 +24,7 @@ interface EmailConnectionStatus {
 }
 
 export default function EmailIntegrationPage() {
+  const { user, loading: userLoading } = useMemberSpaceUser()
   const [connectionStatus, setConnectionStatus] = useState<EmailConnectionStatus | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isConnecting, setIsConnecting] = useState(false)
@@ -34,20 +36,14 @@ export default function EmailIntegrationPage() {
   useEffect(() => {
     checkConnectionStatus()
     checkOAuthCompletion()
-  }, [])
+  }, [user]) // Re-run when user data is loaded
 
   const checkConnectionStatus = async () => {
     try {
       setIsLoading(true)
       
-      // Get user email from MemberSpace
-      const memberSpaceResponse = await fetch('/api/memberspace-user')
-      let userEmail = null
-      
-      if (memberSpaceResponse.ok) {
-        const memberData = await memberSpaceResponse.json()
-        userEmail = memberData.email
-      }
+      // Use the user email from the hook
+      const userEmail = user?.email
       
       if (!userEmail) {
         console.log('No user email found, showing disconnected status')
@@ -119,14 +115,8 @@ export default function EmailIntegrationPage() {
       setIsDisconnecting(true)
       setError(null)
       
-      // Get user email from MemberSpace
-      const memberSpaceResponse = await fetch('/api/memberspace-user')
-      let userEmail = null
-      
-      if (memberSpaceResponse.ok) {
-        const memberData = await memberSpaceResponse.json()
-        userEmail = memberData.email
-      }
+      // Use the user email from the hook
+      const userEmail = user?.email
       
       if (!userEmail) {
         setError('User email required for disconnect')
@@ -159,12 +149,14 @@ export default function EmailIntegrationPage() {
     await checkConnectionStatus()
   }
 
-  if (isLoading) {
+  if (userLoading || isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-center min-h-[400px]">
           <RefreshCw className="h-8 w-8 animate-spin text-blue-600" />
-          <span className="ml-3 text-lg">Checking email connection status...</span>
+          <span className="ml-3 text-lg">
+            {userLoading ? 'Loading user data...' : 'Checking email connection status...'}
+          </span>
         </div>
       </div>
     )
