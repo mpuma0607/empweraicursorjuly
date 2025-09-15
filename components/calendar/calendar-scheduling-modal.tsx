@@ -27,11 +27,17 @@ export default function CalendarSchedulingModal({
   const { user } = useMemberSpaceUser()
   const [isOpen, setIsOpen] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
+  // Set default date to tomorrow
+  const tomorrow = new Date()
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  const defaultDate = tomorrow.toISOString().split('T')[0]
+  const defaultTime = "09:00"
+
   const [formData, setFormData] = useState({
     eventTitle: title,
     description: description,
-    startDate: "",
-    startTime: "",
+    startDate: defaultDate,
+    startTime: defaultTime,
     duration: defaultDuration,
     attendees: "",
     location: ""
@@ -48,8 +54,24 @@ export default function CalendarSchedulingModal({
     setIsCreating(true)
 
     try {
-      // Combine date and time
-      const startDateTime = new Date(`${formData.startDate}T${formData.startTime}`)
+      // Validate date and time inputs
+      if (!formData.startDate || !formData.startTime) {
+        alert("Please select both date and time")
+        return
+      }
+
+      // Combine date and time with proper validation
+      const dateTimeString = `${formData.startDate}T${formData.startTime}`
+      console.log("Creating date from:", dateTimeString)
+      const startDateTime = new Date(dateTimeString)
+      console.log("Parsed date:", startDateTime)
+      
+      // Check if the date is valid
+      if (isNaN(startDateTime.getTime())) {
+        console.error("Invalid date created from:", dateTimeString)
+        alert("Invalid date or time selected. Please check your inputs.")
+        return
+      }
       
       // Parse attendees (comma-separated emails)
       const attendeeList = formData.attendees
@@ -98,12 +120,6 @@ export default function CalendarSchedulingModal({
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
-  // Set default date to tomorrow
-  const tomorrow = new Date()
-  tomorrow.setDate(tomorrow.getDate() + 1)
-  const defaultDate = tomorrow.toISOString().split('T')[0]
-  const defaultTime = "09:00"
-
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
@@ -149,7 +165,7 @@ export default function CalendarSchedulingModal({
               <Input
                 id="startDate"
                 type="date"
-                value={formData.startDate || defaultDate}
+                value={formData.startDate}
                 onChange={(e) => handleInputChange('startDate', e.target.value)}
                 required
               />
@@ -159,7 +175,7 @@ export default function CalendarSchedulingModal({
               <Input
                 id="startTime"
                 type="time"
-                value={formData.startTime || defaultTime}
+                value={formData.startTime}
                 onChange={(e) => handleInputChange('startTime', e.target.value)}
                 required
               />
