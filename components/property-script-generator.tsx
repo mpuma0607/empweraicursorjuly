@@ -827,6 +827,9 @@ export function PropertyScriptGenerator({
                     <Calendar className="h-4 w-4" />
                     📅 Schedule Your Outreach
                   </h5>
+                  <div className="mb-2 p-2 bg-yellow-100 border border-yellow-300 rounded text-sm">
+                    DEBUG: Calendar section is rendering! Result exists: {result ? 'YES' : 'NO'}
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <CalendarScheduler
                       title={`${formData.prospectType === "other" ? formData.customProspectType : formData.prospectType.toUpperCase()} Call - ${propertyAddress}`}
