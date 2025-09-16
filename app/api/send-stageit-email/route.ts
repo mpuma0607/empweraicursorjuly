@@ -15,6 +15,32 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Prepare attachments if image is provided
+    let attachments: any[] = []
+    if (imageUrl && fileName) {
+      try {
+        // Fetch the image data
+        const imageResponse = await fetch(imageUrl)
+        if (imageResponse.ok) {
+          const imageBuffer = await imageResponse.arrayBuffer()
+          const base64Image = Buffer.from(imageBuffer).toString('base64')
+          
+          // Determine content type from the image
+          const contentType = imageResponse.headers.get('content-type') || 'image/png'
+          
+          attachments.push({
+            filename: fileName,
+            content: base64Image,
+            contentType: contentType,
+            disposition: 'attachment'
+          })
+        }
+      } catch (error) {
+        console.warn('Failed to fetch image for attachment:', error)
+        // Continue without attachment if image fetch fails
+      }
+    }
+
     if (!process.env.RESEND_API_KEY) {
       console.error("RESEND_API_KEY is missing!")
       return NextResponse.json({ 
@@ -29,6 +55,7 @@ export async function POST(request: NextRequest) {
     }
 
     console.log("Sending StageIT email via Resend to:", to)
+    console.log("Attachments:", attachments.length > 0 ? `${attachments.length} file(s)` : 'none')
 
     // Create email content with image
     let emailContent: string
@@ -86,12 +113,19 @@ export async function POST(request: NextRequest) {
       `
     }
 
-    const result = await resend.emails.send({
+    const emailData: any = {
       from: "StageIT AI <noreply@marketing.getempowerai.com>",
       to: [to],
       subject: subject,
       html: emailContent,
-    })
+    }
+
+    // Add attachments if any
+    if (attachments.length > 0) {
+      emailData.attachments = attachments
+    }
+
+    const result = await resend.emails.send(emailData)
 
     if (result.error) {
       console.error("Resend API error:", result.error)
