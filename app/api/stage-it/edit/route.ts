@@ -48,9 +48,12 @@ export async function POST(request: NextRequest) {
       imageBlob = await fetchToBlob(originalImage)
     } else if (originalImage.startsWith("data:")) {
       imageBlob = dataUrlToBlob(originalImage)
+    } else if (originalImage.startsWith("blob:")) {
+      // Handle blob URLs by fetching them
+      imageBlob = await fetchToBlob(originalImage)
     } else {
       return NextResponse.json(
-        { error: "originalImage must be http(s) or a data: URL" },
+        { error: "originalImage must be http(s), data:, or blob: URL" },
         { status: 400 }
       )
     }
@@ -60,6 +63,9 @@ export async function POST(request: NextRequest) {
       maskBlob = await fetchToBlob(stagedImage)
     } else if (stagedImage.startsWith("data:")) {
       maskBlob = dataUrlToBlob(stagedImage)
+    } else if (stagedImage.startsWith("blob:")) {
+      // Handle blob URLs by fetching them
+      maskBlob = await fetchToBlob(stagedImage)
     }
 
     // Create a prompt that incorporates the edit instructions
