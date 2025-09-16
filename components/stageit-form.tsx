@@ -291,25 +291,27 @@ Additional Features: ${stagingRequest.additionalFeatures.join(', ')}
 Generated on: ${new Date().toLocaleDateString()}
       `.trim()
 
-      const response = await fetch('/api/send-support-email', {
+      const response = await fetch('/api/send-stageit-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           to: user.email,
-          from: 'noreply@marketing.getempowerai.com',
           subject: `StageIT: ${imageName} - ${selectedResult.style}`,
-          message: emailContent
+          content: emailContent,
+          imageUrl: selectedResult.stagedImage,
+          fileName: `staged-${imageName}-${selectedResult.style}.jpg`
         })
       })
 
       if (response.ok) {
         alert('Email sent to yourself successfully!')
       } else {
-        throw new Error('Failed to send email')
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to send email')
       }
     } catch (error) {
-      console.error('Error sending email:', error)
-      alert('Failed to send email. Please try again.')
+      console.error('Error sending email to self:', error)
+      alert(`Failed to send email: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
