@@ -1,9 +1,27 @@
 import { NextRequest, NextResponse } from "next/server"
-import OpenAI from "openai"
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+function need(name: string) {
+  const v = process.env[name];
+  if (!v) throw new Error(`Missing env var: ${name}`);
+  return v;
+}
+
+// fetch http(s) into a Blob
+async function fetchToBlob(url: string, mime = "image/png") {
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) throw new Error(`Failed to fetch ${url}: ${res.status} ${res.statusText}`);
+  const ab = await res.arrayBuffer();
+  return new Blob([ab], { type: mime });
+}
+
+// turn data: URL into a Blob
+function dataUrlToBlob(dataUrl: string) {
+  const m = /^data:(.+);base64,(.*)$/.exec(dataUrl);
+  if (!m) throw new Error("Invalid data URL");
+  const [, mime, b64] = m;
+  const bin = Buffer.from(b64, "base64");
+  return new Blob([bin], { type: mime });
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,103 +38,103 @@ export async function POST(request: NextRequest) {
     console.log('📝 Instructions:', instructions)
     console.log('🏠 Room Type:', roomType, 'Style:', style)
 
-    // Create a detailed prompt for the vision model
-    const systemPrompt = `You are a professional virtual staging expert. You will be given:
-1. An original room image
-2. A staged version of that room
-3. Specific edit instructions from the user
+    const OPENAI_API_KEY = need("OPENAI_API_KEY")
 
-Your task is to analyze both images and the user's instructions, then generate a new staged image that incorporates the requested changes while maintaining the overall style and quality.
+    // Convert blob URLs to image blobs
+    let imageBlob: Blob
+    let maskBlob: Blob | null = null
 
-Guidelines:
-- Maintain the original room's structure and layout
-- Keep the same ${style} style and ${colorPalette} color palette
-- Only make the specific changes requested by the user
-- Ensure the final image looks professional and realistic
-- If the user wants to remove something, make sure it's completely removed
-- If the user wants to move something, position it naturally
-- Maintain proper lighting and shadows
-- Keep the image quality high and professional
+    if (/^https?:\/\//i.test(originalImage)) {
+      imageBlob = await fetchToBlob(originalImage)
+    } else if (originalImage.startsWith("data:")) {
+      imageBlob = dataUrlToBlob(originalImage)
+    } else {
+      return NextResponse.json(
+        { error: "originalImage must be http(s) or a data: URL" },
+        { status: 400 }
+      )
+    }
 
-User's edit instructions: "${instructions}"
+    // Use the staged image as a mask/reference
+    if (/^https?:\/\//i.test(stagedImage)) {
+      maskBlob = await fetchToBlob(stagedImage)
+    } else if (stagedImage.startsWith("data:")) {
+      maskBlob = dataUrlToBlob(stagedImage)
+    }
 
-Generate a new staged image that incorporates these changes while maintaining the ${style} style for this ${roomType}.`
+    // Create a prompt that incorporates the edit instructions
+    const prompt = [
+      `Virtual-stage this ${roomType} in ${style} style.`,
+      colorPalette ? `Palette: ${colorPalette}.` : null,
+      `Cohesive furniture layout; correct rug size; layered lighting; tasteful wall art.`,
+      `Preserve architecture (windows, doors, trim, flooring). Realistic perspective, scale, and shadows.`,
+      `Edit instructions: ${instructions}`,
+      `Photorealistic, listing-quality output.`
+    ].filter(Boolean).join(" ")
 
-    // Use GPT-4 Vision to analyze the images and generate a new staging prompt
-    const visionResponse = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        {
-          role: "system",
-          content: systemPrompt
-        },
-        {
-          role: "user",
-          content: [
-            {
-              type: "text",
-              text: `Please analyze these two images and the user's instructions, then provide a detailed prompt for generating a new staged image that incorporates the requested changes.
+    console.log('🎨 Generated prompt:', prompt)
 
-Original room image:`
-            },
-            {
-              type: "image_url",
-              image_url: {
-                url: originalImage
-              }
-            },
-            {
-              type: "text",
-              text: "Current staged image:"
-            },
-            {
-              type: "image_url",
-              image_url: {
-                url: stagedImage
-              }
-            },
-            {
-              type: "text",
-              text: `User's edit instructions: "${instructions}"
+    // Build outbound form to OpenAI (same as original StageIT)
+    const aiForm = new FormData()
+    aiForm.append("model", "gpt-image-1")
+    aiForm.append("prompt", prompt)
+    aiForm.append("size", "1024x1024")
+    aiForm.append("image", imageBlob, "image.png")
+    if (maskBlob) aiForm.append("mask", maskBlob, "mask.png")
 
-Please provide a detailed prompt for DALL-E to generate a new staged image that incorporates these changes while maintaining the ${style} style for this ${roomType}.`
-            }
-          ]
+    console.log(`Sending request to OpenAI with prompt: ${prompt.substring(0, 100)}...`)
+
+    const aiRes = await fetch("https://api.openai.com/v1/images/edits", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${OPENAI_API_KEY}` },
+      body: aiForm,
+    })
+
+    console.log(`OpenAI response status: ${aiRes.status} ${aiRes.statusText}`)
+
+    if (!aiRes.ok) {
+      let errorDetails
+      try {
+        errorDetails = await aiRes.json()
+        console.error("OpenAI JSON error response:", errorDetails)
+      } catch (jsonError) {
+        try {
+          const errorText = await aiRes.text()
+          console.error("OpenAI text error response:", errorText)
+          errorDetails = { text: errorText }
+        } catch (textError) {
+          console.error("Failed to read error response:", textError)
+          errorDetails = { message: `OpenAI error ${aiRes.status}: ${aiRes.statusText}` }
         }
-      ],
-      max_tokens: 1000
-    })
-
-    const stagingPrompt = visionResponse.choices[0]?.message?.content
-
-    if (!stagingPrompt) {
-      throw new Error('Failed to generate staging prompt')
+      }
+      
+      return NextResponse.json(
+        { 
+          error: errorDetails?.error?.message || errorDetails?.text || `OpenAI error ${aiRes.status}`, 
+          details: errorDetails,
+          status: aiRes.status,
+          statusText: aiRes.statusText
+        },
+        { status: 502 }
+      )
     }
 
-    console.log('🎨 Generated staging prompt:', stagingPrompt)
+    const json = await aiRes.json()
+    const b64 = json?.data?.[0]?.b64_json
+    if (!b64) throw new Error("OpenAI returned no image data")
 
-    // Generate the new staged image using DALL-E
-    const imageResponse = await openai.images.generate({
-      model: "dall-e-3",
-      prompt: stagingPrompt,
-      size: "1024x1024",
-      quality: "hd",
-      n: 1
-    })
-
-    const newStagedImageUrl = imageResponse.data[0]?.url
-
-    if (!newStagedImageUrl) {
-      throw new Error('Failed to generate new staged image')
-    }
-
+    const bin = Buffer.from(b64, "base64")
+    
     console.log('✅ Successfully generated edited staged image')
 
-    return NextResponse.json({
-      success: true,
-      stagedImage: newStagedImageUrl,
-      instructions: instructions,
-      prompt: stagingPrompt
+    return new Response(bin, {
+      status: 200,
+      headers: {
+        "Content-Type": "image/png",
+        "Content-Length": String(bin.length),
+        "Cache-Control": "no-store",
+        "Content-Disposition": 'inline; filename="staged-edit.png"',
+      },
     })
 
   } catch (error) {

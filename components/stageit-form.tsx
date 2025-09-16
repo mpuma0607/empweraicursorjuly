@@ -370,15 +370,34 @@ ${user?.name || 'Your Name'}
       })
 
       if (!response.ok) {
-        throw new Error('Failed to regenerate image')
+        let errorMessage = 'Failed to regenerate image'
+        let errorDetails = null
+        
+        try {
+          const errorData = await response.json()
+          errorMessage = errorData.error || errorMessage
+          errorDetails = errorData.details || errorData
+          console.error('Detailed error:', errorData)
+        } catch {
+          // If response isn't JSON, use status text
+          errorMessage = response.statusText || errorMessage
+        }
+        
+        // Log additional details for debugging
+        console.error('Response status:', response.status)
+        console.error('Response headers:', Object.fromEntries(response.headers.entries()))
+        
+        throw new Error(`${errorMessage}${errorDetails ? ` - Details: ${JSON.stringify(errorDetails)}` : ''}`)
       }
 
-      const data = await response.json()
+      // Handle binary image response (same as original staging)
+      const blob = await response.blob()
+      const objectUrl = URL.createObjectURL(blob)
       
       // Update the selected result with the new image
       const updatedResult = {
         ...selectedResult,
-        stagedImage: data.stagedImage,
+        stagedImage: objectUrl,
         editInstructions: instructions
       }
       
