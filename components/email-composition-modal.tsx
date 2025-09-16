@@ -25,6 +25,12 @@ interface EmailCompositionModalProps {
   agentName: string
   brokerageName: string
   contentType?: 'script' | 'cma' | 'ideahub' | 'realbio' | 'listit' | 'real-img' // Add content type to determine which API to use
+  attachments?: {
+    pdfData?: string // Base64 encoded PDF data for CMA
+    imageData?: string // Base64 encoded image data for IdeaHub
+    imageUrl?: string // URL to image for IdeaHub
+    fileName?: string // Name for the attachment
+  }
 }
 
 interface EmailConnectionStatus {
@@ -38,7 +44,8 @@ export default function EmailCompositionModal({
   scriptContent,
   agentName,
   brokerageName,
-  contentType = 'script' // Default to script if not specified
+  contentType = 'script', // Default to script if not specified
+  attachments
 }: EmailCompositionModalProps) {
   const { user } = useMemberSpaceUser()
   const [connectionStatus, setConnectionStatus] = useState<EmailConnectionStatus | null>(null)
@@ -52,6 +59,10 @@ export default function EmailCompositionModal({
   const [subject, setSubject] = useState("")
   const [emailBody, setEmailBody] = useState("")
   const [signature, setSignature] = useState("")
+  
+  // Attachment handling
+  const [attachmentFiles, setAttachmentFiles] = useState<File[]>([])
+  const [inlineImageHtml, setInlineImageHtml] = useState("")
 
   // Check connection status on mount
   useEffect(() => {
@@ -86,6 +97,60 @@ export default function EmailCompositionModal({
     // Set email body to cleaned script content
     setEmailBody(cleanedContent)
   }, [isOpen, user?.email, agentName, brokerageName, scriptContent])
+
+  // Update email body when inline image changes
+  useEffect(() => {
+    if (inlineImageHtml && emailBody) {
+      // Only add inline image if it's not already there
+      if (!emailBody.includes(inlineImageHtml)) {
+        setEmailBody(inlineImageHtml + emailBody)
+      }
+    }
+  }, [inlineImageHtml])
+
+  // Handle attachments when modal opens
+  useEffect(() => {
+    if (isOpen && attachments) {
+      const files: File[] = []
+      let imageHtml = ""
+
+      // Handle PDF attachment for CMA
+      if (attachments.pdfData && contentType === 'cma') {
+        try {
+          const pdfBlob = new Blob([Uint8Array.from(atob(attachments.pdfData), c => c.charCodeAt(0))], { type: 'application/pdf' })
+          const pdfFile = new File([pdfBlob], attachments.fileName || 'cma-report.pdf', { type: 'application/pdf' })
+          files.push(pdfFile)
+        } catch (error) {
+          console.error('Error creating PDF file:', error)
+        }
+      }
+
+      // Handle image attachment for IdeaHub
+      if (attachments.imageData && contentType === 'ideahub') {
+        try {
+          const imageBlob = new Blob([Uint8Array.from(atob(attachments.imageData), c => c.charCodeAt(0))], { type: 'image/png' })
+          const imageFile = new File([imageBlob], attachments.fileName || 'social-content.png', { type: 'image/png' })
+          files.push(imageFile)
+          
+          // Create inline image HTML
+          imageHtml = `<div style="text-align: center; margin-bottom: 20px;"><img src="data:image/png;base64,${attachments.imageData}" style="max-width: 100%; height: auto; border-radius: 8px;" alt="Generated Content" /></div>`
+        } catch (error) {
+          console.error('Error creating image file:', error)
+        }
+      }
+
+      // Handle image URL for IdeaHub (fallback)
+      if (attachments.imageUrl && contentType === 'ideahub' && !attachments.imageData) {
+        imageHtml = `<div style="text-align: center; margin-bottom: 20px;"><img src="${attachments.imageUrl}" style="max-width: 100%; height: auto; border-radius: 8px;" alt="Generated Content" /></div>`
+      }
+
+      setAttachmentFiles(files)
+      setInlineImageHtml(imageHtml)
+    } else if (isOpen && !attachments) {
+      setAttachmentFiles([])
+      setInlineImageHtml("")
+    }
+  }, [isOpen, attachments, contentType])
 
   // Function to parse script content and extract subject/remove placeholders
   const parseScriptContent = (content: string) => {
@@ -230,17 +295,22 @@ export default function EmailCompositionModal({
         apiEndpoint = '/api/send-listit-email-gmail'
       }
       
+      // Create FormData for attachments
+      const formData = new FormData()
+      formData.append('to', toEmail)
+      formData.append('subject', subject)
+      formData.append('body', wrapLongLines(emailBody + '\n\n' + signature))
+      formData.append('from', connectionStatus.email || '')
+      formData.append('contentType', contentType || 'script')
+      
+      // Add attachments if any
+      attachmentFiles.forEach((file, index) => {
+        formData.append(`attachment_${index}`, file)
+      })
+
       const response = await fetch(apiEndpoint, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          to: toEmail,
-          subject,
-          body: wrapLongLines(emailBody + '\n\n' + signature),
-          from: connectionStatus.email
-        }),
+        body: formData, // Use FormData instead of JSON for file uploads
       })
 
       if (response.ok) {

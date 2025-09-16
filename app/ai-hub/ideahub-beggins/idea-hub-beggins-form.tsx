@@ -15,6 +15,7 @@ import { Loader2, Copy, Download, Mail, Mic, MicOff, Save, Upload, Info } from "
 import Image from "next/image"
 import { useMemberSpaceUser } from "@/hooks/use-memberspace-user"
 import { useTenantConfig } from "@/contexts/tenant-context"
+import EmailCompositionModal from "@/components/email-composition-modal"
 import { saveUserCreation, generateCreationTitle } from "@/lib/auto-save-creation"
 import { getUserBrandingProfile } from "@/app/profile/branding/actions"
 import type { UserBrandingProfile } from "@/app/profile/branding/actions"
@@ -240,6 +241,7 @@ export default function IdeaHubBegginsForm() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [isSendingEmail, setIsSendingEmail] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
   const [isListening, setIsListening] = useState(false)
   const [userBrandingProfile, setUserBrandingProfile] = useState<UserBrandingProfile | null>(null)
   const [loadingProfile, setLoadingProfile] = useState(true)
@@ -432,40 +434,8 @@ export default function IdeaHubBegginsForm() {
     }
   }
 
-  const sendEmail = async () => {
-    const contentToSend = editableText || result?.text
-    if (contentToSend && result?.imageUrl) {
-      setIsSendingEmail(true)
-      try {
-        const response = await fetch("/api/ideahub-email", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            action: "send-email",
-            data: {
-              to: formData.email,
-              name: formData.name,
-              content: contentToSend,
-              imageUrl: result.imageUrl,
-            },
-          }),
-        })
-
-        const data = await response.json()
-        if (data.success) {
-          alert("Email sent successfully! Check your inbox.")
-        } else {
-          throw new Error(data.error || "Failed to send email")
-        }
-      } catch (error) {
-        console.error("Error sending email:", error)
-        alert(`Failed to send email: ${error instanceof Error ? error.message : "Unknown error"}`)
-      } finally {
-        setIsSendingEmail(false)
-      }
-    }
+  const handleEmailClick = () => {
+    setIsEmailModalOpen(true)
   }
 
   const saveToProfile = async () => {
@@ -1095,7 +1065,7 @@ export default function IdeaHubBegginsForm() {
         </Button>
         <Button
           variant="outline"
-          onClick={sendEmail}
+          onClick={handleEmailClick}
           disabled={isSendingEmail}
           className="flex items-center justify-center gap-2 bg-transparent"
         >
@@ -1179,6 +1149,20 @@ export default function IdeaHubBegginsForm() {
         {step === 2 && renderStepTwo()}
         {step === 3 && renderStepThree()}
       </form>
+
+      {/* Email Composition Modal */}
+      <EmailCompositionModal
+        isOpen={isEmailModalOpen}
+        onClose={() => setIsEmailModalOpen(false)}
+        scriptContent={editableText || result?.text || ""}
+        agentName={formData.name}
+        brokerageName=""
+        contentType="ideahub"
+        attachments={result?.imageUrl ? {
+          imageUrl: result.imageUrl,
+          fileName: "social-media-content.png"
+        } : undefined}
+      />
     </div>
   )
 }

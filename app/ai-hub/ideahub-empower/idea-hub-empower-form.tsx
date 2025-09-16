@@ -1169,6 +1169,10 @@ export default function IdeaHubEmpowerForm() {
         agentName={formData.name}
         brokerageName=""
         contentType="ideahub"
+        attachments={result?.imageUrl ? {
+          imageUrl: result.imageUrl,
+          fileName: "social-media-content.png"
+        } : undefined}
       />
     </div>
   )

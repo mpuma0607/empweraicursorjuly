@@ -110,6 +110,9 @@ const QuickCMAResults = ({ data }: QuickCMAResultsProps) => {
   const [isSendingEmail, setIsSendingEmail] = useState(false)
   const [emailSent, setEmailSent] = useState(false)
   const [emailError, setEmailError] = useState<string | null>(null)
+  
+  // PDF data for email attachment
+  const [pdfData, setPdfData] = useState<string | null>(null)
 
   // Get brand colors with fallback to black/white
   const brandColors = useMemo(() => {
@@ -382,6 +385,12 @@ const QuickCMAResults = ({ data }: QuickCMAResultsProps) => {
       }
 
       const cleanAddress = data.address.split(",")[0].replace(/[^a-zA-Z0-9]/g, "-")
+      
+      // Store PDF data for email attachment
+      const pdfOutput = doc.output('datauristring')
+      const base64Data = pdfOutput.split(',')[1] // Remove data:application/pdf;filename=generated.pdf;base64, prefix
+      setPdfData(base64Data)
+      
       doc.save(`${cleanAddress}-CMA-Report.pdf`)
     } catch (error) {
       console.error("Error generating PDF:", error)
@@ -805,6 +814,10 @@ Please review the detailed comparables and market analysis below. If you have an
         agentName={data.userBranding?.name || "Real Estate Agent"}
         brokerageName={data.userBranding?.company || "Real Estate Company"}
         contentType="cma"
+        attachments={pdfData ? {
+          pdfData: pdfData,
+          fileName: `${data.address.split(",")[0].replace(/[^a-zA-Z0-9]/g, "-")}-CMA-Report.pdf`
+        } : undefined}
       />
     </div>
   )
