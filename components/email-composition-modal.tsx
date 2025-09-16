@@ -139,10 +139,10 @@ export default function EmailCompositionModal({
         }
       }
 
-      // Handle image URL for IdeaHub - convert to base64 and create file
+      // Handle image URL for IdeaHub - just attach it, no inline display
       if (attachments.imageUrl && contentType === 'ideahub' && !attachments.imageData) {
-        // Create inline image HTML with URL (will be converted to base64 by browser)
-        imageHtml = `<div style="text-align: center; margin-bottom: 20px;"><img src="${attachments.imageUrl}" style="max-width: 100%; height: auto; border-radius: 8px;" alt="Generated Content" /></div>`
+        // No inline image HTML - just attach the file
+        imageHtml = ""
         
         // For attachment, we'll fetch the image and convert to file
         fetch(attachments.imageUrl)

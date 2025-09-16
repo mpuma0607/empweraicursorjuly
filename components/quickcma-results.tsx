@@ -430,10 +430,51 @@ const QuickCMAResults = ({ data }: QuickCMAResultsProps) => {
           // Reset text color for content
           doc.setTextColor(0, 0, 0)
 
+          // Add CMA value/range at the top (extract from analysis text)
+          let yPosition = 60
+          doc.setFontSize(16)
+          doc.setFont("helvetica", "bold")
+          
+          // Look for CMA value patterns in the analysis text
+          const cmaValueMatch = data.analysisText.match(/\$[\d,]+(?:-\$[\d,]+)?/g)
+          const cmaRangeMatch = data.analysisText.match(/\$[\d,]+.*?to.*?\$[\d,]+/gi)
+          
+          if (cmaValueMatch && cmaValueMatch.length > 0) {
+            doc.text("Estimated Value:", 20, yPosition)
+            yPosition += 8
+            doc.setFontSize(20)
+            doc.setTextColor(0, 100, 0) // Green color for value
+            doc.text(cmaValueMatch[0], 20, yPosition)
+            yPosition += 15
+            doc.setTextColor(0, 0, 0)
+            doc.setFontSize(12)
+          } else if (cmaRangeMatch && cmaRangeMatch.length > 0) {
+            doc.text("Estimated Value Range:", 20, yPosition)
+            yPosition += 8
+            doc.setFontSize(18)
+            doc.setTextColor(0, 100, 0) // Green color for value
+            doc.text(cmaRangeMatch[0], 20, yPosition)
+            yPosition += 15
+            doc.setTextColor(0, 0, 0)
+            doc.setFontSize(12)
+          } else {
+            // Fallback: look for any dollar amounts
+            const dollarMatch = data.analysisText.match(/\$[\d,]+/g)
+            if (dollarMatch && dollarMatch.length > 0) {
+              doc.text("Estimated Value:", 20, yPosition)
+              yPosition += 8
+              doc.setFontSize(18)
+              doc.setTextColor(0, 100, 0)
+              doc.text(dollarMatch[0], 20, yPosition)
+              yPosition += 15
+              doc.setTextColor(0, 0, 0)
+              doc.setFontSize(12)
+            }
+          }
+
           // Add analysis text (simplified version for email)
           doc.setFontSize(12)
           const analysisLines = doc.splitTextToSize(data.analysisText, 170)
-          let yPosition = 60
 
           for (const line of analysisLines) {
             if (yPosition > 280) {
