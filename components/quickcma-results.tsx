@@ -281,9 +281,23 @@ const QuickCMAResults = ({ data }: QuickCMAResultsProps) => {
       doc.setFontSize(10)
       doc.text(`Generated: ${new Date().toLocaleDateString()}`, 150, 50)
       doc.text(`Comparables Analyzed: ${data.comparableData.totalComparables}`, 150, 55)
-      doc.text(`Average Price: $${data.comparableData.summary.averagePrice.toLocaleString()}`, 150, 60)
 
-      let yPosition = 80
+      // Add prominent CMA value display
+      let yPosition = 70
+      doc.setFontSize(16)
+      doc.setFont("helvetica", "bold")
+      doc.text("Estimated Value:", 20, yPosition)
+      yPosition += 8
+      doc.setFontSize(20)
+      doc.setTextColor(0, 100, 0) // Green color for value
+      doc.text(`$${data.comparableData.summary.averagePrice.toLocaleString()}`, 20, yPosition)
+      yPosition += 8
+      
+      // Add price range
+      doc.setFontSize(14)
+      doc.setTextColor(0, 0, 0)
+      doc.text(`Range: $${data.comparableData.summary.priceRange.min.toLocaleString()} - $${data.comparableData.summary.priceRange.max.toLocaleString()}`, 20, yPosition)
+      yPosition += 20
 
       // Add comparable properties summary
       doc.setFontSize(14)
@@ -430,35 +444,56 @@ const QuickCMAResults = ({ data }: QuickCMAResultsProps) => {
           // Reset text color for content
           doc.setTextColor(0, 0, 0)
 
-          // Add CMA value/range at the top (extract from analysis text)
+          // Add CMA value/range at the top using actual data
           let yPosition = 60
           doc.setFontSize(16)
           doc.setFont("helvetica", "bold")
           
-          // Look for CMA value patterns in the analysis text
-          const cmaValueMatch = data.analysisText.match(/\$[\d,]+(?:-\$[\d,]+)?/g)
-          const cmaRangeMatch = data.analysisText.match(/\$[\d,]+.*?to.*?\$[\d,]+/gi)
-          
-          if (cmaValueMatch && cmaValueMatch.length > 0) {
+          // Use the actual comparable data summary
+          if (data.comparableData?.summary) {
+            const { averagePrice, priceRange } = data.comparableData.summary
+            
+            // Format the average price
+            const formattedAveragePrice = new Intl.NumberFormat('en-US', {
+              style: 'currency',
+              currency: 'USD',
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0
+            }).format(averagePrice)
+            
+            // Format the price range
+            const formattedMinPrice = new Intl.NumberFormat('en-US', {
+              style: 'currency',
+              currency: 'USD',
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0
+            }).format(priceRange.min)
+            
+            const formattedMaxPrice = new Intl.NumberFormat('en-US', {
+              style: 'currency',
+              currency: 'USD',
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0
+            }).format(priceRange.max)
+            
+            // Display the average price prominently
             doc.text("Estimated Value:", 20, yPosition)
             yPosition += 8
             doc.setFontSize(20)
             doc.setTextColor(0, 100, 0) // Green color for value
-            doc.text(cmaValueMatch[0], 20, yPosition)
-            yPosition += 15
-            doc.setTextColor(0, 0, 0)
-            doc.setFontSize(12)
-          } else if (cmaRangeMatch && cmaRangeMatch.length > 0) {
-            doc.text("Estimated Value Range:", 20, yPosition)
+            doc.text(formattedAveragePrice, 20, yPosition)
             yPosition += 8
-            doc.setFontSize(18)
-            doc.setTextColor(0, 100, 0) // Green color for value
-            doc.text(cmaRangeMatch[0], 20, yPosition)
-            yPosition += 15
+            
+            // Display the price range
+            doc.setFontSize(14)
             doc.setTextColor(0, 0, 0)
+            doc.text(`Range: ${formattedMinPrice} - ${formattedMaxPrice}`, 20, yPosition)
+            yPosition += 15
+            
+            // Reset formatting
             doc.setFontSize(12)
           } else {
-            // Fallback: look for any dollar amounts
+            // Fallback: look for any dollar amounts in analysis text
             const dollarMatch = data.analysisText.match(/\$[\d,]+/g)
             if (dollarMatch && dollarMatch.length > 0) {
               doc.text("Estimated Value:", 20, yPosition)
