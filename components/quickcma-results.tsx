@@ -399,7 +399,63 @@ const QuickCMAResults = ({ data }: QuickCMAResultsProps) => {
     }
   }
 
+  // Generate PDF data for email attachment when component mounts
+  useEffect(() => {
+    const generatePDFData = async () => {
+      if (!pdfData) {
+        try {
+          const { jsPDF } = await import("jspdf")
+          const doc = new jsPDF()
 
+          // Add header background with brand color
+          const primaryColor = brandColors.primary
+          const rgbColor = hexToRgb(primaryColor)
+          if (rgbColor) {
+            doc.setFillColor(rgbColor.r, rgbColor.g, rgbColor.b)
+          } else {
+            doc.setFillColor(0, 0, 0) // Fallback to black
+          }
+          doc.rect(0, 0, 210, 40, "F")
+
+          // Add title
+          doc.setTextColor(255, 255, 255)
+          doc.setFont("helvetica", "bold")
+          doc.setFontSize(24)
+          doc.text("QuickCMA Report", 20, 25)
+
+          // Add property address
+          doc.setFontSize(16)
+          doc.text(data.address, 20, 35)
+
+          // Reset text color for content
+          doc.setTextColor(0, 0, 0)
+
+          // Add analysis text (simplified version for email)
+          doc.setFontSize(12)
+          const analysisLines = doc.splitTextToSize(data.analysisText, 170)
+          let yPosition = 60
+
+          for (const line of analysisLines) {
+            if (yPosition > 280) {
+              doc.addPage()
+              yPosition = 20
+            }
+            doc.text(line, 20, yPosition)
+            yPosition += 6
+          }
+
+          // Store PDF data for email attachment
+          const pdfOutput = doc.output('datauristring')
+          const base64Data = pdfOutput.split(',')[1] // Remove data:application/pdf;filename=generated.pdf;base64, prefix
+          setPdfData(base64Data)
+        } catch (error) {
+          console.error("Error generating PDF data for email:", error)
+        }
+      }
+    }
+
+    generatePDFData()
+  }, [data, brandColors, pdfData])
 
   // Helper function to convert hex to RGB
   const hexToRgb = (hex: string) => {

@@ -139,9 +139,21 @@ export default function EmailCompositionModal({
         }
       }
 
-      // Handle image URL for IdeaHub (fallback)
+      // Handle image URL for IdeaHub - convert to base64 and create file
       if (attachments.imageUrl && contentType === 'ideahub' && !attachments.imageData) {
+        // Create inline image HTML with URL (will be converted to base64 by browser)
         imageHtml = `<div style="text-align: center; margin-bottom: 20px;"><img src="${attachments.imageUrl}" style="max-width: 100%; height: auto; border-radius: 8px;" alt="Generated Content" /></div>`
+        
+        // For attachment, we'll fetch the image and convert to file
+        fetch(attachments.imageUrl)
+          .then(response => response.blob())
+          .then(blob => {
+            const imageFile = new File([blob], attachments.fileName || 'social-content.png', { type: 'image/png' })
+            setAttachmentFiles(prev => [...prev, imageFile])
+          })
+          .catch(error => {
+            console.error('Error fetching image for attachment:', error)
+          })
       }
 
       setAttachmentFiles(files)
