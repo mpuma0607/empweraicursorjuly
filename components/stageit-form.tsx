@@ -20,11 +20,13 @@ import {
   Palette,
   Home,
   Sparkles,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Edit3
 } from "lucide-react"
 import { useMemberSpaceUser } from "@/hooks/use-memberspace-user"
 import { saveUserCreation } from "@/lib/auto-save-creation"
 import EmailCompositionModal from "@/components/email-composition-modal"
+import ImageEditModal from "@/components/image-edit-modal"
 
 interface StagingRequest {
   roomType: string
@@ -67,6 +69,8 @@ export function StageItForm() {
   const [selectedResult, setSelectedResult] = useState<StagingResult | null>(null)
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
   const [emailContent, setEmailContent] = useState('')
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isRegenerating, setIsRegenerating] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   
   const { user, loading: userLoading } = useMemberSpaceUser()
@@ -337,6 +341,64 @@ ${user?.name || 'Your Name'}
 
     setEmailContent(emailContent)
     setIsEmailModalOpen(true)
+  }
+
+  // Edit image function
+  const handleEditImage = () => {
+    setIsEditModalOpen(true)
+  }
+
+  // Regenerate image with edit instructions
+  const handleRegenerateImage = async (instructions: string) => {
+    if (!selectedResult || !imageUrl) return
+
+    setIsRegenerating(true)
+    try {
+      const response = await fetch('/api/stage-it/edit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          originalImage: imageUrl,
+          stagedImage: selectedResult.stagedImage,
+          instructions,
+          roomType: selectedResult.roomType,
+          style: selectedResult.style,
+          colorPalette: selectedResult.colorPalette
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to regenerate image')
+      }
+
+      const data = await response.json()
+      
+      // Update the selected result with the new image
+      const updatedResult = {
+        ...selectedResult,
+        stagedImage: data.stagedImage,
+        editInstructions: instructions
+      }
+      
+      setSelectedResult(updatedResult)
+      
+      // Update the staging results array
+      setStagingResults(prev => 
+        prev.map(result => 
+          result === selectedResult ? updatedResult : result
+        )
+      )
+      
+      setIsEditModalOpen(false)
+      alert('Image regenerated successfully!')
+    } catch (error) {
+      console.error('Error regenerating image:', error)
+      alert('Failed to regenerate image. Please try again.')
+    } finally {
+      setIsRegenerating(false)
+    }
   }
 
   // Download image
@@ -695,13 +757,17 @@ ${user?.name || 'Your Name'}
                <Download className="h-4 w-4 mr-2" />
                Download Staged Image
              </Button>
+             <Button variant="outline" onClick={handleEditImage}>
+               <Edit3 className="h-4 w-4 mr-2" />
+               Edit Image
+             </Button>
              <Button variant="outline" onClick={handleEmailToSelf}>
                <Mail className="h-4 w-4 mr-2" />
                Email To Self
              </Button>
              <Button variant="outline" onClick={handleEmailToClient}>
                <Mail className="h-4 w-4 mr-2" />
-               Email To Client
+               Email To Someone Else
              </Button>
              <Button onClick={handleSaveToProfile} disabled={isSaving}>
                <Save className="h-4 w-4 mr-2" />
@@ -789,10 +855,26 @@ ${user?.name || 'Your Name'}
       <EmailCompositionModal
         isOpen={isEmailModalOpen}
         onClose={() => setIsEmailModalOpen(false)}
-                      contentType="real-img"
+        contentType="script"
         scriptContent={emailContent}
         agentName={user?.name || 'Your Name'}
         brokerageName="Your Brokerage"
+        attachments={selectedResult?.stagedImage ? {
+          imageUrl: selectedResult.stagedImage,
+          fileName: `staged-${imageName}-${selectedResult?.style}.jpg`
+        } : undefined}
+      />
+
+      {/* Image Edit Modal */}
+      <ImageEditModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        originalImage={imageUrl}
+        stagedImage={selectedResult?.stagedImage || ''}
+        roomType={selectedResult?.roomType || ''}
+        style={selectedResult?.style || ''}
+        onRegenerate={handleRegenerateImage}
+        isRegenerating={isRegenerating}
       />
     </div>
   )

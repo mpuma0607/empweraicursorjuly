@@ -156,6 +156,23 @@ export default function EmailCompositionModal({
           })
       }
 
+      // Handle image URL for StageIT (script content type) - just attach it, no inline display
+      if (attachments.imageUrl && contentType === 'script' && !attachments.imageData) {
+        // No inline image HTML - just attach the file
+        imageHtml = ""
+        
+        // For attachment, we'll fetch the image and convert to file
+        fetch(attachments.imageUrl)
+          .then(response => response.blob())
+          .then(blob => {
+            const imageFile = new File([blob], attachments.fileName || 'staged-image.jpg', { type: 'image/jpeg' })
+            setAttachmentFiles(prev => [...prev, imageFile])
+          })
+          .catch(error => {
+            console.error('Error fetching image for attachment:', error)
+          })
+      }
+
       setAttachmentFiles(files)
       setInlineImageHtml(imageHtml)
     } else if (isOpen && !attachments) {
