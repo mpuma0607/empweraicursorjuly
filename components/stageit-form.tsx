@@ -270,7 +270,8 @@ export function StageItForm() {
     }
   }
 
-  // Email to self (Resend)
+
+  // Email to self (Resend API with attachments - same methodology as Gmail)
   const handleEmailToSelf = async () => {
     if (!user || !selectedResult) return
     
@@ -291,16 +292,28 @@ Additional Features: ${stagingRequest.additionalFeatures.join(', ')}
 Generated on: ${new Date().toLocaleDateString()}
       `.trim()
 
-      const response = await fetch('/api/send-stageit-email', {
+      // Create FormData (same methodology as Gmail API)
+      const formData = new FormData()
+      formData.append('to', user.email)
+      formData.append('from', 'noreply@marketing.getempowerai.com')
+      formData.append('subject', `StageIT: ${imageName} - ${selectedResult.style}`)
+      formData.append('body', emailContent)
+
+      // Add image attachment (same methodology as Gmail API)
+      try {
+        const imageResponse = await fetch(selectedResult.stagedImage)
+        const imageBlob = await imageResponse.blob()
+        const imageFile = new File([imageBlob], `staged-${imageName}-${selectedResult.style}.jpg`, { type: 'image/jpeg' })
+        formData.append('attachment_0', imageFile)
+        console.log('📎 Added image attachment:', imageFile.name, imageFile.size, 'bytes')
+      } catch (error) {
+        console.warn('Failed to add image attachment:', error)
+        // Continue without attachment if image fetch fails
+      }
+
+      const response = await fetch('/api/send-stageit-email-resend', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          to: user.email,
-          subject: `StageIT: ${imageName} - ${selectedResult.style}`,
-          content: emailContent,
-          imageUrl: selectedResult.stagedImage,
-          fileName: `staged-${imageName}-${selectedResult.style}.jpg`
-        })
+        body: formData
       })
 
       if (response.ok) {

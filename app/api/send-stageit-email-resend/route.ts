@@ -1,0 +1,123 @@
+import { NextRequest, NextResponse } from "next/server"
+import { Resend } from "resend"
+
+const resend = new Resend(process.env.RESEND_API_KEY)
+
+export async function POST(request: NextRequest) {
+  try {
+    const formData = await request.formData()
+    const to = formData.get('to') as string
+    const subject = formData.get('subject') as string
+    const body = formData.get('body') as string
+    const from = formData.get('from') as string
+
+    console.log('📧 StageIT Resend API - Request data:', { to, subject, body: body?.substring(0, 100) + '...', from })
+
+    // Validate required fields
+    if (!to || !subject || !body || !from) {
+      console.log('❌ Missing required fields')
+      return NextResponse.json(
+        { error: 'Missing required fields: to, subject, body, from' },
+        { status: 400 }
+      )
+    }
+
+    if (!process.env.RESEND_API_KEY) {
+      console.error("RESEND_API_KEY is missing!")
+      return NextResponse.json({ 
+        error: "Email service not configured - RESEND_API_KEY environment variable is missing",
+        details: {
+          message: "The RESEND_API_KEY environment variable is required for sending emails",
+          solution: "Add RESEND_API_KEY to your environment variables or deployment configuration",
+          currentEnv: process.env.NODE_ENV,
+          isVercel: !!process.env.VERCEL
+        }
+      }, { status: 500 })
+    }
+
+    // Get attachments (same methodology as Gmail API)
+    const attachments: { file: File; name: string }[] = []
+    for (let i = 0; i < 10; i++) { // Check up to 10 attachments
+      const attachment = formData.get(`attachment_${i}`) as File
+      if (attachment && attachment.size > 0) {
+        attachments.push({ file: attachment, name: attachment.name })
+        console.log(`📎 Found attachment ${i}:`, attachment.name, attachment.size, 'bytes')
+      }
+    }
+
+    console.log('📎 Total attachments:', attachments.length)
+
+    // Convert attachments to Resend format
+    const resendAttachments: any[] = []
+    for (const attachment of attachments) {
+      try {
+        const fileBuffer = Buffer.from(await attachment.file.arrayBuffer())
+        const base64Content = fileBuffer.toString('base64')
+        const mimeType = attachment.file.type || 'application/octet-stream'
+        
+        resendAttachments.push({
+          filename: attachment.name,
+          content: base64Content,
+          contentType: mimeType,
+          disposition: 'attachment'
+        })
+        
+        console.log(`✅ Processed attachment: ${attachment.name} (${fileBuffer.length} bytes, ${mimeType})`)
+      } catch (error) {
+        console.error(`❌ Failed to process attachment ${attachment.name}:`, error)
+      }
+    }
+
+    // Create email data
+    const emailData: any = {
+      from: "StageIT AI <noreply@marketing.getempowerai.com>",
+      to: [to],
+      subject: subject,
+      html: body.replace(/\n/g, '<br>'),
+    }
+
+    // Add attachments if any
+    if (resendAttachments.length > 0) {
+      emailData.attachments = resendAttachments
+      console.log(`📎 Sending email with ${resendAttachments.length} attachment(s)`)
+    }
+
+    console.log('📤 Sending email via Resend...')
+    const result = await resend.emails.send(emailData)
+
+    if (result.error) {
+      console.error("❌ Resend API error:", result.error)
+      const errorMessage = result.error.message || result.error.toString() || 'Unknown Resend API error'
+      return NextResponse.json(
+        { error: `Failed to send email: ${errorMessage}` },
+        { status: 500 }
+      )
+    }
+
+    console.log("✅ StageIT email sent successfully via Resend:", result.data?.id)
+
+    return NextResponse.json({
+      success: true,
+      messageId: result.data?.id,
+      message: 'StageIT email sent successfully via Resend'
+    })
+
+  } catch (error) {
+    console.error('❌ Error sending StageIT email via Resend:', error)
+    return NextResponse.json(
+      { 
+        error: error instanceof Error ? error.message : 'Failed to send email',
+        details: {
+          message: "An unexpected error occurred while sending the email",
+          originalError: error instanceof Error ? error.message : String(error),
+          envInfo: {
+            hasApiKey: !!process.env.RESEND_API_KEY,
+            environment: process.env.NODE_ENV,
+            isVercel: !!process.env.VERCEL
+          }
+        }
+      },
+      { status: 500 }
+    )
+  }
+}
