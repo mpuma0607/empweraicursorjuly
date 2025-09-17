@@ -32,6 +32,7 @@ interface EmailCompositionModalProps {
     imageUrl?: string // URL to image for IdeaHub
     fileName?: string // Name for the attachment
   }
+  recipientEmail?: string // Pre-populate recipient email (e.g., from CRM contact)
 }
 
 interface EmailConnectionStatus {
@@ -52,7 +53,8 @@ export default function EmailCompositionModal({
   agentName,
   brokerageName,
   contentType = 'script', // Default to script if not specified
-  attachments
+  attachments,
+  recipientEmail
 }: EmailCompositionModalProps) {
   const { user } = useMemberSpaceUser()
   const [providerStatus, setProviderStatus] = useState<ProviderStatus>({
@@ -107,7 +109,14 @@ export default function EmailCompositionModal({
     setSignature(`Best regards,\n${agentName}\n${brokerageName}`)
     // Set email body to cleaned script content
     setEmailBody(cleanedContent)
-  }, [isOpen, user?.email, agentName, brokerageName, scriptContent])
+    
+    // Pre-populate recipient email if provided (e.g., from CRM contact)
+    if (recipientEmail) {
+      setToEmail(recipientEmail)
+    } else {
+      setToEmail("") // Clear if no recipient email provided
+    }
+  }, [isOpen, user?.email, agentName, brokerageName, scriptContent, recipientEmail])
 
   // Update email body when inline image changes
   useEffect(() => {

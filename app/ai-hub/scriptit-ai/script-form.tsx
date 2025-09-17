@@ -1514,6 +1514,7 @@ export default function ScriptForm() {
           scriptContent={result.script}
           agentName={formData.agentName}
           brokerageName={formData.brokerageName}
+          recipientEmail={selectedContact?.email || ""}
         />
       )}
     </div>
