@@ -118,7 +118,7 @@ export default function EmailCompositionModal({
     } else {
       setToEmail("") // Clear if no recipient email provided
     }
-  }, [isOpen, user?.email, agentName, brokerageName, scriptContent, recipientEmail, customSubject])
+  }, [isOpen, user?.email, agentName, brokerageName, scriptContent, recipientEmail])
 
   // Update email body when inline image changes
   useEffect(() => {
