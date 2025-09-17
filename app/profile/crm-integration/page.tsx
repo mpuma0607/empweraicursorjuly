@@ -22,44 +22,21 @@ interface ConnectionStatus {
 }
 
 export default function CRMIntegrationPage() {
-  const { user } = useMemberSpaceUser()
+  const { user, loading: userLoading } = useMemberSpaceUser()
   const [fubStatus, setFubStatus] = useState<ConnectionStatus>({ connected: false, provider: 'followupboss' })
   const [apiKey, setApiKey] = useState('')
   const [isConnecting, setIsConnecting] = useState(false)
   const [isCheckingStatus, setIsCheckingStatus] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
 
-  // Check for MemberSpace user with fallback
+  // Check connection status when user loads (same pattern as Email Integration)
   useEffect(() => {
-    const checkForUser = async () => {
-      // First try our hook
-      if (user?.email) {
-        setIsCheckingStatus(true)
-        checkConnectionStatus(user.email)
-        return
-      }
-
-      // Fallback: Check MemberSpace directly
-      if (typeof window !== 'undefined' && (window as any).MemberSpace) {
-        try {
-          const msUser = await (window as any).MemberSpace.getCurrentMember()
-          console.log('CRM Integration: Direct MemberSpace check:', msUser)
-          if (msUser?.email) {
-            setIsCheckingStatus(true)
-            checkConnectionStatus(msUser.email)
-          }
-        } catch (error) {
-          console.log('CRM Integration: MemberSpace check failed:', error)
-        }
-      }
+    if (!userLoading && user?.email) {
+      console.log('CRM Integration: User loaded, checking FUB status for:', user.email)
+      setIsCheckingStatus(true)
+      checkConnectionStatus(user.email)
     }
-
-    // Check immediately and also after a delay for MemberSpace to load
-    checkForUser()
-    const timeout = setTimeout(checkForUser, 2000)
-    
-    return () => clearTimeout(timeout)
-  }, [user?.email])
+  }, [user?.email, userLoading])
 
   const checkConnectionStatus = async (userEmail?: string) => {
     const emailToUse = userEmail || user?.email
@@ -100,26 +77,8 @@ export default function CRMIntegrationPage() {
   }
 
   const connectFollowUpBoss = async () => {
-    let currentUserEmail = user?.email
-    
-    // Fallback to MemberSpace direct check if hook fails
-    if (!currentUserEmail && typeof window !== 'undefined' && (window as any).MemberSpace) {
-      try {
-        const msUser = await (window as any).MemberSpace.getCurrentMember()
-        currentUserEmail = msUser?.email
-        console.log('Connect FUB: Got email from MemberSpace directly:', currentUserEmail)
-      } catch (error) {
-        console.log('Connect FUB: Could not get MemberSpace user')
-      }
-    }
-
-    if (!currentUserEmail) {
-      setMessage({ type: 'error', text: 'Please log in to connect your Follow Up Boss account' })
-      return
-    }
-    
-    if (!apiKey.trim()) {
-      setMessage({ type: 'error', text: 'Please enter your Follow Up Boss API key' })
+    if (!user?.email || !apiKey.trim()) {
+      setMessage({ type: 'error', text: !user?.email ? 'Please log in to connect Follow Up Boss' : 'Please enter your Follow Up Boss API key' })
       return
     }
 
@@ -134,7 +93,7 @@ export default function CRMIntegrationPage() {
         },
         body: JSON.stringify({
           apiKey: apiKey.trim(),
-          userEmail: currentUserEmail
+          userEmail: user.email
         })
       })
 
@@ -167,16 +126,7 @@ export default function CRMIntegrationPage() {
     }
   }
 
-  if (isCheckingStatus) {
-    return (
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin" />
-          <span className="ml-2">Checking CRM connections...</span>
-        </div>
-      </div>
-    )
-  }
+  // Always show the interface - don't wait for MemberSpace
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -225,7 +175,7 @@ export default function CRMIntegrationPage() {
             </div>
           </CardHeader>
           <CardContent>
-            {fubStatus.connected ? (
+            {fubStatus.connected && user?.email ? (
               <div className="space-y-4">
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-2">
