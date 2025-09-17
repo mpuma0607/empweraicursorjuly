@@ -5,7 +5,9 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Loader2, Users, Zap, Home, Activity, ArrowRight, Database, Filter, Mail, FileText, Clock, MapPin, Phone, X, Download } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Loader2, Users, Zap, Home, Activity, ArrowRight, Database, Filter, Mail, FileText, Clock, MapPin, Phone, X, Download, RefreshCw, Edit } from 'lucide-react'
 import { useMemberSpaceUser } from '@/hooks/use-memberspace-user'
 import EmailCompositionModal from '@/components/email-composition-modal'
 import Link from 'next/link'
@@ -59,6 +61,12 @@ function LeadHubDashboard({ fubStatus, userEmail }: { fubStatus: FUBStatus, user
   const [generatedScript, setGeneratedScript] = useState<{contact: LeadContact, script: string} | null>(null)
   const [isScriptModalOpen, setIsScriptModalOpen] = useState(false)
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
+  
+  // Script modal customization
+  const [editableEmail, setEditableEmail] = useState('')
+  const [selectedTonality, setSelectedTonality] = useState('Professional & Authoritative')
+  const [selectedLanguage, setSelectedLanguage] = useState('English')
+  const [isRegenerating, setIsRegenerating] = useState(false)
 
   // Load contacts from Follow Up Boss
   useEffect(() => {
@@ -140,6 +148,9 @@ function LeadHubDashboard({ fubStatus, userEmail }: { fubStatus: FUBStatus, user
       
       // Show the generated script in a modal
       setGeneratedScript({ contact, script: result.script })
+      setEditableEmail(contact.email)
+      setSelectedTonality('Professional & Authoritative')
+      setSelectedLanguage('English')
       setIsScriptModalOpen(true)
       
     } catch (error) {
@@ -156,6 +167,51 @@ function LeadHubDashboard({ fubStatus, userEmail }: { fubStatus: FUBStatus, user
     if (contact.stage === 'Past Client') return 'past-client'
     if (contact.source === 'Zillow') return 'first-time-homebuyer'
     return 'current-client'
+  }
+
+  // Regenerate script with new tonality/language
+  const regenerateScript = async () => {
+    if (!generatedScript) return
+
+    try {
+      setIsRegenerating(true)
+      const contact = generatedScript.contact
+      
+      // Build script data with new settings
+      let additionalDetails = `Follow-up script for ${contact.name} - ${contact.stage} from ${contact.source}${contact.address ? ` in ${contact.address.city}, ${contact.address.state}` : ''}${contact.recentInquiry?.property ? `. Recently interested in ${contact.recentInquiry.property.address}` : ''}`
+      
+      // Add language instruction if not English
+      if (selectedLanguage !== 'English') {
+        additionalDetails += `\n\nIMPORTANT: Generate this script in ${selectedLanguage} language.`
+      }
+
+      const scriptData = {
+        agentName: fubStatus.user?.name || 'Agent',
+        brokerageName: 'Your Brokerage',
+        scriptType: 'email',
+        topic: getTopicForContact(contact),
+        customTopic: '',
+        additionalDetails,
+        agentEmail: userEmail,
+        scriptTypeCategory: 'Follow-up',
+        difficultConversationType: '',
+        tonality: selectedTonality,
+        selectedContactId: contact.id.toString(),
+        useContactPersonalization: true
+      }
+
+      const { generateScript } = await import('@/app/ai-hub/scriptit-ai/actions')
+      const result = await generateScript(scriptData, userEmail)
+      
+      // Update the generated script
+      setGeneratedScript({ contact, script: result.script })
+      
+    } catch (error) {
+      console.error('Error regenerating script:', error)
+      alert('Failed to regenerate script. Please try again.')
+    } finally {
+      setIsRegenerating(false)
+    }
   }
 
   // Generate CMA for contact's property inquiry
@@ -507,8 +563,79 @@ function LeadHubDashboard({ fubStatus, userEmail }: { fubStatus: FUBStatus, user
                 <X className="w-4 h-4" />
               </Button>
             </CardHeader>
-            <CardContent className="overflow-y-auto max-h-[60vh]">
+            <CardContent className="overflow-y-auto max-h-[70vh]">
               <div className="space-y-4">
+                {/* Customization Controls */}
+                <div className="grid md:grid-cols-3 gap-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="space-y-2">
+                    <Label htmlFor="editableEmail" className="text-sm font-medium">
+                      Contact Email
+                    </Label>
+                    <Input
+                      id="editableEmail"
+                      type="email"
+                      value={editableEmail}
+                      onChange={(e) => setEditableEmail(e.target.value)}
+                      className="text-sm"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Tonality</Label>
+                    <Select value={selectedTonality} onValueChange={setSelectedTonality}>
+                      <SelectTrigger className="text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Professional & Authoritative">Professional & Authoritative</SelectItem>
+                        <SelectItem value="Friendly & Conversational">Friendly & Conversational</SelectItem>
+                        <SelectItem value="Urgent & Direct">Urgent & Direct</SelectItem>
+                        <SelectItem value="Warm & Personal">Warm & Personal</SelectItem>
+                        <SelectItem value="Expert & Consultative">Expert & Consultative</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Language</Label>
+                    <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+                      <SelectTrigger className="text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="English">English</SelectItem>
+                        <SelectItem value="Spanish">Spanish</SelectItem>
+                        <SelectItem value="French">French</SelectItem>
+                        <SelectItem value="Portuguese">Portuguese</SelectItem>
+                        <SelectItem value="Italian">Italian</SelectItem>
+                        <SelectItem value="German">German</SelectItem>
+                        <SelectItem value="Chinese">Chinese</SelectItem>
+                        <SelectItem value="Japanese">Japanese</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={regenerateScript}
+                    disabled={isRegenerating}
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    {isRegenerating ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : (
+                      <RefreshCw className="w-3 h-3" />
+                    )}
+                    {isRegenerating ? 'Regenerating...' : 'Regenerate Script'}
+                  </Button>
+                  <div className="text-xs text-gray-500 flex items-center">
+                    Change tonality or language and click regenerate to update the script
+                  </div>
+                </div>
+
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <pre className="whitespace-pre-wrap text-sm font-mono">
                     {generatedScript.script}
@@ -570,7 +697,7 @@ function LeadHubDashboard({ fubStatus, userEmail }: { fubStatus: FUBStatus, user
           scriptContent={generatedScript.script}
           agentName={fubStatus.user?.name || 'Agent'}
           brokerageName="Your Brokerage"
-          recipientEmail={generatedScript.contact.email}
+          recipientEmail={editableEmail}
           contentType="script"
         />
       )}
