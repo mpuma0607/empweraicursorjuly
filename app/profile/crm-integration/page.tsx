@@ -29,12 +29,36 @@ export default function CRMIntegrationPage() {
   const [isCheckingStatus, setIsCheckingStatus] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
 
-  // Only check connection status if user is logged in
+  // Check for MemberSpace user with fallback
   useEffect(() => {
-    if (user?.email) {
-      setIsCheckingStatus(true)
-      checkConnectionStatus(user.email)
+    const checkForUser = async () => {
+      // First try our hook
+      if (user?.email) {
+        setIsCheckingStatus(true)
+        checkConnectionStatus(user.email)
+        return
+      }
+
+      // Fallback: Check MemberSpace directly
+      if (typeof window !== 'undefined' && (window as any).MemberSpace) {
+        try {
+          const msUser = await (window as any).MemberSpace.getCurrentMember()
+          console.log('CRM Integration: Direct MemberSpace check:', msUser)
+          if (msUser?.email) {
+            setIsCheckingStatus(true)
+            checkConnectionStatus(msUser.email)
+          }
+        } catch (error) {
+          console.log('CRM Integration: MemberSpace check failed:', error)
+        }
+      }
     }
+
+    // Check immediately and also after a delay for MemberSpace to load
+    checkForUser()
+    const timeout = setTimeout(checkForUser, 2000)
+    
+    return () => clearTimeout(timeout)
   }, [user?.email])
 
   const checkConnectionStatus = async (userEmail?: string) => {
@@ -76,7 +100,20 @@ export default function CRMIntegrationPage() {
   }
 
   const connectFollowUpBoss = async () => {
-    if (!user?.email) {
+    let currentUserEmail = user?.email
+    
+    // Fallback to MemberSpace direct check if hook fails
+    if (!currentUserEmail && typeof window !== 'undefined' && (window as any).MemberSpace) {
+      try {
+        const msUser = await (window as any).MemberSpace.getCurrentMember()
+        currentUserEmail = msUser?.email
+        console.log('Connect FUB: Got email from MemberSpace directly:', currentUserEmail)
+      } catch (error) {
+        console.log('Connect FUB: Could not get MemberSpace user')
+      }
+    }
+
+    if (!currentUserEmail) {
       setMessage({ type: 'error', text: 'Please log in to connect your Follow Up Boss account' })
       return
     }
@@ -97,7 +134,7 @@ export default function CRMIntegrationPage() {
         },
         body: JSON.stringify({
           apiKey: apiKey.trim(),
-          userEmail: user.email
+          userEmail: currentUserEmail
         })
       })
 
