@@ -3,6 +3,15 @@ import crypto from "crypto"
 
 export async function GET(request: NextRequest) {
   try {
+    // Check for required environment variables
+    if (!process.env.OUTLOOK_CLIENT_ID || !process.env.OUTLOOK_CLIENT_SECRET) {
+      console.error('❌ Missing Microsoft OAuth environment variables')
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.getempowerai.com'
+      return NextResponse.redirect(
+        `${baseUrl}/profile/email-integration?error=microsoft_oauth_not_configured`
+      )
+    }
+
     const { searchParams } = new URL(request.url)
     const returnUrl = searchParams.get('returnUrl') || '/profile/email-integration'
     const tenant = searchParams.get('tenant') || 'empower-ai'
