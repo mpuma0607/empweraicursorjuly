@@ -33,7 +33,6 @@ interface EmailCompositionModalProps {
     fileName?: string // Name for the attachment
   }
   recipientEmail?: string // Pre-populate recipient email (e.g., from CRM contact)
-  customSubject?: string // Custom subject line (e.g., for Lead Hub personalization)
 }
 
 interface EmailConnectionStatus {
@@ -55,8 +54,7 @@ export default function EmailCompositionModal({
   brokerageName,
   contentType = 'script', // Default to script if not specified
   attachments,
-  recipientEmail,
-  customSubject
+  recipientEmail
 }: EmailCompositionModalProps) {
   const { user } = useMemberSpaceUser()
   const [providerStatus, setProviderStatus] = useState<ProviderStatus>({
@@ -74,7 +72,6 @@ export default function EmailCompositionModal({
   const [subject, setSubject] = useState("")
   const [emailBody, setEmailBody] = useState("")
   const [signature, setSignature] = useState("")
-  const [hasInitialized, setHasInitialized] = useState(false)
   
   // Attachment handling
   const [attachmentFiles, setAttachmentFiles] = useState<File[]>([])
@@ -92,19 +89,12 @@ export default function EmailCompositionModal({
       setIsLoading(false)
     }
     
-    // Reset initialization when modal closes
-    if (!isOpen) {
-      setHasInitialized(false)
-    }
       
     // Parse the script content to extract subject and clean up content
     const { extractedSubject, cleanedContent } = parseScriptContent(scriptContent)
     
     // Set default subject and signature based on content type
-    // Use custom subject if provided, otherwise generate based on content type
-    if (customSubject) {
-      setSubject(customSubject)
-    } else if (contentType === 'cma') {
+    if (contentType === 'cma') {
       setSubject(extractedSubject || `CMA Report from ${agentName} - ${brokerageName}`)
     } else if (contentType === 'listit') {
       setSubject(extractedSubject || `Listing Description from ${agentName} - ${brokerageName}`)
@@ -119,11 +109,8 @@ export default function EmailCompositionModal({
     }
     setSignature(`Best regards,\n${agentName}\n${brokerageName}`)
     
-    // Only set email body on first initialization or when script content changes
-    if (!hasInitialized || emailBody === "") {
-      setEmailBody(cleanedContent)
-      setHasInitialized(true)
-    }
+    // Set email body to cleaned script content
+    setEmailBody(cleanedContent)
     
     // Pre-populate recipient email if provided (e.g., from CRM contact)
     if (recipientEmail) {
@@ -619,7 +606,7 @@ export default function EmailCompositionModal({
                     id="emailBody"
                     value={emailBody}
                     onChange={(e) => setEmailBody(e.target.value)}
-                    className="min-h-[300px] resize-none"
+                    className="min-h-[300px]"
                     placeholder="Your script content will appear here..."
                   />
                 </div>

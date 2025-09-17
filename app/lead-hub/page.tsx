@@ -59,7 +59,6 @@ function LeadHubDashboard({ fubStatus, userEmail }: { fubStatus: FUBStatus, user
   const [generatingScript, setGeneratingScript] = useState<number | null>(null)
   const [generatingCMA, setGeneratingCMA] = useState<number | null>(null)
   const [generatedScript, setGeneratedScript] = useState<{contact: LeadContact, script: string} | null>(null)
-  const [isScriptModalOpen, setIsScriptModalOpen] = useState(false)
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
   
   // Script modal customization
@@ -146,12 +145,12 @@ function LeadHubDashboard({ fubStatus, userEmail }: { fubStatus: FUBStatus, user
       const { generateScript } = await import('@/app/ai-hub/scriptit-ai/actions')
       const result = await generateScript(scriptData, userEmail)
       
-      // Show the generated script in a modal
+      // Store the generated script and open email modal directly
       setGeneratedScript({ contact, script: result.script })
       setEditableEmail(contact.email)
       setSelectedTonality('Professional & Authoritative')
       setSelectedLanguage('English')
-      setIsScriptModalOpen(true)
+      setIsEmailModalOpen(true)
       
     } catch (error) {
       console.error('Error generating script:', error)
@@ -502,9 +501,9 @@ function LeadHubDashboard({ fubStatus, userEmail }: { fubStatus: FUBStatus, user
                         {generatingScript === contact.id ? (
                           <Loader2 className="w-3 h-3 animate-spin" />
                         ) : (
-                          <FileText className="w-3 h-3" />
+                          <Mail className="w-3 h-3" />
                         )}
-                        Script
+                        Create Email
                       </Button>
                       {contact.recentInquiry?.property && (
                         <Button 
@@ -538,156 +537,6 @@ function LeadHubDashboard({ fubStatus, userEmail }: { fubStatus: FUBStatus, user
         </CardContent>
       </Card>
 
-      {/* Script Generation Modal */}
-      {isScriptModalOpen && generatedScript && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-4xl max-h-[90vh] overflow-hidden">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="w-5 h-5" />
-                  Generated Script for {generatedScript.contact.name}
-                </CardTitle>
-                <p className="text-sm text-gray-600 mt-1">
-                  {generatedScript.contact.email} • {generatedScript.contact.stage} • {generatedScript.contact.source}
-                </p>
-              </div>
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => {
-                  setIsScriptModalOpen(false)
-                  setGeneratedScript(null)
-                }}
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </CardHeader>
-            <CardContent className="overflow-y-auto max-h-[70vh]">
-              <div className="space-y-4">
-                {/* Customization Controls */}
-                <div className="grid md:grid-cols-3 gap-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                  <div className="space-y-2">
-                    <Label htmlFor="editableEmail" className="text-sm font-medium">
-                      Contact Email
-                    </Label>
-                    <Input
-                      id="editableEmail"
-                      type="email"
-                      value={editableEmail}
-                      onChange={(e) => setEditableEmail(e.target.value)}
-                      className="text-sm"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">Tonality</Label>
-                    <Select value={selectedTonality} onValueChange={setSelectedTonality}>
-                      <SelectTrigger className="text-sm">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Professional & Authoritative">Professional & Authoritative</SelectItem>
-                        <SelectItem value="Friendly & Conversational">Friendly & Conversational</SelectItem>
-                        <SelectItem value="Urgent & Direct">Urgent & Direct</SelectItem>
-                        <SelectItem value="Warm & Personal">Warm & Personal</SelectItem>
-                        <SelectItem value="Expert & Consultative">Expert & Consultative</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">Language</Label>
-                    <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
-                      <SelectTrigger className="text-sm">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="English">English</SelectItem>
-                        <SelectItem value="Spanish">Spanish</SelectItem>
-                        <SelectItem value="French">French</SelectItem>
-                        <SelectItem value="Portuguese">Portuguese</SelectItem>
-                        <SelectItem value="Italian">Italian</SelectItem>
-                        <SelectItem value="German">German</SelectItem>
-                        <SelectItem value="Chinese">Chinese</SelectItem>
-                        <SelectItem value="Japanese">Japanese</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                
-                <div className="flex gap-2">
-                  <Button 
-                    onClick={regenerateScript}
-                    disabled={isRegenerating}
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-2"
-                  >
-                    {isRegenerating ? (
-                      <Loader2 className="w-3 h-3 animate-spin" />
-                    ) : (
-                      <RefreshCw className="w-3 h-3" />
-                    )}
-                    {isRegenerating ? 'Regenerating...' : 'Regenerate Script'}
-                  </Button>
-                  <div className="text-xs text-gray-500 flex items-center">
-                    Change tonality or language and click regenerate to update the script
-                  </div>
-                </div>
-
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <pre className="whitespace-pre-wrap text-sm font-mono">
-                    {generatedScript.script}
-                  </pre>
-                </div>
-                
-                <div className="flex gap-3 pt-4 border-t">
-                  <Button 
-                    onClick={() => {
-                      setIsScriptModalOpen(false)
-                      setIsEmailModalOpen(true)
-                    }}
-                    className="flex items-center gap-2"
-                  >
-                    <Mail className="w-4 h-4" />
-                    Send Email
-                  </Button>
-                  
-                  <Button 
-                    variant="outline"
-                    onClick={() => {
-                      navigator.clipboard.writeText(generatedScript.script)
-                      alert('Script copied to clipboard!')
-                    }}
-                    className="flex items-center gap-2"
-                  >
-                    <FileText className="w-4 h-4" />
-                    Copy Script
-                  </Button>
-                  
-                  <Button 
-                    variant="outline"
-                    onClick={() => {
-                      const blob = new Blob([generatedScript.script], { type: 'text/plain' })
-                      const url = URL.createObjectURL(blob)
-                      const a = document.createElement('a')
-                      a.href = url
-                      a.download = `script-${generatedScript.contact.name.replace(/\s+/g, '-')}.txt`
-                      a.click()
-                      URL.revokeObjectURL(url)
-                    }}
-                    className="flex items-center gap-2"
-                  >
-                    <Download className="w-4 h-4" />
-                    Download
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
 
       {/* Email Composition Modal */}
       {generatedScript && (
@@ -698,8 +547,6 @@ function LeadHubDashboard({ fubStatus, userEmail }: { fubStatus: FUBStatus, user
           agentName={fubStatus.user?.name || 'Agent'}
           brokerageName="Your Brokerage"
           recipientEmail={editableEmail}
-          customSubject={`Follow-up from ${fubStatus.user?.name || 'Your Agent'} - ${generatedScript.contact.name}`}
-          contentType="script"
         />
       )}
     </div>
