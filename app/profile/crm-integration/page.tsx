@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, CheckCircle, XCircle, ExternalLink, Users, Database, Zap } from 'lucide-react'
-import { useMemberSpaceUser } from '@/hooks/useMemberSpaceUser'
+import { useMemberSpaceUser } from '@/hooks/use-memberspace-user'
 
 interface ConnectionStatus {
   connected: boolean
