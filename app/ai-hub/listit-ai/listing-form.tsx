@@ -122,10 +122,10 @@ export default function ListingForm() {
 
         const currentText = finalTranscript || interimTranscript
         if (currentText.trim()) {
-          // REPLACE the content, don't append (this fixes the repetition issue)
+          // APPEND the content instead of replacing (same pattern as IdeaHub)
           setFormData((prev) => ({
             ...prev,
-            propertyDescription: currentText.trim(),
+            propertyDescription: prev.propertyDescription + (prev.propertyDescription ? " " : "") + currentText.trim(),
           }))
         }
 

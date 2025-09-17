@@ -114,7 +114,10 @@ export default function ElicitationStep({ profile, updateProfile }: ElicitationS
         const transcript = event.results[0][0].transcript
         const currentQ = elicitationQuestions[currentQuestion]
         if (currentQ && currentQ.id !== 'non_negotiables') {
-          handleTextResponse(currentQ.id, transcript)
+          // Append to existing content instead of replacing
+          const currentValue = profile[currentQ.id as keyof AgentProfile] as string || ''
+          const newValue = currentValue + (currentValue ? ' ' : '') + transcript
+          handleTextResponse(currentQ.id, newValue)
         }
         setIsListening(false)
       }
