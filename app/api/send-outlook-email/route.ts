@@ -76,27 +76,30 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Create email message for Microsoft Graph
+    // Create email message for Microsoft Graph (simplified format)
     const emailMessage = {
-      message: {
-        subject: subject,
-        body: {
-          contentType: "HTML",
-          content: body.replace(/\n/g, '<br>')
-        },
-        toRecipients: [
-          {
-            emailAddress: {
-              address: to
-            }
-          }
-        ],
-        attachments: graphAttachments
+      subject: subject,
+      body: {
+        contentType: "Text",
+        content: body
       },
-      saveToSentItems: true
+      toRecipients: [
+        {
+          emailAddress: {
+            address: to
+          }
+        }
+      ]
+    }
+    
+    // Add attachments only if they exist
+    if (graphAttachments.length > 0) {
+      emailMessage.attachments = graphAttachments
     }
 
     console.log('📤 Sending email via Microsoft Graph...')
+    console.log('📧 Email message:', JSON.stringify(emailMessage, null, 2))
+    console.log('🔑 Using access token (first 20 chars):', tokens.accessToken.substring(0, 20) + '...')
     
     // Send email via Microsoft Graph API
     const graphResponse = await fetch('https://graph.microsoft.com/v1.0/me/sendMail', {
@@ -108,13 +111,21 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify(emailMessage)
     })
 
+    console.log('📡 Microsoft Graph response status:', graphResponse.status)
+
     if (!graphResponse.ok) {
-      const errorData = await graphResponse.text()
+      let errorData
+      try {
+        errorData = await graphResponse.json()
+      } catch {
+        errorData = await graphResponse.text()
+      }
       console.error('❌ Microsoft Graph API error:', errorData)
       return NextResponse.json(
         { 
           error: 'Failed to send email via Microsoft Graph',
-          details: errorData
+          details: errorData,
+          status: graphResponse.status
         },
         { status: 502 }
       )
