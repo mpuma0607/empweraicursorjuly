@@ -273,7 +273,14 @@ export default function EmailCompositionModal({
   }
 
   const checkConnectionStatus = async () => {
-    if (!user?.email) {
+    // Use same email detection logic as Email Integration page
+    let currentUserEmail = localStorage.getItem('connected_email') || localStorage.getItem('gmail_connected_email')
+    
+    if (!currentUserEmail) {
+      currentUserEmail = user?.email
+    }
+    
+    if (!currentUserEmail) {
       console.log('Email modal: No user email available')
       setProviderStatus({ google: { connected: false }, microsoft: { connected: false } })
       setIsLoading(false)
@@ -282,12 +289,12 @@ export default function EmailCompositionModal({
     
     try {
       setIsLoading(true)
-      console.log('Email modal: Checking OAuth status for:', user.email)
+      console.log('Email modal: Checking OAuth status for:', currentUserEmail, '(localStorage email:', localStorage.getItem('connected_email'), 'MemberSpace email:', user?.email, ')')
       
       // Check Google status
       const googleResponse = await fetch('/api/auth/google/status', {
         headers: {
-          'x-user-email': user.email
+          'x-user-email': currentUserEmail
         }
       })
       
@@ -298,7 +305,7 @@ export default function EmailCompositionModal({
       }
       
       // Check Microsoft status
-      const microsoftResponse = await fetch(`/api/outlook/auth/status?email=${encodeURIComponent(user.email)}`)
+      const microsoftResponse = await fetch(`/api/outlook/auth/status?email=${encodeURIComponent(currentUserEmail)}`)
       
       let microsoftStatus: EmailConnectionStatus = { connected: false, provider: 'microsoft' }
       if (microsoftResponse.ok) {
