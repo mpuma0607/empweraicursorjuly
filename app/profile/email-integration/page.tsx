@@ -21,14 +21,29 @@ interface EmailConnectionStatus {
   connectedAt?: string
   scopes?: string[]
   lastUsed?: string
+  provider?: string
+}
+
+interface ProviderStatus {
+  google: EmailConnectionStatus | null
+  microsoft: EmailConnectionStatus | null
 }
 
 export default function EmailIntegrationPage() {
   const { user, loading: userLoading } = useMemberSpaceUser()
-  const [connectionStatus, setConnectionStatus] = useState<EmailConnectionStatus | null>(null)
+  const [providerStatus, setProviderStatus] = useState<ProviderStatus>({
+    google: null,
+    microsoft: null
+  })
   const [isLoading, setIsLoading] = useState(true)
-  const [isConnecting, setIsConnecting] = useState(false)
-  const [isDisconnecting, setIsDisconnecting] = useState(false)
+  const [isConnecting, setIsConnecting] = useState<{google: boolean, microsoft: boolean}>({
+    google: false,
+    microsoft: false
+  })
+  const [isDisconnecting, setIsDisconnecting] = useState<{google: boolean, microsoft: boolean}>({
+    google: false,
+    microsoft: false
+  })
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [userEmail, setUserEmail] = useState<string | null>(null)
@@ -49,11 +64,11 @@ export default function EmailIntegrationPage() {
       
       if (currentUserEmail) {
         setUserEmail(currentUserEmail) // Store it for future use
-        localStorage.setItem('gmail_connected_email', currentUserEmail)
+        localStorage.setItem('connected_email', currentUserEmail)
         console.log('📧 Got email from URL params:', currentUserEmail)
       } else {
         // Priority 2: Check localStorage
-        currentUserEmail = localStorage.getItem('gmail_connected_email')
+        currentUserEmail = localStorage.getItem('connected_email') || localStorage.getItem('gmail_connected_email')
         if (currentUserEmail) {
           setUserEmail(currentUserEmail)
           console.log('💾 Using localStorage email:', currentUserEmail)
@@ -74,46 +89,62 @@ export default function EmailIntegrationPage() {
       
       if (!currentUserEmail) {
         console.log('No user email found, showing disconnected status')
-        setConnectionStatus({ connected: false })
+        setProviderStatus({ google: { connected: false }, microsoft: { connected: false } })
         return
       }
       
-      const response = await fetch('/api/auth/google/status', {
+      // Check Google status
+      const googleResponse = await fetch('/api/auth/google/status', {
         headers: {
           'x-user-email': currentUserEmail
         }
       })
       
-      console.log('📡 Status API response:', response.status)
-      
-      if (response.ok) {
-        const data = await response.json()
-        console.log('✅ Status data received:', data)
-        setConnectionStatus(data.status)
-      } else {
-        console.log('❌ Status API failed:', response.status)
-        setConnectionStatus({ connected: false })
+      let googleStatus: EmailConnectionStatus = { connected: false, provider: 'google' }
+      if (googleResponse.ok) {
+        const data = await googleResponse.json()
+        googleStatus = { ...data.status, provider: 'google' }
       }
+      
+      // Check Microsoft status
+      const microsoftResponse = await fetch(`/api/outlook/auth/status?email=${encodeURIComponent(currentUserEmail)}`)
+      
+      let microsoftStatus: EmailConnectionStatus = { connected: false, provider: 'microsoft' }
+      if (microsoftResponse.ok) {
+        const data = await microsoftResponse.json()
+        microsoftStatus = { ...data, provider: 'microsoft' }
+      }
+      
+      console.log('✅ Status data received:', { google: googleStatus, microsoft: microsoftStatus })
+      setProviderStatus({
+        google: googleStatus,
+        microsoft: microsoftStatus
+      })
+      
     } catch (error) {
       console.error('Error checking connection status:', error)
-      setConnectionStatus({ connected: false })
+      setProviderStatus({ google: { connected: false }, microsoft: { connected: false } })
     } finally {
       setIsLoading(false)
     }
   }
 
-  const connectGmail = async () => {
+  const connectProvider = async (provider: 'google' | 'microsoft') => {
     try {
-      setIsConnecting(true)
+      setIsConnecting(prev => ({ ...prev, [provider]: true }))
       setError(null)
       
+      const startUrl = provider === 'google' 
+        ? '/api/auth/google/start'
+        : '/api/outlook/auth/start'
+      
       // Always redirect to OAuth start - simpler and more reliable
-      window.location.href = '/api/auth/google/start'
+      window.location.href = startUrl
     } catch (error) {
-      console.error('Error connecting Gmail:', error)
-      setError(error instanceof Error ? error.message : 'Failed to connect Gmail')
+      console.error(`Error connecting ${provider}:`, error)
+      setError(error instanceof Error ? error.message : `Failed to connect ${provider}`)
     } finally {
-      setIsConnecting(false)
+      setIsConnecting(prev => ({ ...prev, [provider]: false }))
     }
   }
 
@@ -128,7 +159,7 @@ export default function EmailIntegrationPage() {
       
       if (success === 'oauth_completed' && email) {
         // Store email in localStorage for persistence
-        localStorage.setItem('gmail_connected_email', email)
+        localStorage.setItem('connected_email', email)
         setUserEmail(email)
         setSuccess(`Gmail connected successfully! Email: ${email}`)
         
@@ -138,8 +169,26 @@ export default function EmailIntegrationPage() {
         }, 1000)
         // Clean up URL
         window.history.replaceState({}, document.title, window.location.pathname)
+      } else if (success === 'microsoft_connected' && email) {
+        // Store email in localStorage for persistence
+        localStorage.setItem('connected_email', email)
+        setUserEmail(email)
+        setSuccess(`Microsoft Outlook connected successfully! Email: ${email}`)
+        
+        // Wait a moment for the OAuth callback to complete, then check status
+        setTimeout(() => {
+          checkConnectionStatus()
+        }, 1000)
+        // Clean up URL
+        window.history.replaceState({}, document.title, window.location.pathname)
       } else if (error) {
-        setError(`OAuth error: ${error}`)
+        let errorMessage = 'OAuth error'
+        if (error.includes('google')) {
+          errorMessage = 'Google OAuth error'
+        } else if (error.includes('microsoft')) {
+          errorMessage = 'Microsoft OAuth error'
+        }
+        setError(`${errorMessage}: ${error}`)
         // Clean up URL
         window.history.replaceState({}, document.title, window.location.pathname)
       }
@@ -148,9 +197,9 @@ export default function EmailIntegrationPage() {
     }
   }
 
-  const disconnectGmail = async () => {
+  const disconnectProvider = async (provider: 'google' | 'microsoft') => {
     try {
-      setIsDisconnecting(true)
+      setIsDisconnecting(prev => ({ ...prev, [provider]: true }))
       setError(null)
       
       // Use stored userEmail or user email from hook
@@ -161,28 +210,52 @@ export default function EmailIntegrationPage() {
         return
       }
       
-      const response = await fetch('/api/auth/google/disconnect', {
-        method: 'POST',
-        headers: {
-          'x-user-email': currentUserEmail
-        }
-      })
+      const disconnectUrl = provider === 'google' 
+        ? '/api/auth/google/disconnect'
+        : '/api/outlook/auth/disconnect'
+      
+      const requestOptions = provider === 'google'
+        ? {
+            method: 'POST',
+            headers: { 'x-user-email': currentUserEmail }
+          }
+        : {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: currentUserEmail })
+          }
+      
+      const response = await fetch(disconnectUrl, requestOptions)
       
       if (response.ok) {
-        setSuccess('Gmail disconnected successfully!')
-        setConnectionStatus({ connected: false })
-        // Clear stored email
-        setUserEmail(null)
-        localStorage.removeItem('gmail_connected_email')
+        const providerName = provider === 'google' ? 'Gmail' : 'Microsoft Outlook'
+        setSuccess(`${providerName} disconnected successfully!`)
+        
+        // Update provider status
+        setProviderStatus(prev => ({
+          ...prev,
+          [provider]: { connected: false, provider }
+        }))
+        
+        // Clear stored email if no providers are connected
+        const otherProvider = provider === 'google' ? 'microsoft' : 'google'
+        const otherProviderConnected = providerStatus[otherProvider]?.connected
+        
+        if (!otherProviderConnected) {
+          setUserEmail(null)
+          localStorage.removeItem('connected_email')
+          localStorage.removeItem('gmail_connected_email')
+        }
       } else {
         const errorData = await response.json()
         throw new Error(errorData.error || 'Failed to disconnect')
       }
     } catch (error) {
-      console.error('Error disconnecting Gmail:', error)
-      setError(error instanceof Error ? error.message : 'Failed to disconnect Gmail')
+      const providerName = provider === 'google' ? 'Gmail' : 'Microsoft Outlook'
+      console.error(`Error disconnecting ${providerName}:`, error)
+      setError(error instanceof Error ? error.message : `Failed to disconnect ${providerName}`)
     } finally {
-      setIsDisconnecting(false)
+      setIsDisconnecting(prev => ({ ...prev, [provider]: false }))
     }
   }
 
@@ -210,129 +283,198 @@ export default function EmailIntegrationPage() {
         <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Email Integration</h1>
           <p className="text-lg text-gray-600">
-            Connect your Gmail account to send emails directly from our platform
+            Connect your Gmail or Microsoft Outlook account to send emails directly from our platform
           </p>
         </div>
 
-        {/* Connection Status Card */}
-        <Card className="border-2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-3">
-              <Mail className="h-6 w-6" />
-              Gmail Connection Status
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {connectionStatus?.connected ? (
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <CheckCircle className="h-6 w-6 text-green-600" />
-                  <Badge variant="default" className="bg-green-100 text-green-800">
-                    Connected
-                  </Badge>
+        {/* Email Providers */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Google Gmail Card */}
+          <Card className="border-2">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-red-500 rounded flex items-center justify-center">
+                  <Mail className="h-5 w-5 text-white" />
                 </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="font-medium text-gray-700">Email:</span>
-                    <span className="ml-2 text-gray-900">{connectionStatus.email}</span>
+                Gmail
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {providerStatus.google?.connected ? (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <CheckCircle className="h-6 w-6 text-green-600" />
+                    <Badge variant="default" className="bg-green-100 text-green-800">
+                      Connected
+                    </Badge>
                   </div>
-                  {connectionStatus.connectedAt && (
+                  
+                  <div className="space-y-2 text-sm">
                     <div>
-                      <span className="font-medium text-gray-700">Connected:</span>
-                      <span className="ml-2 text-gray-900">
-                        {new Date(connectionStatus.connectedAt).toLocaleDateString()}
-                      </span>
+                      <span className="font-medium text-gray-700">Email:</span>
+                      <span className="ml-2 text-gray-900">{providerStatus.google.email}</span>
                     </div>
-                  )}
-                  {connectionStatus.lastUsed && (
-                    <div>
-                      <span className="font-medium text-gray-700">Last Used:</span>
-                      <span className="ml-2 text-gray-900">
-                        {new Date(connectionStatus.lastUsed).toLocaleDateString()}
-                      </span>
-                    </div>
-                  )}
+                    {providerStatus.google.lastUsed && (
+                      <div>
+                        <span className="font-medium text-gray-700">Last Used:</span>
+                        <span className="ml-2 text-gray-900">
+                          {new Date(providerStatus.google.lastUsed).toLocaleDateString()}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex gap-2 pt-2">
+                    <Button
+                      onClick={() => disconnectProvider('google')}
+                      disabled={isDisconnecting.google}
+                      variant="outline"
+                      size="sm"
+                      className="border-red-300 text-red-700 hover:bg-red-50"
+                    >
+                      {isDisconnecting.google ? (
+                        <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+                      ) : (
+                        <XCircle className="h-4 w-4 mr-2" />
+                      )}
+                      Disconnect
+                    </Button>
+                  </div>
                 </div>
-
-                {connectionStatus.scopes && (
-                  <div>
-                    <span className="font-medium text-gray-700">Permissions:</span>
-                    <div className="mt-2 space-y-1">
-                      {connectionStatus.scopes.map((scope, index) => (
-                        <Badge key={index} variant="outline" className="mr-2">
-                          {scope}
-                        </Badge>
-                      ))}
-                    </div>
+              ) : (
+                <div className="text-center space-y-4">
+                  <div className="flex items-center justify-center gap-3">
+                    <XCircle className="h-6 w-6 text-gray-400" />
+                    <Badge variant="outline" className="text-gray-600">
+                      Not Connected
+                    </Badge>
                   </div>
-                )}
-
-                <div className="flex gap-3 pt-4">
+                  
+                  <p className="text-gray-600 text-sm">
+                    Connect Gmail to send emails using your Google account
+                  </p>
+                  
                   <Button
-                    onClick={disconnectGmail}
-                    disabled={isDisconnecting}
-                    variant="outline"
-                    className="border-red-300 text-red-700 hover:bg-red-50"
+                    onClick={() => connectProvider('google')}
+                    disabled={isConnecting.google}
+                    className="bg-red-600 hover:bg-red-700 w-full"
                   >
-                    {isDisconnecting ? (
+                    {isConnecting.google ? (
                       <>
                         <RefreshCw className="h-4 w-4 animate-spin mr-2" />
-                        Disconnecting...
+                        Connecting...
                       </>
                     ) : (
                       <>
-                        <XCircle className="h-4 w-4 mr-2" />
-                        Disconnect Gmail
+                        <Mail className="h-4 w-4 mr-2" />
+                        Connect Gmail
                       </>
                     )}
                   </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Microsoft Outlook Card */}
+          <Card className="border-2">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-blue-500 rounded flex items-center justify-center">
+                  <Mail className="h-5 w-5 text-white" />
+                </div>
+                Microsoft Outlook
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {providerStatus.microsoft?.connected ? (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <CheckCircle className="h-6 w-6 text-green-600" />
+                    <Badge variant="default" className="bg-green-100 text-green-800">
+                      Connected
+                    </Badge>
+                  </div>
+                  
+                  <div className="space-y-2 text-sm">
+                    <div>
+                      <span className="font-medium text-gray-700">Email:</span>
+                      <span className="ml-2 text-gray-900">{providerStatus.microsoft.email}</span>
+                    </div>
+                    {providerStatus.microsoft.lastUsed && (
+                      <div>
+                        <span className="font-medium text-gray-700">Last Used:</span>
+                        <span className="ml-2 text-gray-900">
+                          {new Date(providerStatus.microsoft.lastUsed).toLocaleDateString()}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex gap-2 pt-2">
+                    <Button
+                      onClick={() => disconnectProvider('microsoft')}
+                      disabled={isDisconnecting.microsoft}
+                      variant="outline"
+                      size="sm"
+                      className="border-red-300 text-red-700 hover:bg-red-50"
+                    >
+                      {isDisconnecting.microsoft ? (
+                        <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+                      ) : (
+                        <XCircle className="h-4 w-4 mr-2" />
+                      )}
+                      Disconnect
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center space-y-4">
+                  <div className="flex items-center justify-center gap-3">
+                    <XCircle className="h-6 w-6 text-gray-400" />
+                    <Badge variant="outline" className="text-gray-600">
+                      Not Connected
+                    </Badge>
+                  </div>
+                  
+                  <p className="text-gray-600 text-sm">
+                    Connect Outlook to send emails using your Microsoft account
+                  </p>
                   
                   <Button
-                    onClick={refreshConnection}
-                    variant="outline"
-                    className="border-blue-300 text-blue-700 hover:bg-blue-50"
+                    onClick={() => connectProvider('microsoft')}
+                    disabled={isConnecting.microsoft}
+                    className="bg-blue-600 hover:bg-blue-700 w-full"
                   >
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Refresh Status
+                    {isConnecting.microsoft ? (
+                      <>
+                        <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+                        Connecting...
+                      </>
+                    ) : (
+                      <>
+                        <Mail className="h-4 w-4 mr-2" />
+                        Connect Outlook
+                      </>
+                    )}
                   </Button>
                 </div>
-              </div>
-            ) : (
-              <div className="text-center space-y-4">
-                <div className="flex items-center justify-center gap-3">
-                  <XCircle className="h-6 w-6 text-gray-400" />
-                  <Badge variant="outline" className="text-gray-600">
-                    Not Connected
-                  </Badge>
-                </div>
-                
-                <p className="text-gray-600">
-                  Connect your Gmail account to send emails directly from our platform
-                </p>
-                
-                <Button
-                  onClick={connectGmail}
-                  disabled={isConnecting}
-                  size="lg"
-                  className="bg-blue-600 hover:bg-blue-700"
-                >
-                  {isConnecting ? (
-                    <>
-                      <RefreshCw className="h-5 w-5 animate-spin mr-2" />
-                      Connecting...
-                    </>
-                  ) : (
-                    <>
-                      <Mail className="h-5 w-5 mr-2" />
-                      Connect Gmail Account
-                    </>
-                  )}
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Refresh Button */}
+        <div className="text-center">
+          <Button
+            onClick={refreshConnection}
+            variant="outline"
+            className="border-blue-300 text-blue-700 hover:bg-blue-50"
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh Connection Status
+          </Button>
+        </div>
 
         {/* Information Card */}
         <Card className="border-blue-200 bg-blue-50">
@@ -345,18 +487,19 @@ export default function EmailIntegrationPage() {
           <CardContent className="text-blue-800">
             <div className="space-y-3">
               <p>
-                When you connect your Gmail account, you'll be able to send emails directly from our platform 
-                using your Gmail address. This is useful for:
+                When you connect your Gmail or Microsoft Outlook account, you'll be able to send emails directly from our platform 
+                using your email address. This is useful for:
               </p>
               <ul className="list-disc list-inside space-y-1 ml-4">
                 <li>Sending CMA reports to clients</li>
                 <li>Emailing property scripts</li>
                 <li>Sharing Who's Who reports</li>
+                <li>Sending virtual staging results</li>
                 <li>Any other email functionality in our tools</li>
               </ul>
               <p className="text-sm">
-                <strong>Note:</strong> We only request permission to send emails on your behalf. 
-                We cannot read your emails or access your account in any other way.
+                <strong>Note:</strong> We only request permission to send emails and create calendar events on your behalf. 
+                We cannot read your emails or access your account in any other way. You can connect both Gmail and Outlook if desired.
               </p>
             </div>
           </CardContent>
