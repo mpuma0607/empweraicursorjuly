@@ -139,7 +139,36 @@ export default function TermsOfServicePage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">5. Termination of Access</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">5. Privacy Policy</h2>
+              <p className="text-gray-700 mb-4">
+                We respect and protect the privacy of all users of our Services.
+              </p>
+              <ul className="list-disc pl-6 text-gray-700 mb-4">
+                <li>
+                  We do not sell, rent, or share any personal information, user data, or content provided to us with any
+                  third parties for marketing or commercial purposes.
+                </li>
+                <li>
+                  Information collected through our platforms is used solely for the purpose of delivering and improving
+                  our Services, maintaining account integrity, providing training or educational content, and
+                  communicating with you as outlined in this Agreement.
+                </li>
+                <li>
+                  Access to your information is restricted to authorized personnel within Beggins Enterprises and its
+                  subsidiaries who require such access to perform their job functions.
+                </li>
+                <li>
+                  Any data you provide is safeguarded using industry-standard security practices.
+                </li>
+              </ul>
+              <p className="text-gray-700">
+                By using our Services, you acknowledge and agree that your data will be handled in accordance with this
+                Privacy Policy.
+              </p>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">6. Termination of Access</h2>
               <p className="text-gray-700">
                 We reserve the right to suspend, restrict, or terminate your access to any platform, content, or tools
                 at any time without notice for violations of this Agreement, suspected misuse, unauthorized sharing, or
@@ -148,7 +177,7 @@ export default function TermsOfServicePage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">6. Updates to Terms</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">7. Updates to Terms</h2>
               <p className="text-gray-700">
                 We may revise these Terms from time to time. You will be notified of material changes via email or
                 platform announcement. Continued use of our Services following any changes constitutes your acceptance
@@ -157,7 +186,7 @@ export default function TermsOfServicePage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">7. Contact Information</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">8. Contact Information</h2>
               <p className="text-gray-700 mb-2">
                 For questions, permission requests, revocation of communication consent, or compliance inquiries:
               </p>
