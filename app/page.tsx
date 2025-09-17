@@ -1166,7 +1166,7 @@ export default function HomePage() {
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-[#b6a888] transition-colors">
+                  <a href="/terms-of-service" className="hover:text-[#b6a888] transition-colors">
                     Privacy Policy
                   </a>
                 </li>
