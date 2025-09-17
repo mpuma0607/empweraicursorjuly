@@ -15,24 +15,46 @@ interface FUBUser {
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('FUB Connect API: Request received')
     const { apiKey, userEmail } = await request.json()
+    console.log('FUB Connect API: User email:', userEmail)
 
     if (!apiKey || !userEmail) {
+      console.log('FUB Connect API: Missing apiKey or userEmail')
       return NextResponse.json(
         { error: 'API key and user email are required' },
         { status: 400 }
       )
     }
 
+    // Check environment variables
+    const xSystem = process.env.FUB_X_SYSTEM
+    const xSystemKey = process.env.FUB_X_SYSTEM_KEY
+    console.log('FUB Connect API: Environment check:', {
+      hasXSystem: !!xSystem,
+      xSystemValue: xSystem,
+      hasXSystemKey: !!xSystemKey,
+      xSystemKeyLength: xSystemKey?.length || 0
+    })
+
     // Test the API key by calling the identity endpoint
+    console.log('FUB Connect API: Making request to Follow Up Boss identity endpoint')
+    console.log('FUB Connect API: Request headers:', {
+      'X-System': xSystem || 'EmpowerAI',
+      'X-System-Key': xSystemKey ? `${xSystemKey.substring(0, 8)}...` : 'MISSING',
+      'Authorization': `Basic ${Buffer.from(`${apiKey.substring(0, 8)}...:`).toString('base64')}`
+    })
+
     const response = await fetch(`${FUB_API_BASE}/identity`, {
       headers: {
         'Authorization': `Basic ${Buffer.from(`${apiKey}:`).toString('base64')}`,
         'Content-Type': 'application/json',
-        'X-System': process.env.FUB_X_SYSTEM || 'EmpowerAI',
-        'X-System-Key': process.env.FUB_X_SYSTEM_KEY || ''
+        'X-System': xSystem || 'EmpowerAI',
+        'X-System-Key': xSystemKey || ''
       }
     })
+
+    console.log('FUB Connect API: Follow Up Boss response:', response.status, response.statusText)
 
     if (!response.ok) {
       const errorText = await response.text()
