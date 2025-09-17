@@ -47,6 +47,12 @@ const navigationItems = [
     ],
   },
   {
+    title: "Lead Hub",
+    href: "/lead-hub",
+    submenu: [],
+    beta: true, // Add beta indicator
+  },
+  {
     title: "Marketing Hub",
     href: "/marketing-hub",
     submenu: [
@@ -496,9 +502,14 @@ export default function Navigation() {
                       ) : (
                         <Link
                           href={item.href}
-                          className="text-gray-700 hover:text-green-600 font-medium transition-colors"
+                          className="text-gray-700 hover:text-green-600 font-medium transition-colors flex items-center gap-2"
                         >
                           {item.title}
+                          {item.beta && (
+                            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-normal">
+                              BETA
+                            </span>
+                          )}
                         </Link>
                       )}
                       {item.submenu && item.submenu.length > 0 && (
@@ -596,7 +607,7 @@ export default function Navigation() {
                         ) : (
                           <Link
                             href={item.href}
-                            className="block text-gray-700 hover:text-green-600 font-medium"
+                            className="block text-gray-700 hover:text-green-600 font-medium flex items-center gap-2"
                             onClick={(e) => {
                               if (item.submenu && item.submenu.length > 0) {
                                 e.preventDefault()
@@ -606,6 +617,11 @@ export default function Navigation() {
                             }}
                           >
                             {item.title}
+                            {item.beta && (
+                              <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-normal">
+                                BETA
+                              </span>
+                            )}
                           </Link>
                         )}
                         {item.submenu && item.submenu.length > 0 && (
