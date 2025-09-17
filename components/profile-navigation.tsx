@@ -27,7 +27,7 @@ const navigation = [
     name: "Email Integration",
     href: "/profile/email-integration",
     icon: Mail,
-    description: "Connect Gmail for sending emails"
+    description: "Connect Gmail or Outlook for sending emails"
   }
 ]
 

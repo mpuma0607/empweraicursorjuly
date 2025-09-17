@@ -15,7 +15,8 @@ import {
   CheckCircle, 
   AlertCircle,
   Loader2,
-  RefreshCw
+  RefreshCw,
+  XCircle
 } from "lucide-react"
 
 interface EmailCompositionModalProps {

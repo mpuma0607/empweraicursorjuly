@@ -367,6 +367,13 @@ export default function Navigation() {
           href: "/profile/branding",
           description: "Manage your personal branding and logo preferences",
         })
+        
+        // Add Email Integration
+        filteredSubmenu.unshift({
+          title: "Email Integration",
+          href: "/profile/email-integration",
+          description: "Connect Gmail or Outlook for sending emails",
+        })
 
         filteredSubmenu.push(
           {
@@ -391,6 +398,13 @@ export default function Navigation() {
           title: "Branding Profile",
           href: "/profile/branding",
           description: "Manage your personal branding and logo preferences",
+        })
+        
+        // Add Email Integration
+        filteredSubmenu.unshift({
+          title: "Email Integration",
+          href: "/profile/email-integration",
+          description: "Connect Gmail or Outlook for sending emails",
         })
       }
 
