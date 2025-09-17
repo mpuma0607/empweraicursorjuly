@@ -324,18 +324,25 @@ export default function ScriptForm() {
   // Check email provider connection status (both Gmail and Microsoft)
   useEffect(() => {
     const checkProviderStatus = async () => {
-      if (!user?.email) {
-        console.log('ScriptIT: No user email, no providers connected')
+      // Use same email detection logic as Email Integration page
+      let currentUserEmail = localStorage.getItem('connected_email') || localStorage.getItem('gmail_connected_email')
+      
+      if (!currentUserEmail) {
+        currentUserEmail = user?.email
+      }
+      
+      if (!currentUserEmail) {
+        console.log('ScriptIT: No user email found, no providers connected')
         setIsGmailConnected(false)
         setIsAnyEmailConnected(false)
         return
       }
       
       try {
-        console.log('ScriptIT: Checking provider status for:', user.email)
+        console.log('ScriptIT: Checking provider status for:', currentUserEmail, '(localStorage email:', localStorage.getItem('connected_email'), 'MemberSpace email:', user?.email, ')')
         const googleResponse = await fetch('/api/auth/google/status', {
           headers: {
-            'x-user-email': user.email
+            'x-user-email': currentUserEmail
           }
         })
         
@@ -346,7 +353,7 @@ export default function ScriptForm() {
         }
         
         // Also check Microsoft status for Email to Client modal
-        const microsoftResponse = await fetch(`/api/outlook/auth/status?email=${encodeURIComponent(user.email)}`)
+        const microsoftResponse = await fetch(`/api/outlook/auth/status?email=${encodeURIComponent(currentUserEmail)}`)
         
         let microsoftConnected = false
         if (microsoftResponse.ok) {
