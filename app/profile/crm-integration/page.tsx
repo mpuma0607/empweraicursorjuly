@@ -26,41 +26,62 @@ export default function CRMIntegrationPage() {
   const [fubStatus, setFubStatus] = useState<ConnectionStatus>({ connected: false, provider: 'followupboss' })
   const [apiKey, setApiKey] = useState('')
   const [isConnecting, setIsConnecting] = useState(false)
-  const [isCheckingStatus, setIsCheckingStatus] = useState(true)
+  const [isCheckingStatus, setIsCheckingStatus] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
 
+  // Only check connection status if user is logged in
   useEffect(() => {
     if (user?.email) {
-      checkConnectionStatus()
+      setIsCheckingStatus(true)
+      checkConnectionStatus(user.email)
     }
   }, [user?.email])
 
-  const checkConnectionStatus = async () => {
-    if (!user?.email) return
+  const checkConnectionStatus = async (userEmail?: string) => {
+    const emailToUse = userEmail || user?.email
+    
+    if (!emailToUse) {
+      console.log('CRM Integration: No user email, stopping status check')
+      setIsCheckingStatus(false)
+      return
+    }
 
     try {
       setIsCheckingStatus(true)
+      console.log('CRM Integration: Checking FUB status for:', emailToUse)
       
       // Check Follow Up Boss status
       const response = await fetch('/api/fub/status', {
         headers: {
-          'x-user-email': user.email
+          'x-user-email': emailToUse
         }
       })
 
+      console.log('CRM Integration: FUB status response:', response.status, response.statusText)
+
       if (response.ok) {
         const data = await response.json()
+        console.log('CRM Integration: FUB status data:', data)
         setFubStatus(data)
+      } else {
+        console.error('CRM Integration: FUB status failed:', response.status, await response.text())
+        setFubStatus({ connected: false, provider: 'followupboss' })
       }
     } catch (error) {
-      console.error('Error checking CRM status:', error)
+      console.error('CRM Integration: Error checking CRM status:', error)
+      setFubStatus({ connected: false, provider: 'followupboss' })
     } finally {
       setIsCheckingStatus(false)
     }
   }
 
   const connectFollowUpBoss = async () => {
-    if (!user?.email || !apiKey.trim()) {
+    if (!user?.email) {
+      setMessage({ type: 'error', text: 'Please log in to connect your Follow Up Boss account' })
+      return
+    }
+    
+    if (!apiKey.trim()) {
       setMessage({ type: 'error', text: 'Please enter your Follow Up Boss API key' })
       return
     }
