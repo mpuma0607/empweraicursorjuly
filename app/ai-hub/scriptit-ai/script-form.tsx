@@ -321,18 +321,18 @@ export default function ScriptForm() {
     console.log("Form data changed:", formData)
   }, [formData])
 
-  // Check Gmail connection status (keep original for Email to Self)
+  // Check email provider connection status (both Gmail and Microsoft)
   useEffect(() => {
-    const checkGmailStatus = async () => {
+    const checkProviderStatus = async () => {
       if (!user?.email) {
-        console.log('ScriptIT: No user email, Gmail not connected')
+        console.log('ScriptIT: No user email, no providers connected')
         setIsGmailConnected(false)
         setIsAnyEmailConnected(false)
         return
       }
       
       try {
-        console.log('ScriptIT: Checking Gmail status for:', user.email)
+        console.log('ScriptIT: Checking provider status for:', user.email)
         const googleResponse = await fetch('/api/auth/google/status', {
           headers: {
             'x-user-email': user.email
@@ -359,13 +359,13 @@ export default function ScriptForm() {
         setIsAnyEmailConnected(googleConnected || microsoftConnected)
         
       } catch (error) {
-        console.error('ScriptIT: Error checking Gmail status:', error)
+        console.error('ScriptIT: Error checking provider status:', error)
         setIsGmailConnected(false)
         setIsAnyEmailConnected(false)
       }
     }
     
-    checkGmailStatus()
+    checkProviderStatus()
   }, [user?.email])
 
   // Auto-scroll to results when they're generated

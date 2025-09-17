@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await resend.emails.send({
-      from: "QuickCMA AI <noreply@marketing.getempowerai.com>",
+      from: "ScriptIT AI <noreply@marketing.getempowerai.com>",
       to: [to],
       subject: `Your Professional Script - ${formData?.scriptType || 'Script'} | Empower AI`,
       html: emailContent,

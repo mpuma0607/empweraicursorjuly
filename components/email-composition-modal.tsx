@@ -303,7 +303,10 @@ export default function EmailCompositionModal({
       let microsoftStatus: EmailConnectionStatus = { connected: false, provider: 'microsoft' }
       if (microsoftResponse.ok) {
         const data = await microsoftResponse.json()
+        console.log('Email modal: Microsoft status data:', data)
         microsoftStatus = { ...data, provider: 'microsoft' }
+      } else {
+        console.log('Email modal: Microsoft status response not ok:', microsoftResponse.status)
       }
       
       console.log('Email modal: Provider status:', { google: googleStatus, microsoft: microsoftStatus })
