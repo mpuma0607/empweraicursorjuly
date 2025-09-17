@@ -33,6 +33,7 @@ interface EmailCompositionModalProps {
     fileName?: string // Name for the attachment
   }
   recipientEmail?: string // Pre-populate recipient email (e.g., from CRM contact)
+  customSubject?: string // Custom subject line (e.g., for Lead Hub personalization)
 }
 
 interface EmailConnectionStatus {
@@ -54,7 +55,8 @@ export default function EmailCompositionModal({
   brokerageName,
   contentType = 'script', // Default to script if not specified
   attachments,
-  recipientEmail
+  recipientEmail,
+  customSubject
 }: EmailCompositionModalProps) {
   const { user } = useMemberSpaceUser()
   const [providerStatus, setProviderStatus] = useState<ProviderStatus>({
@@ -72,12 +74,13 @@ export default function EmailCompositionModal({
   const [subject, setSubject] = useState("")
   const [emailBody, setEmailBody] = useState("")
   const [signature, setSignature] = useState("")
+  const [hasInitialized, setHasInitialized] = useState(false)
   
   // Attachment handling
   const [attachmentFiles, setAttachmentFiles] = useState<File[]>([])
   const [inlineImageHtml, setInlineImageHtml] = useState("")
 
-  // Check connection status on mount
+  // Check connection status on mount and reset initialization
   useEffect(() => {
     if (isOpen && user?.email) {
       // Small delay to ensure OAuth tokens are stored
@@ -88,12 +91,20 @@ export default function EmailCompositionModal({
       console.log('Email modal: User not available, setting loading to false')
       setIsLoading(false)
     }
+    
+    // Reset initialization when modal closes
+    if (!isOpen) {
+      setHasInitialized(false)
+    }
       
     // Parse the script content to extract subject and clean up content
     const { extractedSubject, cleanedContent } = parseScriptContent(scriptContent)
     
     // Set default subject and signature based on content type
-    if (contentType === 'cma') {
+    // Use custom subject if provided, otherwise generate based on content type
+    if (customSubject) {
+      setSubject(customSubject)
+    } else if (contentType === 'cma') {
       setSubject(extractedSubject || `CMA Report from ${agentName} - ${brokerageName}`)
     } else if (contentType === 'listit') {
       setSubject(extractedSubject || `Listing Description from ${agentName} - ${brokerageName}`)
@@ -107,8 +118,12 @@ export default function EmailCompositionModal({
       setSubject(extractedSubject || `Script from ${agentName} - ${brokerageName}`)
     }
     setSignature(`Best regards,\n${agentName}\n${brokerageName}`)
-    // Set email body to cleaned script content
-    setEmailBody(cleanedContent)
+    
+    // Only set email body on first initialization or when script content changes
+    if (!hasInitialized || emailBody === "") {
+      setEmailBody(cleanedContent)
+      setHasInitialized(true)
+    }
     
     // Pre-populate recipient email if provided (e.g., from CRM contact)
     if (recipientEmail) {
@@ -116,7 +131,7 @@ export default function EmailCompositionModal({
     } else {
       setToEmail("") // Clear if no recipient email provided
     }
-  }, [isOpen, user?.email, agentName, brokerageName, scriptContent, recipientEmail])
+  }, [isOpen, user?.email, agentName, brokerageName, scriptContent, recipientEmail, customSubject])
 
   // Update email body when inline image changes
   useEffect(() => {

@@ -698,6 +698,7 @@ function LeadHubDashboard({ fubStatus, userEmail }: { fubStatus: FUBStatus, user
           agentName={fubStatus.user?.name || 'Agent'}
           brokerageName="Your Brokerage"
           recipientEmail={editableEmail}
+          customSubject={`Follow-up from ${fubStatus.user?.name || 'Your Agent'} - ${generatedScript.contact.name}`}
           contentType="script"
         />
       )}
