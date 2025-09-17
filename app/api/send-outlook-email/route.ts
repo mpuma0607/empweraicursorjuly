@@ -76,8 +76,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Create email message for Microsoft Graph (simplified format)
-    const emailMessage = {
+    // Create email message for Microsoft Graph (correct format with message wrapper)
+    const messageContent = {
       subject: subject,
       body: {
         contentType: "Text",
@@ -94,7 +94,12 @@ export async function POST(request: NextRequest) {
     
     // Add attachments only if they exist
     if (graphAttachments.length > 0) {
-      emailMessage.attachments = graphAttachments
+      messageContent.attachments = graphAttachments
+    }
+    
+    const emailMessage = {
+      message: messageContent,
+      saveToSentItems: true
     }
 
     console.log('📤 Sending email via Microsoft Graph...')
