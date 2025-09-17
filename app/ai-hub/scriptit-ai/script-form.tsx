@@ -235,6 +235,7 @@ export default function ScriptForm() {
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
   const [isResendModalOpen, setIsResendModalOpen] = useState(false)
   const [isGmailConnected, setIsGmailConnected] = useState(false)
+  const [isAnyEmailConnected, setIsAnyEmailConnected] = useState(false)
 
   const [formData, setFormData] = useState<ScriptFormState>({
     agentName: "",
@@ -320,35 +321,47 @@ export default function ScriptForm() {
     console.log("Form data changed:", formData)
   }, [formData])
 
-  // Check Gmail connection status
+  // Check Gmail connection status (keep original for Email to Self)
   useEffect(() => {
     const checkGmailStatus = async () => {
       if (!user?.email) {
         console.log('ScriptIT: No user email, Gmail not connected')
         setIsGmailConnected(false)
+        setIsAnyEmailConnected(false)
         return
       }
       
       try {
         console.log('ScriptIT: Checking Gmail status for:', user.email)
-        const response = await fetch('/api/auth/google/status', {
+        const googleResponse = await fetch('/api/auth/google/status', {
           headers: {
             'x-user-email': user.email
           }
         })
-        console.log('ScriptIT: Gmail status response:', response.status, response.ok)
         
-        if (response.ok) {
-          const data = await response.json()
-          console.log('ScriptIT: Gmail status data:', data)
-          setIsGmailConnected(data.status.connected)
-        } else {
-          console.log('ScriptIT: Gmail status response not ok')
-          setIsGmailConnected(false)
+        let googleConnected = false
+        if (googleResponse.ok) {
+          const data = await googleResponse.json()
+          googleConnected = data.status.connected
         }
+        
+        // Also check Microsoft status for Email to Client modal
+        const microsoftResponse = await fetch(`/api/outlook/auth/status?email=${encodeURIComponent(user.email)}`)
+        
+        let microsoftConnected = false
+        if (microsoftResponse.ok) {
+          const data = await microsoftResponse.json()
+          microsoftConnected = data.connected
+        }
+        
+        console.log('ScriptIT: Provider status:', { google: googleConnected, microsoft: microsoftConnected })
+        setIsGmailConnected(googleConnected)
+        setIsAnyEmailConnected(googleConnected || microsoftConnected)
+        
       } catch (error) {
         console.error('ScriptIT: Error checking Gmail status:', error)
         setIsGmailConnected(false)
+        setIsAnyEmailConnected(false)
       }
     }
     
@@ -1111,8 +1124,8 @@ export default function ScriptForm() {
             <span className="whitespace-nowrap">Email to Self</span>
           </Button>
           
-          {/* Gmail Client Email (Only if Gmail Connected) */}
-          {isGmailConnected ? (
+          {/* Email to Client (Gmail or Outlook) */}
+          {isAnyEmailConnected ? (
             <Button
               variant="outline"
               onClick={() => setIsEmailModalOpen(true)}
@@ -1124,10 +1137,10 @@ export default function ScriptForm() {
             </Button>
           ) : (
             <div className="text-xs text-gray-500 text-center p-2 border border-gray-200 rounded">
-              Gmail not connected
+              No email account connected
               <br />
               <a href="/profile/email-integration" className="text-blue-600 hover:underline">
-                Connect Gmail
+                Connect Email Account
               </a>
             </div>
           )}
@@ -1159,7 +1172,7 @@ export default function ScriptForm() {
           📅 Schedule Your Script Practice
         </h5>
         <p className="text-green-700 text-sm mb-4">
-          Add your script practice sessions directly to your Google Calendar to stay organized and consistent.
+          Add your script practice sessions directly to your calendar to stay organized and consistent.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <CalendarSchedulingModal
@@ -1191,7 +1204,7 @@ export default function ScriptForm() {
           </CalendarSchedulingModal>
         </div>
         <p className="text-xs text-green-600 mt-3">
-          💡 Events are created directly in your Google Calendar using OAuth API!
+          💡 Events are created directly in your calendar using OAuth API!
         </p>
       </div>
 

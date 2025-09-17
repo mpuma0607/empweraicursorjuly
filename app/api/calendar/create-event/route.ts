@@ -35,11 +35,14 @@ export async function POST(request: NextRequest) {
       }, { status: 500 })
     }
 
-    // Get user's OAuth tokens - check for calendar.events scope specifically
+    // Get user's OAuth tokens - check both Google and Microsoft
     let tokens
+    let provider: 'google' | 'microsoft' | null = null
+    
     try {
-      tokens = await sql`
-        SELECT access_token, refresh_token, expires_at, scopes
+      // First try Google Calendar tokens
+      const googleTokens = await sql`
+        SELECT access_token, refresh_token, expires_at, scopes, provider
         FROM oauth_tokens 
         WHERE user_email = ${userEmail} 
         AND provider = 'google' 
@@ -47,7 +50,33 @@ export async function POST(request: NextRequest) {
         ORDER BY created_at DESC 
         LIMIT 1
       `
-      console.log('Found tokens for user:', userEmail, 'Count:', tokens.length, 'Scopes:', tokens[0]?.scopes)
+      
+      // Then try Microsoft Calendar tokens
+      const microsoftTokens = await sql`
+        SELECT access_token, refresh_token, expires_at, scopes, provider
+        FROM oauth_tokens 
+        WHERE user_email = ${userEmail} 
+        AND provider = 'microsoft'
+        ORDER BY created_at DESC 
+        LIMIT 1
+      `
+      
+      console.log('Google tokens found:', googleTokens.length)
+      console.log('Microsoft tokens found:', microsoftTokens.length)
+      
+      // Prefer Google if available, otherwise use Microsoft
+      if (googleTokens.length > 0) {
+        tokens = googleTokens
+        provider = 'google'
+        console.log('Using Google Calendar for user:', userEmail)
+      } else if (microsoftTokens.length > 0) {
+        tokens = microsoftTokens
+        provider = 'microsoft'
+        console.log('Using Microsoft Calendar for user:', userEmail)
+      } else {
+        tokens = []
+        console.log('No calendar tokens found for user:', userEmail)
+      }
     } catch (dbError) {
       console.error('Database query error:', dbError)
       return NextResponse.json({ 
@@ -124,53 +153,113 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    const event = {
-      summary: title,
-      description: description,
-      start: {
-        dateTime: startDate.toISOString(),
-        timeZone: 'America/New_York' // Use specific timezone instead of auto-detection
-      },
-      end: {
-        dateTime: endDate.toISOString(),
-        timeZone: 'America/New_York'
-      },
-      attendees: attendees?.map(email => ({ email })) || [],
-      location: location || undefined
-    }
-
-    console.log('Creating calendar event with:', event)
-
     let calendarResponse
-    try {
-      calendarResponse = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json'
+    let eventData
+    
+    if (provider === 'google') {
+      // Google Calendar event format
+      const event = {
+        summary: title,
+        description: description,
+        start: {
+          dateTime: startDate.toISOString(),
+          timeZone: 'America/New_York'
         },
-        body: JSON.stringify(event)
-      })
-      console.log('Calendar API response status:', calendarResponse.status)
-    } catch (fetchError) {
-      console.error('Google Calendar API fetch error:', fetchError)
-      return NextResponse.json({ 
-        error: "Failed to call Google Calendar API", 
-        details: fetchError instanceof Error ? fetchError.message : 'Unknown fetch error'
-      }, { status: 500 })
-    }
+        end: {
+          dateTime: endDate.toISOString(),
+          timeZone: 'America/New_York'
+        },
+        attendees: attendees?.map(email => ({ email })) || [],
+        location: location || undefined
+      }
 
-    if (!calendarResponse.ok) {
-      const errorData = await calendarResponse.json()
-      console.error('Google Calendar API error:', errorData)
-      return NextResponse.json({ 
-        error: "Failed to create calendar event", 
-        details: errorData.error?.message || 'Unknown error',
-        status: calendarResponse.status
-      }, { status: 500 })
-    }
+      console.log('Creating Google Calendar event with:', event)
 
-    const eventData = await calendarResponse.json()
+      try {
+        calendarResponse = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(event)
+        })
+        console.log('Google Calendar API response status:', calendarResponse.status)
+      } catch (fetchError) {
+        console.error('Google Calendar API fetch error:', fetchError)
+        return NextResponse.json({ 
+          error: "Failed to call Google Calendar API", 
+          details: fetchError instanceof Error ? fetchError.message : 'Unknown fetch error'
+        }, { status: 500 })
+      }
+
+      if (!calendarResponse.ok) {
+        const errorData = await calendarResponse.json()
+        console.error('Google Calendar API error:', errorData)
+        return NextResponse.json({ 
+          error: "Failed to create Google calendar event", 
+          details: errorData.error?.message || 'Unknown error',
+          status: calendarResponse.status
+        }, { status: 500 })
+      }
+
+      eventData = await calendarResponse.json()
+      
+    } else if (provider === 'microsoft') {
+      // Microsoft Calendar event format
+      const event = {
+        subject: title,
+        body: {
+          contentType: 'Text',
+          content: description
+        },
+        start: {
+          dateTime: startDate.toISOString(),
+          timeZone: 'America/New_York'
+        },
+        end: {
+          dateTime: endDate.toISOString(),
+          timeZone: 'America/New_York'
+        },
+        attendees: attendees?.map(email => ({
+          emailAddress: { address: email, name: email },
+          type: 'required'
+        })) || [],
+        location: location ? { displayName: location } : undefined
+      }
+
+      console.log('Creating Microsoft Calendar event with:', event)
+
+      try {
+        calendarResponse = await fetch('https://graph.microsoft.com/v1.0/me/events', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(event)
+        })
+        console.log('Microsoft Calendar API response status:', calendarResponse.status)
+      } catch (fetchError) {
+        console.error('Microsoft Calendar API fetch error:', fetchError)
+        return NextResponse.json({ 
+          error: "Failed to call Microsoft Calendar API", 
+          details: fetchError instanceof Error ? fetchError.message : 'Unknown fetch error'
+        }, { status: 500 })
+      }
+
+      if (!calendarResponse.ok) {
+        const errorData = await calendarResponse.json()
+        console.error('Microsoft Calendar API error:', errorData)
+        return NextResponse.json({ 
+          error: "Failed to create Microsoft calendar event", 
+          details: errorData.error?.message || 'Unknown error',
+          status: calendarResponse.status
+        }, { status: 500 })
+      }
+
+      eventData = await calendarResponse.json()
+    }
 
     return NextResponse.json({
       success: true,
