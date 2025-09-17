@@ -51,6 +51,10 @@ function LeadHubDashboard({ fubStatus, userEmail }: { fubStatus: FUBStatus, user
   const [isLoadingContacts, setIsLoadingContacts] = useState(true)
   const [filterStage, setFilterStage] = useState<string>('all')
   const [filterSource, setFilterSource] = useState<string>('all')
+  
+  // Action states
+  const [generatingScript, setGeneratingScript] = useState<number | null>(null)
+  const [generatingCMA, setGeneratingCMA] = useState<number | null>(null)
 
   // Load contacts from Follow Up Boss
   useEffect(() => {
@@ -105,6 +109,122 @@ function LeadHubDashboard({ fubStatus, userEmail }: { fubStatus: FUBStatus, user
   // Get contacts with recent property inquiries
   const withInquiries = contacts.filter(contact => contact.recentInquiry?.property)
 
+  // Generate personalized script for contact
+  const generateScriptForContact = async (contact: LeadContact) => {
+    try {
+      setGeneratingScript(contact.id)
+      
+      // Build script data based on contact info
+      const scriptData = {
+        agentName: fubStatus.user?.name || 'Agent',
+        brokerageName: 'Your Brokerage', // Could get from user profile
+        scriptType: 'email',
+        topic: 'current-client',
+        customTopic: '',
+        additionalDetails: `Personalized for ${contact.name} - ${contact.stage} from ${contact.source}${contact.address ? ` in ${contact.address.city}, ${contact.address.state}` : ''}${contact.recentInquiry?.property ? `. Recently interested in ${contact.recentInquiry.property.address}` : ''}`,
+        agentEmail: userEmail,
+        scriptTypeCategory: 'Follow-up',
+        difficultConversationType: '',
+        tonality: 'Professional & Authoritative',
+        selectedContactId: contact.id.toString(),
+        useContactPersonalization: true
+      }
+
+      // Use the same generateScript function as ScriptIT
+      const { generateScript } = await import('@/app/ai-hub/scriptit-ai/actions')
+      const result = await generateScript(scriptData, userEmail)
+      
+      // For now, just open ScriptIT with pre-filled data
+      // Later we can show inline results or open a modal
+      const params = new URLSearchParams({
+        contactId: contact.id.toString(),
+        contactName: contact.name,
+        contactEmail: contact.email,
+        preGenerated: 'true'
+      })
+      
+      window.open(`/ai-hub/scriptit-ai?${params.toString()}`, '_blank')
+      
+    } catch (error) {
+      console.error('Error generating script:', error)
+      alert('Failed to generate script. Please try again.')
+    } finally {
+      setGeneratingScript(null)
+    }
+  }
+
+  // Generate CMA for contact's property inquiry
+  const generateCMAForContact = async (contact: LeadContact) => {
+    if (!contact.recentInquiry?.property) {
+      alert('No recent property inquiry found for this contact')
+      return
+    }
+
+    try {
+      setGeneratingCMA(contact.id)
+      
+      // Open QuickCMA with pre-filled property address
+      const params = new URLSearchParams({
+        address: contact.recentInquiry.property.address,
+        contactId: contact.id.toString(),
+        contactName: contact.name,
+        contactEmail: contact.email
+      })
+      
+      window.open(`/ai-hub/quickcma-ai?${params.toString()}`, '_blank')
+      
+    } catch (error) {
+      console.error('Error generating CMA:', error)
+      alert('Failed to generate CMA. Please try again.')
+    } finally {
+      setGeneratingCMA(null)
+    }
+  }
+
+  // Handle bulk actions from Action Required panel
+  const handleBulkFollowUps = () => {
+    if (recentContacts.length === 0) {
+      alert('No recent leads to generate follow-ups for')
+      return
+    }
+    
+    // Open bulk script generator (we'll build this next)
+    const params = new URLSearchParams({
+      bulkAction: 'follow-up',
+      contactIds: recentContacts.map(c => c.id.toString()).join(','),
+      filterType: 'recent'
+    })
+    window.open(`/lead-hub/bulk-scripts?${params.toString()}`, '_blank')
+  }
+
+  const handleBulkScripts = () => {
+    if (needsFollowUp.length === 0) {
+      alert('No contacts need follow-up scripts')
+      return
+    }
+    
+    const params = new URLSearchParams({
+      bulkAction: 'overdue',
+      contactIds: needsFollowUp.map(c => c.id.toString()).join(','),
+      filterType: 'overdue'
+    })
+    window.open(`/lead-hub/bulk-scripts?${params.toString()}`, '_blank')
+  }
+
+  const handleBulkCMAs = () => {
+    if (withInquiries.length === 0) {
+      alert('No contacts have property inquiries for CMAs')
+      return
+    }
+    
+    const params = new URLSearchParams({
+      bulkAction: 'cma',
+      contactIds: withInquiries.map(c => c.id.toString()).join(','),
+      filterType: 'inquiries'
+    })
+    window.open(`/lead-hub/bulk-cmas?${params.toString()}`, '_blank')
+  }
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
       {/* Header */}
@@ -134,7 +254,13 @@ function LeadHubDashboard({ fubStatus, userEmail }: { fubStatus: FUBStatus, user
             <div className="bg-white p-4 rounded-lg border border-orange-200">
               <div className="text-2xl font-bold text-orange-600">{recentContacts.length}</div>
               <div className="text-sm text-gray-600">New Leads (Last 7 Days)</div>
-              <Button size="sm" className="mt-2" variant="outline">
+              <Button 
+                size="sm" 
+                className="mt-2" 
+                variant="outline"
+                onClick={handleBulkFollowUps}
+                disabled={recentContacts.length === 0}
+              >
                 Generate Follow-ups
               </Button>
             </div>
@@ -142,7 +268,13 @@ function LeadHubDashboard({ fubStatus, userEmail }: { fubStatus: FUBStatus, user
             <div className="bg-white p-4 rounded-lg border border-orange-200">
               <div className="text-2xl font-bold text-red-600">{needsFollowUp.length}</div>
               <div className="text-sm text-gray-600">Need Follow-up (30+ Days)</div>
-              <Button size="sm" className="mt-2" variant="outline">
+              <Button 
+                size="sm" 
+                className="mt-2" 
+                variant="outline"
+                onClick={handleBulkScripts}
+                disabled={needsFollowUp.length === 0}
+              >
                 Create Scripts
               </Button>
             </div>
@@ -150,7 +282,13 @@ function LeadHubDashboard({ fubStatus, userEmail }: { fubStatus: FUBStatus, user
             <div className="bg-white p-4 rounded-lg border border-orange-200">
               <div className="text-2xl font-bold text-green-600">{withInquiries.length}</div>
               <div className="text-sm text-gray-600">Property Inquiries Need CMAs</div>
-              <Button size="sm" className="mt-2" variant="outline">
+              <Button 
+                size="sm" 
+                className="mt-2" 
+                variant="outline"
+                onClick={handleBulkCMAs}
+                disabled={withInquiries.length === 0}
+              >
                 Create CMAs
               </Button>
             </div>
@@ -160,19 +298,45 @@ function LeadHubDashboard({ fubStatus, userEmail }: { fubStatus: FUBStatus, user
 
       {/* Quick Actions */}
       <div className="grid md:grid-cols-4 gap-4 mb-8">
-        <Button className="h-20 flex flex-col gap-2" variant="outline">
+        <Button 
+          className="h-20 flex flex-col gap-2" 
+          variant="outline"
+          onClick={() => {
+            const params = new URLSearchParams({ bulkAction: 'all', filterType: 'all' })
+            window.open(`/lead-hub/bulk-scripts?${params.toString()}`, '_blank')
+          }}
+        >
           <Zap className="w-6 h-6" />
           <span>Bulk Scripts</span>
         </Button>
-        <Button className="h-20 flex flex-col gap-2" variant="outline">
+        <Button 
+          className="h-20 flex flex-col gap-2" 
+          variant="outline"
+          onClick={() => {
+            const params = new URLSearchParams({ bulkAction: 'cma-all', filterType: 'all' })
+            window.open(`/lead-hub/bulk-cmas?${params.toString()}`, '_blank')
+          }}
+        >
           <Home className="w-6 h-6" />
           <span>Batch CMAs</span>
         </Button>
-        <Button className="h-20 flex flex-col gap-2" variant="outline">
+        <Button 
+          className="h-20 flex flex-col gap-2" 
+          variant="outline"
+          onClick={() => {
+            alert('Email Campaign builder coming soon!')
+          }}
+        >
           <Mail className="w-6 h-6" />
           <span>Email Campaign</span>
         </Button>
-        <Button className="h-20 flex flex-col gap-2" variant="outline">
+        <Button 
+          className="h-20 flex flex-col gap-2" 
+          variant="outline"
+          onClick={() => {
+            alert('Analytics dashboard coming soon!')
+          }}
+        >
           <Activity className="w-6 h-6" />
           <span>View Analytics</span>
         </Button>
@@ -268,13 +432,31 @@ function LeadHubDashboard({ fubStatus, userEmail }: { fubStatus: FUBStatus, user
                     <Badge variant="outline">{contact.stage}</Badge>
                     <Badge variant="secondary">{contact.source}</Badge>
                     <div className="flex gap-1">
-                      <Button size="sm" variant="outline">
-                        <FileText className="w-3 h-3" />
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => generateScriptForContact(contact)}
+                        disabled={generatingScript === contact.id}
+                      >
+                        {generatingScript === contact.id ? (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : (
+                          <FileText className="w-3 h-3" />
+                        )}
                         Script
                       </Button>
                       {contact.recentInquiry?.property && (
-                        <Button size="sm" variant="outline">
-                          <Home className="w-3 h-3" />
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => generateCMAForContact(contact)}
+                          disabled={generatingCMA === contact.id}
+                        >
+                          {generatingCMA === contact.id ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <Home className="w-3 h-3" />
+                          )}
                           CMA
                         </Button>
                       )}
