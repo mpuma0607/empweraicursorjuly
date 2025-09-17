@@ -7,6 +7,7 @@ import {
   User, 
   Palette, 
   Mail,
+  Database,
   Settings
 } from "lucide-react"
 
@@ -28,6 +29,12 @@ const navigation = [
     href: "/profile/email-integration",
     icon: Mail,
     description: "Connect Gmail or Outlook for sending emails"
+  },
+  {
+    name: "CRM Integration",
+    href: "/profile/crm-integration",
+    icon: Database,
+    description: "Connect Follow Up Boss for personalized content"
   }
 ]
 

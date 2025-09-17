@@ -374,6 +374,13 @@ export default function Navigation() {
           href: "/profile/email-integration",
           description: "Connect Gmail or Outlook for sending emails",
         })
+        
+        // Add CRM Integration
+        filteredSubmenu.unshift({
+          title: "CRM Integration",
+          href: "/profile/crm-integration",
+          description: "Connect Follow Up Boss for personalized content",
+        })
 
         filteredSubmenu.push(
           {
@@ -405,6 +412,13 @@ export default function Navigation() {
           title: "Email Integration",
           href: "/profile/email-integration",
           description: "Connect Gmail or Outlook for sending emails",
+        })
+        
+        // Add CRM Integration
+        filteredSubmenu.unshift({
+          title: "CRM Integration",
+          href: "/profile/crm-integration",
+          description: "Connect Follow Up Boss for personalized content",
         })
       }
 
