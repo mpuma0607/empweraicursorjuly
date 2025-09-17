@@ -36,6 +36,12 @@ interface EmailCompositionModalProps {
 interface EmailConnectionStatus {
   connected: boolean
   email?: string
+  provider?: string
+}
+
+interface ProviderStatus {
+  google: EmailConnectionStatus | null
+  microsoft: EmailConnectionStatus | null
 }
 
 export default function EmailCompositionModal({
@@ -48,7 +54,11 @@ export default function EmailCompositionModal({
   attachments
 }: EmailCompositionModalProps) {
   const { user } = useMemberSpaceUser()
-  const [connectionStatus, setConnectionStatus] = useState<EmailConnectionStatus | null>(null)
+  const [providerStatus, setProviderStatus] = useState<ProviderStatus>({
+    google: null,
+    microsoft: null
+  })
+  const [selectedProvider, setSelectedProvider] = useState<'google' | 'microsoft' | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSending, setIsSending] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -264,7 +274,7 @@ export default function EmailCompositionModal({
   const checkConnectionStatus = async () => {
     if (!user?.email) {
       console.log('Email modal: No user email available')
-      setConnectionStatus({ connected: false })
+      setProviderStatus({ google: { connected: false }, microsoft: { connected: false } })
       setIsLoading(false)
       return
     }
@@ -272,24 +282,48 @@ export default function EmailCompositionModal({
     try {
       setIsLoading(true)
       console.log('Email modal: Checking OAuth status for:', user.email)
-      const response = await fetch('/api/auth/google/status', {
+      
+      // Check Google status
+      const googleResponse = await fetch('/api/auth/google/status', {
         headers: {
           'x-user-email': user.email
         }
       })
-      console.log('Email modal: Status response:', response.status, response.ok)
       
-      if (response.ok) {
-        const data = await response.json()
-        console.log('Email modal: Status data:', data)
-        setConnectionStatus(data.status)
-      } else {
-        console.log('Email modal: Status response not ok')
-        setConnectionStatus({ connected: false })
+      let googleStatus: EmailConnectionStatus = { connected: false, provider: 'google' }
+      if (googleResponse.ok) {
+        const data = await googleResponse.json()
+        googleStatus = { ...data.status, provider: 'google' }
       }
+      
+      // Check Microsoft status
+      const microsoftResponse = await fetch(`/api/outlook/auth/status?email=${encodeURIComponent(user.email)}`)
+      
+      let microsoftStatus: EmailConnectionStatus = { connected: false, provider: 'microsoft' }
+      if (microsoftResponse.ok) {
+        const data = await microsoftResponse.json()
+        microsoftStatus = { ...data, provider: 'microsoft' }
+      }
+      
+      console.log('Email modal: Provider status:', { google: googleStatus, microsoft: microsoftStatus })
+      setProviderStatus({
+        google: googleStatus,
+        microsoft: microsoftStatus
+      })
+      
+      // Auto-select provider if only one is connected
+      if (googleStatus.connected && !microsoftStatus.connected) {
+        setSelectedProvider('google')
+      } else if (microsoftStatus.connected && !googleStatus.connected) {
+        setSelectedProvider('microsoft')
+      } else if (googleStatus.connected && microsoftStatus.connected) {
+        // If both are connected, default to Google (existing behavior)
+        setSelectedProvider('google')
+      }
+      
     } catch (error) {
       console.error('Email modal: Error checking connection status:', error)
-      setConnectionStatus({ connected: false })
+      setProviderStatus({ google: { connected: false }, microsoft: { connected: false } })
     } finally {
       setIsLoading(false)
     }
@@ -301,8 +335,15 @@ export default function EmailCompositionModal({
       return
     }
 
-    if (!connectionStatus?.connected) {
-      setError('Gmail account not connected. Please connect your account first.')
+    if (!selectedProvider) {
+      setError('Please select an email provider.')
+      return
+    }
+
+    const currentProvider = providerStatus[selectedProvider]
+    if (!currentProvider?.connected) {
+      const providerName = selectedProvider === 'google' ? 'Gmail' : 'Microsoft Outlook'
+      setError(`${providerName} account not connected. Please connect your account first.`)
       return
     }
 
@@ -310,18 +351,25 @@ export default function EmailCompositionModal({
       setIsSending(true)
       setError(null)
       
-      // Determine which API endpoint to use based on content type
+      // Determine which API endpoint to use based on provider and content type
       let apiEndpoint = '/api/send-script-email-gmail' // default
-      if (contentType === 'cma') {
-        apiEndpoint = '/api/send-cma-email-gmail'
-      } else if (contentType === 'script') {
-        apiEndpoint = '/api/send-script-email-gmail'
-      } else if (contentType === 'ideahub') {
-        apiEndpoint = '/api/send-ideahub-email-gmail'
-      } else if (contentType === 'realbio') {
-        apiEndpoint = '/api/send-realbio-email-gmail'
-      } else if (contentType === 'listit') {
-        apiEndpoint = '/api/send-listit-email-gmail'
+      
+      if (selectedProvider === 'microsoft') {
+        // Use Microsoft Outlook API
+        apiEndpoint = '/api/send-outlook-email'
+      } else {
+        // Use Gmail APIs (existing behavior)
+        if (contentType === 'cma') {
+          apiEndpoint = '/api/send-cma-email-gmail'
+        } else if (contentType === 'script') {
+          apiEndpoint = '/api/send-script-email-gmail'
+        } else if (contentType === 'ideahub') {
+          apiEndpoint = '/api/send-ideahub-email-gmail'
+        } else if (contentType === 'realbio') {
+          apiEndpoint = '/api/send-realbio-email-gmail'
+        } else if (contentType === 'listit') {
+          apiEndpoint = '/api/send-listit-email-gmail'
+        }
       }
       
       // Create FormData for attachments
@@ -329,7 +377,7 @@ export default function EmailCompositionModal({
       formData.append('to', toEmail)
       formData.append('subject', subject)
       formData.append('body', wrapLongLines(emailBody + '\n\n' + signature))
-      formData.append('from', connectionStatus.email || '')
+      formData.append('from', currentProvider.email || '')
       formData.append('contentType', contentType || 'script')
       
       // Add attachments if any
@@ -392,37 +440,118 @@ export default function EmailCompositionModal({
                 <Loader2 className="h-5 w-5 animate-spin mr-2" />
                 <span>Checking email connection...</span>
               </div>
-            ) : !connectionStatus?.connected ? (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  Gmail account not connected. Please connect your account in the Email Integration section first.
-                </AlertDescription>
-              </Alert>
-                         ) : (
-               <Alert className="border-green-200 bg-green-50">
-                 <CheckCircle className="h-4 w-4 text-green-600" />
-                 <AlertDescription className="text-green-800">
-                   Connected to Gmail: {connectionStatus.email}
-                 </AlertDescription>
-               </Alert>
-             )}
-             
-             {/* Manual refresh button */}
-             <div className="flex justify-center">
-               <Button
-                 variant="outline"
-                 size="sm"
-                 onClick={checkConnectionStatus}
-                 className="text-xs"
-               >
-                 <RefreshCw className="h-3 w-3 mr-1" />
-                 Refresh Connection Status
-               </Button>
-             </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Provider Status */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Gmail Status */}
+                  <div className="border rounded-lg p-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-6 h-6 bg-red-500 rounded flex items-center justify-center">
+                        <Mail className="h-4 w-4 text-white" />
+                      </div>
+                      <span className="font-medium">Gmail</span>
+                      {providerStatus.google?.connected ? (
+                        <CheckCircle className="h-4 w-4 text-green-600 ml-auto" />
+                      ) : (
+                        <XCircle className="h-4 w-4 text-gray-400 ml-auto" />
+                      )}
+                    </div>
+                    {providerStatus.google?.connected ? (
+                      <div>
+                        <p className="text-sm text-green-700">Connected as:</p>
+                        <p className="text-xs text-green-600">{providerStatus.google.email}</p>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-gray-500">Not connected</p>
+                    )}
+                  </div>
+
+                  {/* Microsoft Status */}
+                  <div className="border rounded-lg p-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-6 h-6 bg-blue-500 rounded flex items-center justify-center">
+                        <Mail className="h-4 w-4 text-white" />
+                      </div>
+                      <span className="font-medium">Outlook</span>
+                      {providerStatus.microsoft?.connected ? (
+                        <CheckCircle className="h-4 w-4 text-green-600 ml-auto" />
+                      ) : (
+                        <XCircle className="h-4 w-4 text-gray-400 ml-auto" />
+                      )}
+                    </div>
+                    {providerStatus.microsoft?.connected ? (
+                      <div>
+                        <p className="text-sm text-green-700">Connected as:</p>
+                        <p className="text-xs text-green-600">{providerStatus.microsoft.email}</p>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-gray-500">Not connected</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Provider Selection */}
+                {(providerStatus.google?.connected || providerStatus.microsoft?.connected) && (
+                  <div className="space-y-2">
+                    <Label>Send email using:</Label>
+                    <div className="flex gap-2">
+                      {providerStatus.google?.connected && (
+                        <Button
+                          variant={selectedProvider === 'google' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setSelectedProvider('google')}
+                          className="flex items-center gap-2"
+                        >
+                          <div className="w-4 h-4 bg-red-500 rounded flex items-center justify-center">
+                            <Mail className="h-3 w-3 text-white" />
+                          </div>
+                          Gmail
+                        </Button>
+                      )}
+                      {providerStatus.microsoft?.connected && (
+                        <Button
+                          variant={selectedProvider === 'microsoft' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setSelectedProvider('microsoft')}
+                          className="flex items-center gap-2"
+                        >
+                          <div className="w-4 h-4 bg-blue-500 rounded flex items-center justify-center">
+                            <Mail className="h-3 w-3 text-white" />
+                          </div>
+                          Outlook
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* No connections warning */}
+                {!providerStatus.google?.connected && !providerStatus.microsoft?.connected && (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      No email accounts connected. Please connect Gmail or Microsoft Outlook in the Email Integration section first.
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                <div className="flex justify-center">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={checkConnectionStatus}
+                    className="text-xs"
+                  >
+                    <RefreshCw className="h-3 w-3 mr-1" />
+                    Refresh Connection Status
+                  </Button>
+                </div>
+              </div>
+            )}
 
             {/* Email Form */}
-            {connectionStatus?.connected && (
+            {(providerStatus.google?.connected || providerStatus.microsoft?.connected) && selectedProvider && (
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
