@@ -121,9 +121,10 @@ export default function BulkScriptsPage() {
 
   const getTopicForContact = (contact: BulkContact) => {
     // Smart topic selection based on contact data
-    if (filterType === 'recent') return 'first-time-homebuyer'
-    if (filterType === 'overdue') return 'past-client'
     if (contact.stage === 'Lead') return 'current-client'
+    if (contact.stage === 'Past Client') return 'past-client'
+    if (contact.source === 'Zillow') return 'first-time-homebuyer'
+    if (filterType === 'overdue') return 'past-client'
     return 'current-client'
   }
 

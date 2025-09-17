@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Loader2, Users, Zap, Home, Activity, ArrowRight, Database, Filter, Mail, FileText, Clock, MapPin, Phone } from 'lucide-react'
+import { Loader2, Users, Zap, Home, Activity, ArrowRight, Database, Filter, Mail, FileText, Clock, MapPin, Phone, X, Download } from 'lucide-react'
 import { useMemberSpaceUser } from '@/hooks/use-memberspace-user'
+import EmailCompositionModal from '@/components/email-composition-modal'
 import Link from 'next/link'
 
 interface FUBStatus {
@@ -55,6 +56,9 @@ function LeadHubDashboard({ fubStatus, userEmail }: { fubStatus: FUBStatus, user
   // Action states
   const [generatingScript, setGeneratingScript] = useState<number | null>(null)
   const [generatingCMA, setGeneratingCMA] = useState<number | null>(null)
+  const [generatedScript, setGeneratedScript] = useState<{contact: LeadContact, script: string} | null>(null)
+  const [isScriptModalOpen, setIsScriptModalOpen] = useState(false)
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
 
   // Load contacts from Follow Up Boss
   useEffect(() => {
@@ -119,9 +123,9 @@ function LeadHubDashboard({ fubStatus, userEmail }: { fubStatus: FUBStatus, user
         agentName: fubStatus.user?.name || 'Agent',
         brokerageName: 'Your Brokerage', // Could get from user profile
         scriptType: 'email',
-        topic: 'current-client',
+        topic: getTopicForContact(contact),
         customTopic: '',
-        additionalDetails: `Personalized for ${contact.name} - ${contact.stage} from ${contact.source}${contact.address ? ` in ${contact.address.city}, ${contact.address.state}` : ''}${contact.recentInquiry?.property ? `. Recently interested in ${contact.recentInquiry.property.address}` : ''}`,
+        additionalDetails: `Follow-up script for ${contact.name} - ${contact.stage} from ${contact.source}${contact.address ? ` in ${contact.address.city}, ${contact.address.state}` : ''}${contact.recentInquiry?.property ? `. Recently interested in ${contact.recentInquiry.property.address}` : ''}`,
         agentEmail: userEmail,
         scriptTypeCategory: 'Follow-up',
         difficultConversationType: '',
@@ -134,16 +138,9 @@ function LeadHubDashboard({ fubStatus, userEmail }: { fubStatus: FUBStatus, user
       const { generateScript } = await import('@/app/ai-hub/scriptit-ai/actions')
       const result = await generateScript(scriptData, userEmail)
       
-      // For now, just open ScriptIT with pre-filled data
-      // Later we can show inline results or open a modal
-      const params = new URLSearchParams({
-        contactId: contact.id.toString(),
-        contactName: contact.name,
-        contactEmail: contact.email,
-        preGenerated: 'true'
-      })
-      
-      window.open(`/ai-hub/scriptit-ai?${params.toString()}`, '_blank')
+      // Show the generated script in a modal
+      setGeneratedScript({ contact, script: result.script })
+      setIsScriptModalOpen(true)
       
     } catch (error) {
       console.error('Error generating script:', error)
@@ -151,6 +148,14 @@ function LeadHubDashboard({ fubStatus, userEmail }: { fubStatus: FUBStatus, user
     } finally {
       setGeneratingScript(null)
     }
+  }
+
+  // Smart topic selection based on contact data
+  const getTopicForContact = (contact: LeadContact) => {
+    if (contact.stage === 'Lead') return 'current-client'
+    if (contact.stage === 'Past Client') return 'past-client'
+    if (contact.source === 'Zillow') return 'first-time-homebuyer'
+    return 'current-client'
   }
 
   // Generate CMA for contact's property inquiry
@@ -476,6 +481,99 @@ function LeadHubDashboard({ fubStatus, userEmail }: { fubStatus: FUBStatus, user
           )}
         </CardContent>
       </Card>
+
+      {/* Script Generation Modal */}
+      {isScriptModalOpen && generatedScript && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-4xl max-h-[90vh] overflow-hidden">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="w-5 h-5" />
+                  Generated Script for {generatedScript.contact.name}
+                </CardTitle>
+                <p className="text-sm text-gray-600 mt-1">
+                  {generatedScript.contact.email} • {generatedScript.contact.stage} • {generatedScript.contact.source}
+                </p>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => {
+                  setIsScriptModalOpen(false)
+                  setGeneratedScript(null)
+                }}
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </CardHeader>
+            <CardContent className="overflow-y-auto max-h-[60vh]">
+              <div className="space-y-4">
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <pre className="whitespace-pre-wrap text-sm font-mono">
+                    {generatedScript.script}
+                  </pre>
+                </div>
+                
+                <div className="flex gap-3 pt-4 border-t">
+                  <Button 
+                    onClick={() => {
+                      setIsScriptModalOpen(false)
+                      setIsEmailModalOpen(true)
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    <Mail className="w-4 h-4" />
+                    Send Email
+                  </Button>
+                  
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      navigator.clipboard.writeText(generatedScript.script)
+                      alert('Script copied to clipboard!')
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    <FileText className="w-4 h-4" />
+                    Copy Script
+                  </Button>
+                  
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      const blob = new Blob([generatedScript.script], { type: 'text/plain' })
+                      const url = URL.createObjectURL(blob)
+                      const a = document.createElement('a')
+                      a.href = url
+                      a.download = `script-${generatedScript.contact.name.replace(/\s+/g, '-')}.txt`
+                      a.click()
+                      URL.revokeObjectURL(url)
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    <Download className="w-4 h-4" />
+                    Download
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Email Composition Modal */}
+      {generatedScript && (
+        <EmailCompositionModal
+          isOpen={isEmailModalOpen}
+          onClose={() => setIsEmailModalOpen(false)}
+          scriptContent={generatedScript.script}
+          agentName={fubStatus.user?.name || 'Agent'}
+          brokerageName="Your Brokerage"
+          recipientEmail={generatedScript.contact.email}
+          contentType="script"
+        />
+      )}
     </div>
   )
 }
