@@ -54,6 +54,10 @@ type ScriptFormState = {
   difficultConversationType: string
 
   tonality: string
+  
+  // Follow Up Boss contact personalization
+  selectedContactId: string
+  useContactPersonalization: boolean
 }
 
 type ScriptResult = {
@@ -237,6 +241,12 @@ export default function ScriptForm() {
   const [isGmailConnected, setIsGmailConnected] = useState(false)
   const [isAnyEmailConnected, setIsAnyEmailConnected] = useState(false)
   
+  // Follow Up Boss integration state (using same pattern as Lead Hub)
+  const [isFubConnected, setIsFubConnected] = useState(false)
+  const [fubContacts, setFubContacts] = useState<any[]>([])
+  const [isLoadingContacts, setIsLoadingContacts] = useState(false)
+  const [selectedContact, setSelectedContact] = useState<any>(null)
+  
 
   const [formData, setFormData] = useState<ScriptFormState>({
     agentName: "",
@@ -258,6 +268,10 @@ export default function ScriptForm() {
     difficultConversationType: "",
 
     tonality: "Professional & Authoritative",
+    
+    // Follow Up Boss contact personalization
+    selectedContactId: "",
+    useContactPersonalization: false,
   })
 
   const [result, setResult] = useState<ScriptResult | null>(null)
@@ -363,20 +377,102 @@ export default function ScriptForm() {
           microsoftConnected = data.connected
         }
         
-        console.log('ScriptIT: Provider status:', { google: googleConnected, microsoft: microsoftConnected })
+        // Check Follow Up Boss status using EXACT same pattern as Lead Hub
+        const fubResponse = await fetch('/api/fub/status', {
+          headers: {
+            'x-user-email': currentUserEmail
+          }
+        })
+
+        let fubConnected = false
+        if (fubResponse.ok) {
+          const data = await fubResponse.json()
+          fubConnected = data.connected
+          console.log('ScriptIT: FUB status for user', currentUserEmail, ':', data)
+        } else {
+          console.log('ScriptIT: FUB status check failed for user', currentUserEmail)
+        }
+        
+        console.log('ScriptIT: Provider status:', { google: googleConnected, microsoft: microsoftConnected, fub: fubConnected })
         setIsGmailConnected(googleConnected)
         setIsAnyEmailConnected(googleConnected || microsoftConnected)
+        setIsFubConnected(fubConnected)
+        
+        // Load contacts ONLY if FUB is connected for THIS user
+        if (fubConnected && currentUserEmail) {
+          console.log('ScriptIT: Loading FUB contacts for verified user:', currentUserEmail)
+          loadFubContacts(currentUserEmail)
+        } else {
+          console.log('ScriptIT: Clearing FUB contacts - not connected for user:', currentUserEmail)
+          setFubContacts([])
+          setSelectedContact(null)
+        }
         
       } catch (error) {
         console.error('ScriptIT: Error checking provider status:', error)
         setIsGmailConnected(false)
         setIsAnyEmailConnected(false)
+        setIsFubConnected(false)
+        setFubContacts([])
       }
     }
     
     checkProviderStatus()
   }, [user?.email])
 
+  // Load Follow Up Boss contacts (same pattern as Lead Hub)
+  const loadFubContacts = async (userEmail: string) => {
+    try {
+      setIsLoadingContacts(true)
+      console.log('ScriptIT: Loading FUB contacts for user:', userEmail)
+      
+      const response = await fetch('/api/fub/contacts?limit=50', {
+        headers: {
+          'x-user-email': userEmail
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        console.log('ScriptIT: Loaded FUB contacts:', data.contacts?.length || 0, 'for user:', userEmail)
+        setFubContacts(data.contacts || [])
+      } else {
+        console.error('ScriptIT: Failed to load FUB contacts for user:', userEmail, response.status)
+        setFubContacts([])
+      }
+    } catch (error) {
+      console.error('ScriptIT: Error loading FUB contacts for user:', userEmail, error)
+      setFubContacts([])
+    } finally {
+      setIsLoadingContacts(false)
+    }
+  }
+
+  // Handle contact selection (same pattern as Lead Hub)
+  const handleContactSelection = async (contactId: string) => {
+    setFormData(prev => ({ ...prev, selectedContactId: contactId }))
+    
+    if (contactId && user?.email) {
+      try {
+        console.log('ScriptIT: Loading contact details for user:', user.email, 'contact:', contactId)
+        const response = await fetch(`/api/fub/contacts/${contactId}`, {
+          headers: {
+            'x-user-email': user.email
+          }
+        })
+        
+        if (response.ok) {
+          const data = await response.json()
+          setSelectedContact(data.contact)
+          console.log('ScriptIT: Selected contact for user:', user.email, data.contact?.name)
+        }
+      } catch (error) {
+        console.error('ScriptIT: Error loading contact details:', error)
+      }
+    } else {
+      setSelectedContact(null)
+    }
+  }
 
   // Auto-scroll to results when they're generated
 
@@ -410,7 +506,7 @@ export default function ScriptForm() {
     try {
       console.log("Generating script with data:", formData)
 
-      const generatedScript = await generateScript(formData)
+      const generatedScript = await generateScript(formData, user?.email)
 
       console.log("Generated script:", generatedScript)
 
@@ -714,6 +810,80 @@ export default function ScriptForm() {
         </div>
       </div>
 
+      {/* Follow Up Boss Contact Personalization - ONLY show if user is connected AND has contacts */}
+      {user?.email && isFubConnected && fubContacts.length > 0 && (
+        <div className="space-y-4 p-4 border border-blue-200 rounded-lg bg-blue-50/50">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+            <Label className="text-sm font-medium text-blue-800">
+              Personalize with CRM Contact (Optional)
+            </Label>
+            <div className="text-xs text-gray-500">
+              Connected to Follow Up Boss ({fubContacts.length} contacts)
+            </div>
+          </div>
+          
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                id="useContactPersonalization"
+                checked={formData.useContactPersonalization}
+                onChange={(e) => setFormData(prev => ({ 
+                  ...prev, 
+                  useContactPersonalization: e.target.checked,
+                  selectedContactId: e.target.checked ? prev.selectedContactId : ""
+                }))}
+                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <Label htmlFor="useContactPersonalization" className="text-sm text-gray-700">
+                Generate personalized script for a specific contact
+              </Label>
+            </div>
+            
+            {formData.useContactPersonalization && (
+              <div className="space-y-2">
+                <Label htmlFor="contactSelect" className="text-sm">Select Contact</Label>
+                <Select 
+                  value={formData.selectedContactId} 
+                  onValueChange={handleContactSelection}
+                  disabled={isLoadingContacts}
+                >
+                  <SelectTrigger id="contactSelect">
+                    <SelectValue placeholder={
+                      isLoadingContacts ? "Loading contacts..." : "Select a contact from Follow Up Boss"
+                    } />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {fubContacts.map((contact) => (
+                      <SelectItem key={contact.id} value={contact.id.toString()}>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{contact.name}</span>
+                          <span className="text-xs text-gray-500">
+                            {contact.email} • {contact.stage} • {contact.source}
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                
+                {selectedContact && (
+                  <div className="text-xs text-gray-600 bg-white p-2 rounded border">
+                    <strong>Selected:</strong> {selectedContact.name} 
+                    {selectedContact.address && (
+                      <span> • {selectedContact.address.city}, {selectedContact.address.state}</span>
+                    )}
+                    {selectedContact.recentInquiry && (
+                      <span> • Interested in: {selectedContact.recentInquiry.property?.address || 'Properties'}</span>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <Button
         onClick={() => setStep(2)}
@@ -1358,7 +1528,7 @@ export default function ScriptForm() {
           scriptContent={result.script}
           agentName={formData.agentName}
           brokerageName={formData.brokerageName}
-          recipientEmail=""
+          recipientEmail={selectedContact?.email || ""}
         />
       )}
     </div>

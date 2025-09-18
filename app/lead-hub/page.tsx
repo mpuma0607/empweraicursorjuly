@@ -86,10 +86,10 @@ function LeadHubDashboard({ fubStatus, userEmail }: { fubStatus: FUBStatus, user
 
   // Regenerate emails when templates change
   useEffect(() => {
-    if (editableSubjectTemplate && editableBodyTemplate && recentContacts.length > 0) {
+    if (editableSubjectTemplate && editableBodyTemplate && recentContacts.length > 0 && userEmail) {
       regenerateFollowUpEmails()
     }
-  }, [editableSubjectTemplate, editableBodyTemplate])
+  }, [editableSubjectTemplate, editableBodyTemplate, recentContacts.length, userEmail])
 
   const loadContacts = async () => {
     try {
@@ -321,25 +321,47 @@ Best regards,
 
   // Regenerate emails when template is edited
   const regenerateFollowUpEmails = () => {
-    if (!editableSubjectTemplate || !editableBodyTemplate) return
-    
-    const updatedEmails = recentContacts.map(contact => ({
-      contactId: contact.id,
-      contactName: contact.name,
-      email: contact.email,
-      subject: editableSubjectTemplate
-        .replace(/\{\{firstName\}\}/g, contact.firstName || contact.name.split(' ')[0]),
-      body: editableBodyTemplate
-        .replace(/\{\{firstName\}\}/g, contact.firstName || contact.name.split(' ')[0])
-        .replace(/\{\{city\}\}/g, contact.address?.city || 'your area')
-        .replace(/\{\{source\}\}/g, contact.source)
-        .replace(/\{\{agentName\}\}/g, fubStatus.user?.name || 'Your Agent')
-        .replace(/\{\{brokerageName\}\}/g, 'Your Brokerage')
-        .replace(/\{\{agentPhone\}\}/g, fubStatus.user?.phone || 'Your Phone')
-        .replace(/\{\{agentEmail\}\}/g, userEmail)
-    }))
-    
-    setEmailsToSend(updatedEmails)
+    try {
+      if (!editableSubjectTemplate || !editableBodyTemplate || !userEmail) {
+        console.log('Missing template data:', { 
+          hasSubject: !!editableSubjectTemplate, 
+          hasBody: !!editableBodyTemplate, 
+          hasEmail: !!userEmail,
+          contactCount: recentContacts.length 
+        })
+        return
+      }
+      
+      const updatedEmails = recentContacts.map(contact => {
+        const firstName = contact.firstName || contact.name.split(' ')[0] || 'there'
+        const city = contact.address?.city || 'your area'
+        const source = contact.source || 'your inquiry'
+        const agentName = fubStatus.user?.name || 'Your Agent'
+        const brokerageName = 'Your Brokerage'
+        const agentPhone = fubStatus.user?.phone || 'Your Phone'
+        
+        return {
+          contactId: contact.id,
+          contactName: contact.name,
+          email: contact.email,
+          subject: editableSubjectTemplate
+            .replace(/\{\{firstName\}\}/g, firstName),
+          body: editableBodyTemplate
+            .replace(/\{\{firstName\}\}/g, firstName)
+            .replace(/\{\{city\}\}/g, city)
+            .replace(/\{\{source\}\}/g, source)
+            .replace(/\{\{agentName\}\}/g, agentName)
+            .replace(/\{\{brokerageName\}\}/g, brokerageName)
+            .replace(/\{\{agentPhone\}\}/g, agentPhone)
+            .replace(/\{\{agentEmail\}\}/g, userEmail)
+        }
+      })
+      
+      console.log('Generated emails:', updatedEmails.length)
+      setEmailsToSend(updatedEmails)
+    } catch (error) {
+      console.error('Error in regenerateFollowUpEmails:', error)
+    }
   }
 
   // Send the follow-up campaign
@@ -693,7 +715,7 @@ Best regards,
                 {/* Template Editor */}
                 <div className="space-y-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
                   <div className="text-sm font-medium text-blue-800 mb-2">
-                    📝 Edit Template (uses merge fields: {{firstName}}, {{city}}, {{source}}, {{agentName}})
+                    📝 Edit Template (uses merge fields: firstName, city, source, agentName)
                   </div>
                   
                   <div className="space-y-3">
