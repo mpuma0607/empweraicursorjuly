@@ -389,6 +389,9 @@ export default function ScriptForm() {
         if (fubResponse.ok) {
           const data = await fubResponse.json()
           fubConnected = data.connected
+          console.log('ScriptIT: FUB status response:', data)
+        } else {
+          console.log('ScriptIT: FUB status failed:', fubResponse.status)
         }
         
         console.log('ScriptIT: Provider status:', { google: googleConnected, microsoft: microsoftConnected, fub: fubConnected })
@@ -396,9 +399,13 @@ export default function ScriptForm() {
         setIsAnyEmailConnected(googleConnected || microsoftConnected)
         setIsFubConnected(fubConnected)
         
-        // Load contacts if FUB is connected
-        if (fubConnected) {
+        // CRITICAL: Only load contacts if FUB is connected AND we have a valid user email
+        if (fubConnected && currentUserEmail) {
+          console.log('ScriptIT: Loading FUB contacts for user:', currentUserEmail)
           loadFubContacts(currentUserEmail)
+        } else {
+          console.log('ScriptIT: Not loading FUB contacts - connected:', fubConnected, 'email:', currentUserEmail)
+          setFubContacts([])
         }
         
       } catch (error) {
@@ -800,7 +807,7 @@ export default function ScriptForm() {
       </div>
 
       {/* Follow Up Boss Contact Personalization */}
-      {isFubConnected && (
+      {isFubConnected && fubContacts.length > 0 && (
         <div className="space-y-4 p-4 border border-blue-200 rounded-lg bg-blue-50/50">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 bg-blue-500 rounded-full"></div>

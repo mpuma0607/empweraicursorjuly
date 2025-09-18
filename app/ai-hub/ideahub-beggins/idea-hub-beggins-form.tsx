@@ -434,6 +434,43 @@ export default function IdeaHubBegginsForm() {
     }
   }
 
+  const sendEmailToSelf = async () => {
+    // Use Resend email functionality (Email to Self)
+    const contentToSend = editableText || result?.text
+    if (contentToSend && result?.imageUrl) {
+      setIsSendingEmail(true)
+      try {
+        const response = await fetch("/api/ideahub-email", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            action: "send-email",
+            data: {
+              to: formData.email,
+              name: formData.name,
+              content: contentToSend,
+              imageUrl: result.imageUrl,
+            },
+          }),
+        })
+
+        const data = await response.json()
+        if (data.success) {
+          alert("Email sent successfully! Check your inbox.")
+        } else {
+          throw new Error(data.error || "Failed to send email")
+        }
+      } catch (error) {
+        console.error("Error sending email:", error)
+        alert(`Failed to send email: ${error instanceof Error ? error.message : "Unknown error"}`)
+      } finally {
+        setIsSendingEmail(false)
+      }
+    }
+  }
+
   const handleEmailClick = () => {
     setIsEmailModalOpen(true)
   }
@@ -1063,14 +1100,25 @@ export default function IdeaHubBegginsForm() {
         >
           <Download className="h-4 w-4" /> <span className="whitespace-nowrap">Download</span>
         </Button>
+        {/* Email To Self (Resend API) */}
         <Button
           variant="outline"
-          onClick={handleEmailClick}
+          onClick={sendEmailToSelf}
           disabled={isSendingEmail}
           className="flex items-center justify-center gap-2 bg-transparent"
         >
           {isSendingEmail ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
-          <span className="whitespace-nowrap">Email</span>
+          <span className="whitespace-nowrap">Email To Self</span>
+        </Button>
+        
+        {/* Email To Client (Gmail/Outlook) */}
+        <Button
+          variant="outline"
+          onClick={handleEmailClick}
+          className="flex items-center justify-center gap-2 bg-transparent"
+        >
+          <Mail className="h-4 w-4" />
+          <span className="whitespace-nowrap">Send Email To Client</span>
         </Button>
         <Button
           variant="outline"
