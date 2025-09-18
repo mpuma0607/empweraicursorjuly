@@ -8,7 +8,16 @@ export async function POST(request: NextRequest) {
     const userEmail = request.headers.get('x-user-email')
     const { contactId, activityType, notes, agentName } = await request.json()
 
+    console.log('Activity logging request:', {
+      userEmail,
+      contactId,
+      activityType,
+      notes: notes?.substring(0, 50) + '...',
+      agentName
+    })
+
     if (!userEmail || !contactId || !activityType || !notes) {
+      console.error('Missing required fields:', { userEmail, contactId, activityType, notes: !!notes })
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -28,6 +37,13 @@ export async function POST(request: NextRequest) {
     // Create note in Follow Up Boss
     const noteContent = `${activityType.toUpperCase()}: ${notes}\n\nLogged via EmpowerAI by ${agentName}`
     
+    console.log('Creating FUB note:', {
+      personId: parseInt(contactId),
+      contentLength: noteContent.length,
+      hasXSystem: !!process.env.FUB_X_SYSTEM,
+      hasXSystemKey: !!process.env.FUB_X_SYSTEM_KEY
+    })
+    
     const response = await fetch(`${FUB_API_BASE}/notes`, {
       method: 'POST',
       headers: {
@@ -38,9 +54,11 @@ export async function POST(request: NextRequest) {
       },
       body: JSON.stringify({
         personId: parseInt(contactId),
-        content: noteContent
+        body: noteContent
       })
     })
+    
+    console.log('FUB API response status:', response.status)
 
     if (!response.ok) {
       const errorText = await response.text()

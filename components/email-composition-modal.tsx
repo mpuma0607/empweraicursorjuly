@@ -107,7 +107,8 @@ export default function EmailCompositionModal({
     } else {
       setSubject(extractedSubject || `Script from ${agentName} - ${brokerageName}`)
     }
-    setSignature(`Best regards,\n${agentName}\n${brokerageName}`)
+    // Generate signature using the API
+    generateSignature()
     
     // Set email body to cleaned script content
     setEmailBody(cleanedContent)
@@ -129,6 +130,35 @@ export default function EmailCompositionModal({
       }
     }
   }, [inlineImageHtml])
+
+  // Generate signature using the API
+  const generateSignature = async () => {
+    try {
+      if (!user?.email) return
+      
+      const response = await fetch('/api/generate-signature', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          userEmail: user.email
+        })
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setSignature(data.signature)
+      } else {
+        // Fallback to basic signature
+        setSignature(`Best regards,\n${agentName}\n${brokerageName}`)
+      }
+    } catch (error) {
+      console.error('Error generating signature:', error)
+      // Fallback to basic signature
+      setSignature(`Best regards,\n${agentName}\n${brokerageName}`)
+    }
+  }
 
   // Handle attachments when modal opens
   useEffect(() => {
@@ -241,14 +271,22 @@ export default function EmailCompositionModal({
       /\[Your Contact Information\]/g,
       /\[Your Agency\]/g,
       /\[Your Real Estate Agency\]/g,
-      /\[Your Name\]/g,
-      /\[Your Contact Information\]/g,
-      /\[Your Real Estate Agency\]/g
+      /\[Agent Name\]/g,
+      /\[Brokerage Name\]/g,
+      /\[Your Real Estate Company\]/g,
+      // More aggressive signature removal for AI-generated content
+      /Best regards,?\s*\n\s*Agent\s*\n\s*Your Brokerage/gi,
+      /Best regards,?\s*\n\s*\[?Agent Name\]?\s*\n\s*\[?Your Brokerage\]?/gi,
+      /Warm regards,?\s*\n\s*\[?Your Real Estate Company\]?/gi,
+      /Sincerely,?\s*\n\s*\[?Agent\]?\s*\n\s*\[?Your Brokerage\]?/gi
     ]
 
     signaturePatterns.forEach(pattern => {
       cleanedContent = cleanedContent.replace(pattern, '')
     })
+    
+    // Clean up any trailing whitespace or multiple newlines
+    cleanedContent = cleanedContent.trim().replace(/\n{3,}/g, '\n\n')
 
     // Clean up extra whitespace and line breaks
     cleanedContent = cleanedContent

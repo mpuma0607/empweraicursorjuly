@@ -491,6 +491,14 @@ Best regards,
     try {
       setIsLoggingActivity(true)
       
+      console.log('Logging activity:', {
+        contactId: selectedContactForActivity.id,
+        activityType: activityType,
+        notes: activityNotes,
+        agentName: fubStatus.user?.name || 'Agent',
+        userEmail: userEmail
+      })
+      
       const response = await fetch('/api/fub/log-activity', {
         method: 'POST',
         headers: {
@@ -506,12 +514,16 @@ Best regards,
       })
 
       if (response.ok) {
+        const result = await response.json()
+        console.log('Activity logged successfully:', result)
         alert(`${activityType} activity logged successfully for ${selectedContactForActivity.name}`)
         setIsActivityModalOpen(false)
         setActivityNotes('')
         setSelectedContactForActivity(null)
       } else {
-        throw new Error('Failed to log activity')
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+        console.error('Activity logging failed:', response.status, errorData)
+        throw new Error(errorData.error || `HTTP ${response.status}`)
       }
     } catch (error) {
       console.error('Error logging activity:', error)
