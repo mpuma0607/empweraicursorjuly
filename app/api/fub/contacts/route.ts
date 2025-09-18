@@ -97,6 +97,12 @@ export async function GET(request: NextRequest) {
 
     const data = await response.json()
     
+    // Debug: Log the first contact to see all available fields
+    if (data.people && data.people.length > 0) {
+      console.log('FUB API Debug - First contact fields:', Object.keys(data.people[0]))
+      console.log('FUB API Debug - First contact data:', data.people[0])
+    }
+    
     // Transform the data to a consistent format
     const contacts = data.people?.map((contact: FUBContact) => ({
       id: contact.id,
