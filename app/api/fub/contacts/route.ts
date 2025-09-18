@@ -22,6 +22,10 @@ interface FUBContact {
   created: string
   updated: string
   lastActivity: string
+  assignedTo?: {
+    id: number
+    name: string
+  }
 }
 
 export async function GET(request: NextRequest) {
@@ -112,7 +116,8 @@ export async function GET(request: NextRequest) {
       stage: contact.stage,
       created: contact.created,
       updated: contact.updated,
-      lastActivity: contact.lastActivity
+      lastActivity: contact.lastActivity,
+      assignedAgent: contact.assignedTo?.name || 'Unassigned'
     })) || []
 
     return NextResponse.json({

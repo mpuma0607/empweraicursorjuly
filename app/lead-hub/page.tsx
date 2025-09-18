@@ -40,6 +40,7 @@ interface LeadContact {
   created: string
   updated: string
   lastActivity: string
+  assignedAgent?: string
   recentInquiry?: {
     property?: {
       address: string
@@ -54,6 +55,8 @@ function LeadHubDashboard({ fubStatus, userEmail }: { fubStatus: FUBStatus, user
   const [isLoadingContacts, setIsLoadingContacts] = useState(true)
   const [filterStage, setFilterStage] = useState<string>('all')
   const [filterSource, setFilterSource] = useState<string>('all')
+  const [filterAgent, setFilterAgent] = useState<string>('all')
+  const [displayLimit, setDisplayLimit] = useState(10)
   
   // Action states
   const [generatingScript, setGeneratingScript] = useState<number | null>(null)
@@ -76,6 +79,13 @@ function LeadHubDashboard({ fubStatus, userEmail }: { fubStatus: FUBStatus, user
   // Template editing state
   const [editableSubjectTemplate, setEditableSubjectTemplate] = useState('')
   const [editableBodyTemplate, setEditableBodyTemplate] = useState('')
+  
+  // Activity logging state
+  const [isActivityModalOpen, setIsActivityModalOpen] = useState(false)
+  const [selectedContactForActivity, setSelectedContactForActivity] = useState<LeadContact | null>(null)
+  const [activityType, setActivityType] = useState('email')
+  const [activityNotes, setActivityNotes] = useState('')
+  const [isLoggingActivity, setIsLoggingActivity] = useState(false)
 
   // Load contacts from Follow Up Boss
   useEffect(() => {
@@ -120,8 +130,20 @@ function LeadHubDashboard({ fubStatus, userEmail }: { fubStatus: FUBStatus, user
   // Filter and smart sort contacts
   const filteredContacts = contacts
     .filter(contact => {
-      if (filterStage !== 'all' && contact.stage !== filterStage) return false
-      if (filterSource !== 'all' && contact.source !== filterSource) return false
+      console.log('Filtering contact:', contact.name, 'stage:', contact.stage, 'source:', contact.source, 'filterStage:', filterStage, 'filterSource:', filterSource)
+      
+      if (filterStage !== 'all' && contact.stage !== filterStage) {
+        console.log('Filtered out by stage:', contact.name)
+        return false
+      }
+      if (filterSource !== 'all' && contact.source !== filterSource) {
+        console.log('Filtered out by source:', contact.name, 'has source:', contact.source, 'looking for:', filterSource)
+        return false
+      }
+      if (filterAgent !== 'all' && contact.assignedAgent !== filterAgent) {
+        console.log('Filtered out by agent:', contact.name)
+        return false
+      }
       return true
     })
     .sort((a, b) => {
@@ -136,6 +158,8 @@ function LeadHubDashboard({ fubStatus, userEmail }: { fubStatus: FUBStatus, user
       return new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime()
     })
 
+  console.log('Total contacts:', contacts.length, 'Filtered contacts:', filteredContacts.length, 'Displaying:', Math.min(filteredContacts.length, displayLimit))
+
   // Get contacts needing follow-up (30+ days since last activity)
   const needsFollowUp = contacts.filter(contact => {
     const lastActivity = new Date(contact.lastActivity)
@@ -146,6 +170,10 @@ function LeadHubDashboard({ fubStatus, userEmail }: { fubStatus: FUBStatus, user
 
   // Get contacts with recent property inquiries
   const withInquiries = contacts.filter(contact => contact.recentInquiry?.property)
+
+  // Get unique sources and agents for filter dropdowns
+  const uniqueSources = ['all', ...new Set(contacts.map(c => c.source).filter(Boolean))]
+  const uniqueAgents = ['all', ...new Set(contacts.map(c => c.assignedAgent).filter(Boolean))]
 
   // Regenerate emails when templates change (moved after all variable definitions)
   useEffect(() => {
@@ -453,6 +481,54 @@ Best regards,
     }
   }
 
+  // Log activity to Follow Up Boss
+  const logActivityToFUB = async () => {
+    if (!selectedContactForActivity || !activityNotes.trim()) {
+      alert('Please enter activity notes')
+      return
+    }
+
+    try {
+      setIsLoggingActivity(true)
+      
+      const response = await fetch('/api/fub/log-activity', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-email': userEmail
+        },
+        body: JSON.stringify({
+          contactId: selectedContactForActivity.id,
+          activityType: activityType,
+          notes: activityNotes,
+          agentName: fubStatus.user?.name || 'Agent'
+        })
+      })
+
+      if (response.ok) {
+        alert(`${activityType} activity logged successfully for ${selectedContactForActivity.name}`)
+        setIsActivityModalOpen(false)
+        setActivityNotes('')
+        setSelectedContactForActivity(null)
+      } else {
+        throw new Error('Failed to log activity')
+      }
+    } catch (error) {
+      console.error('Error logging activity:', error)
+      alert('Failed to log activity. Please try again.')
+    } finally {
+      setIsLoggingActivity(false)
+    }
+  }
+
+  // Open activity logging modal
+  const openActivityModal = (contact: LeadContact, type: string) => {
+    setSelectedContactForActivity(contact)
+    setActivityType(type)
+    setActivityNotes('')
+    setIsActivityModalOpen(true)
+  }
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
       {/* Header */}
@@ -584,10 +660,21 @@ Best regards,
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Sources</SelectItem>
-                  <SelectItem value="Zillow">Zillow</SelectItem>
-                  <SelectItem value="Website">Website</SelectItem>
-                  <SelectItem value="Referral">Referral</SelectItem>
-                  <SelectItem value="Facebook">Facebook</SelectItem>
+                  {uniqueSources.filter(s => s !== 'all').map(source => (
+                    <SelectItem key={source} value={source}>{source}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              <Select value={filterAgent} onValueChange={setFilterAgent}>
+                <SelectTrigger className="w-32">
+                  <SelectValue placeholder="Agent" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Agents</SelectItem>
+                  {uniqueAgents.filter(a => a !== 'all').map(agent => (
+                    <SelectItem key={agent} value={agent}>{agent}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -605,7 +692,7 @@ Best regards,
             </div>
           ) : (
             <div className="space-y-3">
-              {filteredContacts.slice(0, 10).map((contact) => (
+              {filteredContacts.slice(0, displayLimit).map((contact) => (
                 <div key={contact.id} className={`flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 ${
                   isNewLead(contact) ? 'border-orange-300 bg-orange-50' : ''
                 }`}>
@@ -634,6 +721,12 @@ Best regards,
                           <span className="flex items-center gap-1">
                             <MapPin className="w-3 h-3" />
                             {contact.address.city}, {contact.address.state}
+                          </span>
+                        )}
+                        {contact.assignedAgent && (
+                          <span className="flex items-center gap-1">
+                            <Users className="w-3 h-3" />
+                            {contact.assignedAgent}
                           </span>
                         )}
                       </div>
@@ -681,15 +774,26 @@ Best regards,
                           CMA
                         </Button>
                       )}
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => openActivityModal(contact, 'call')}
+                      >
+                        <Phone className="w-3 h-3" />
+                        Log
+                      </Button>
                     </div>
                   </div>
                 </div>
               ))}
               
-              {filteredContacts.length > 10 && (
+              {filteredContacts.length > displayLimit && (
                 <div className="text-center pt-4">
-                  <Button variant="outline">
-                    Load More ({filteredContacts.length - 10} remaining)
+                  <Button 
+                    variant="outline"
+                    onClick={() => setDisplayLimit(prev => prev + 10)}
+                  >
+                    Load More ({filteredContacts.length - displayLimit} remaining)
                   </Button>
                 </div>
               )}
@@ -820,6 +924,93 @@ Best regards,
                     onClick={() => {
                       setIsFollowUpPreviewOpen(false)
                       setEmailsToSend([])
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Activity Logging Modal */}
+      {isActivityModalOpen && selectedContactForActivity && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-2xl">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="w-5 h-5" />
+                  Log Activity for {selectedContactForActivity.name}
+                </CardTitle>
+                <p className="text-sm text-gray-600 mt-1">
+                  {selectedContactForActivity.email} • {selectedContactForActivity.stage}
+                </p>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => {
+                  setIsActivityModalOpen(false)
+                  setSelectedContactForActivity(null)
+                  setActivityNotes('')
+                }}
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Activity Type</Label>
+                  <Select value={activityType} onValueChange={setActivityType}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="email">Email Sent</SelectItem>
+                      <SelectItem value="call">Phone Call</SelectItem>
+                      <SelectItem value="text">Text Message</SelectItem>
+                      <SelectItem value="meeting">Meeting/Appointment</SelectItem>
+                      <SelectItem value="property_showing">Property Showing</SelectItem>
+                      <SelectItem value="follow_up">Follow-up</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Activity Notes</Label>
+                  <textarea
+                    value={activityNotes}
+                    onChange={(e) => setActivityNotes(e.target.value)}
+                    className="w-full min-h-[120px] p-3 border border-gray-300 rounded-md text-sm"
+                    placeholder="Enter details about this activity..."
+                  />
+                </div>
+                
+                <div className="flex gap-3 pt-4">
+                  <Button 
+                    onClick={logActivityToFUB}
+                    disabled={isLoggingActivity || !activityNotes.trim()}
+                    className="flex items-center gap-2"
+                  >
+                    {isLoggingActivity ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Activity className="w-4 h-4" />
+                    )}
+                    {isLoggingActivity ? 'Logging...' : 'Log Activity'}
+                  </Button>
+                  
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      setIsActivityModalOpen(false)
+                      setSelectedContactForActivity(null)
+                      setActivityNotes('')
                     }}
                   >
                     Cancel

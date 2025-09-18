@@ -14,9 +14,6 @@ type ScriptFormData = {
   scriptTypeCategory: string
   difficultConversationType: string
   tonality: string
-  // Follow Up Boss contact personalization
-  selectedContactId: string
-  useContactPersonalization: boolean
 }
 
 type ScriptResult = {
@@ -46,32 +43,10 @@ const topicOptions = [
   { value: "other", label: "Other (Custom Topic)" },
 ]
 
-export async function generateScript(formData: ScriptFormData, userEmail?: string) {
+export async function generateScript(formData: ScriptFormData) {
   try {
     console.log("=== ScriptIt generateScript Started ===")
     console.log("Form data received:", formData)
-    
-    // Fetch contact data if personalization is enabled
-    let contactData = null
-    if (formData.useContactPersonalization && formData.selectedContactId && userEmail) {
-      try {
-        console.log("Fetching contact data for personalization...")
-        const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'https://www.getempowerai.com'}/api/fub/contacts/${formData.selectedContactId}`, {
-          headers: {
-            'x-user-email': userEmail
-          }
-        })
-        
-        if (response.ok) {
-          const data = await response.json()
-          contactData = data.contact
-          console.log("Contact data loaded for user:", userEmail, "contact:", contactData?.name)
-        }
-      } catch (error) {
-        console.error("Error fetching contact data:", error)
-        // Continue without personalization if contact fetch fails
-      }
-    }
     
     // Determine the topic to use
     const topicToUse = formData.topic === "other" ? formData.customTopic : formData.topic
@@ -97,28 +72,11 @@ export async function generateScript(formData: ScriptFormData, userEmail?: strin
     console.log("Topic context:", topicContext)
     console.log("Script purpose:", scriptPurpose)
 
-    // Build contact personalization context
-    let contactPersonalization = ""
-    if (contactData) {
-      contactPersonalization = `
-PERSONALIZE FOR THIS CONTACT:
-- Name: ${contactData.name}
-- Email: ${contactData.email}
-- Phone: ${contactData.phone || 'Not provided'}
-- Location: ${contactData.address ? `${contactData.address.city}, ${contactData.address.state}` : 'Not provided'}
-- Lead Stage: ${contactData.stage}
-- Lead Source: ${contactData.source}
-- Recent Activity: ${contactData.recentInquiry ? `Inquired about ${contactData.recentInquiry.property?.address || 'properties'}` : 'No recent property inquiries'}
-
-IMPORTANT: Use the contact's name naturally throughout the script. Reference their location, lead source, or recent property interest when relevant. Make it feel like you know them personally.`
-    }
-
     const prompt = `You are a world-class real estate agent creating a ${formData.scriptTypeCategory} script. 
 Topic: ${topicToUse}${formData.customTopic ? ` (${formData.customTopic})` : ""}. 
 Tone: ${formData.tonality}.
 ${topicContext ? `Context: ${topicContext}` : ""}
 ${formData.difficultConversationType ? `This is a difficult conversation type: ${formData.difficultConversationType}. Show empathy, acknowledge concerns, and provide a calm, confident path forward.` : ""}
-${contactPersonalization}
 
 Always use language that helps the client see what's possible, hear reassurance, and feel confident in the next step.
 Blend DISC needs (clarity for D/C, warmth for I/S). Use embedded commands like "Picture this…" or "You'll start to realize…" to create action.
