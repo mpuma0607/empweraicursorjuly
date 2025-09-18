@@ -94,12 +94,29 @@ function LeadHubDashboard({ fubStatus, userEmail }: { fubStatus: FUBStatus, user
     }
   }
 
-  // Filter contacts based on selected filters
-  const filteredContacts = contacts.filter(contact => {
-    if (filterStage !== 'all' && contact.stage !== filterStage) return false
-    if (filterSource !== 'all' && contact.source !== filterSource) return false
-    return true
-  })
+  // Filter and smart sort contacts
+  const filteredContacts = contacts
+    .filter(contact => {
+      if (filterStage !== 'all' && contact.stage !== filterStage) return false
+      if (filterSource !== 'all' && contact.source !== filterSource) return false
+      return true
+    })
+    .sort((a, b) => {
+      // Smart sorting: New leads first, then by last activity
+      const aIsNew = recentContacts.some(rc => rc.id === a.id)
+      const bIsNew = recentContacts.some(rc => rc.id === b.id)
+      
+      if (aIsNew && !bIsNew) return -1
+      if (!aIsNew && bIsNew) return 1
+      
+      // If both are new or both are old, sort by last activity (most recent first)
+      return new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime()
+    })
+
+  // Helper function to check if contact is new
+  const isNewLead = (contact: LeadContact) => {
+    return recentContacts.some(rc => rc.id === contact.id)
+  }
 
   // Get recent contacts (last 7 days)
   const recentContacts = contacts.filter(contact => {
@@ -241,48 +258,15 @@ function LeadHubDashboard({ fubStatus, userEmail }: { fubStatus: FUBStatus, user
     }
   }
 
-  // Handle bulk actions from Action Required panel
-  const handleBulkFollowUps = () => {
+  // Generate follow-ups for new leads using template + merge fields
+  const generateNewLeadFollowUps = async () => {
     if (recentContacts.length === 0) {
-      alert('No recent leads to generate follow-ups for')
+      alert('No recent leads to send follow-ups to')
       return
     }
-    
-    // Open bulk script generator (we'll build this next)
-    const params = new URLSearchParams({
-      bulkAction: 'follow-up',
-      contactIds: recentContacts.map(c => c.id.toString()).join(','),
-      filterType: 'recent'
-    })
-    window.open(`/lead-hub/bulk-scripts?${params.toString()}`, '_blank')
-  }
 
-  const handleBulkScripts = () => {
-    if (needsFollowUp.length === 0) {
-      alert('No contacts need follow-up scripts')
-      return
-    }
-    
-    const params = new URLSearchParams({
-      bulkAction: 'overdue',
-      contactIds: needsFollowUp.map(c => c.id.toString()).join(','),
-      filterType: 'overdue'
-    })
-    window.open(`/lead-hub/bulk-scripts?${params.toString()}`, '_blank')
-  }
-
-  const handleBulkCMAs = () => {
-    if (withInquiries.length === 0) {
-      alert('No contacts have property inquiries for CMAs')
-      return
-    }
-    
-    const params = new URLSearchParams({
-      bulkAction: 'cma',
-      contactIds: withInquiries.map(c => c.id.toString()).join(','),
-      filterType: 'inquiries'
-    })
-    window.open(`/lead-hub/bulk-cmas?${params.toString()}`, '_blank')
+    // We'll implement the template-based follow-up system here
+    alert(`Template-based follow-up system coming soon! Will send personalized emails to ${recentContacts.length} new leads.`)
   }
 
   return (
@@ -318,7 +302,7 @@ function LeadHubDashboard({ fubStatus, userEmail }: { fubStatus: FUBStatus, user
                 size="sm" 
                 className="mt-2" 
                 variant="outline"
-                onClick={handleBulkFollowUps}
+                onClick={generateNewLeadFollowUps}
                 disabled={recentContacts.length === 0}
               >
                 Generate Follow-ups
@@ -328,68 +312,24 @@ function LeadHubDashboard({ fubStatus, userEmail }: { fubStatus: FUBStatus, user
             <div className="bg-white p-4 rounded-lg border border-orange-200">
               <div className="text-2xl font-bold text-red-600">{needsFollowUp.length}</div>
               <div className="text-sm text-gray-600">Need Follow-up (30+ Days)</div>
-              <Button 
-                size="sm" 
-                className="mt-2" 
-                variant="outline"
-                onClick={handleBulkScripts}
-                disabled={needsFollowUp.length === 0}
-              >
-                Create Scripts
-              </Button>
+              <div className="text-xs text-gray-500 mt-1">
+                Use individual "Create Email" buttons below
+              </div>
             </div>
             
             <div className="bg-white p-4 rounded-lg border border-orange-200">
               <div className="text-2xl font-bold text-green-600">{withInquiries.length}</div>
               <div className="text-sm text-gray-600">Property Inquiries Need CMAs</div>
-              <Button 
-                size="sm" 
-                className="mt-2" 
-                variant="outline"
-                onClick={handleBulkCMAs}
-                disabled={withInquiries.length === 0}
-              >
-                Create CMAs
-              </Button>
+              <div className="text-xs text-gray-500 mt-1">
+                Use individual "CMA" buttons below
+              </div>
             </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Quick Actions */}
-      <div className="grid md:grid-cols-4 gap-4 mb-8">
-        <Button 
-          className="h-20 flex flex-col gap-2" 
-          variant="outline"
-          onClick={() => {
-            const params = new URLSearchParams({ bulkAction: 'all', filterType: 'all' })
-            window.open(`/lead-hub/bulk-scripts?${params.toString()}`, '_blank')
-          }}
-        >
-          <Zap className="w-6 h-6" />
-          <span>Bulk Scripts</span>
-        </Button>
-        <Button 
-          className="h-20 flex flex-col gap-2" 
-          variant="outline"
-          onClick={() => {
-            const params = new URLSearchParams({ bulkAction: 'cma-all', filterType: 'all' })
-            window.open(`/lead-hub/bulk-cmas?${params.toString()}`, '_blank')
-          }}
-        >
-          <Home className="w-6 h-6" />
-          <span>Batch CMAs</span>
-        </Button>
-        <Button 
-          className="h-20 flex flex-col gap-2" 
-          variant="outline"
-          onClick={() => {
-            alert('Email Campaign builder coming soon!')
-          }}
-        >
-          <Mail className="w-6 h-6" />
-          <span>Email Campaign</span>
-        </Button>
+      <div className="grid md:grid-cols-2 gap-4 mb-8">
         <Button 
           className="h-20 flex flex-col gap-2" 
           variant="outline"
@@ -399,6 +339,26 @@ function LeadHubDashboard({ fubStatus, userEmail }: { fubStatus: FUBStatus, user
         >
           <Activity className="w-6 h-6" />
           <span>View Analytics</span>
+        </Button>
+        <Button 
+          className="h-20 flex flex-col gap-2" 
+          variant="outline"
+          onClick={() => {
+            // Export contacts functionality
+            const csvData = contacts.map(c => ({
+              name: c.name,
+              email: c.email,
+              phone: c.phone,
+              stage: c.stage,
+              source: c.source,
+              city: c.address?.city || '',
+              state: c.address?.state || ''
+            }))
+            alert('Export functionality coming soon!')
+          }}
+        >
+          <Download className="w-6 h-6" />
+          <span>Export Contacts</span>
         </Button>
       </div>
 
@@ -418,6 +378,9 @@ function LeadHubDashboard({ fubStatus, userEmail }: { fubStatus: FUBStatus, user
                 <SelectContent>
                   <SelectItem value="all">All Stages</SelectItem>
                   <SelectItem value="Lead">Lead</SelectItem>
+                  <SelectItem value="Nurture">Nurture</SelectItem>
+                  <SelectItem value="Appointment Set">Appointment Set</SelectItem>
+                  <SelectItem value="Spoke with Customer">Spoke with Customer</SelectItem>
                   <SelectItem value="Prospect">Prospect</SelectItem>
                   <SelectItem value="Client">Client</SelectItem>
                   <SelectItem value="Past Client">Past Client</SelectItem>
@@ -452,7 +415,9 @@ function LeadHubDashboard({ fubStatus, userEmail }: { fubStatus: FUBStatus, user
           ) : (
             <div className="space-y-3">
               {filteredContacts.slice(0, 10).map((contact) => (
-                <div key={contact.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+                <div key={contact.id} className={`flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 ${
+                  isNewLead(contact) ? 'border-orange-300 bg-orange-50' : ''
+                }`}>
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
                       <span className="text-blue-600 font-medium">
@@ -489,6 +454,11 @@ function LeadHubDashboard({ fubStatus, userEmail }: { fubStatus: FUBStatus, user
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
+                    {isNewLead(contact) && (
+                      <Badge className="bg-orange-100 text-orange-800 border-orange-300">
+                        NEW
+                      </Badge>
+                    )}
                     <Badge variant="outline">{contact.stage}</Badge>
                     <Badge variant="secondary">{contact.source}</Badge>
                     <div className="flex gap-1">
