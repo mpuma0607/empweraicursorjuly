@@ -94,6 +94,19 @@ function LeadHubDashboard({ fubStatus, userEmail }: { fubStatus: FUBStatus, user
     }
   }
 
+  // Get recent contacts (last 7 days)
+  const recentContacts = contacts.filter(contact => {
+    const createdDate = new Date(contact.created)
+    const weekAgo = new Date()
+    weekAgo.setDate(weekAgo.getDate() - 7)
+    return createdDate > weekAgo
+  })
+
+  // Helper function to check if contact is new
+  const isNewLead = (contact: LeadContact) => {
+    return recentContacts.some(rc => rc.id === contact.id)
+  }
+
   // Filter and smart sort contacts
   const filteredContacts = contacts
     .filter(contact => {
@@ -103,8 +116,8 @@ function LeadHubDashboard({ fubStatus, userEmail }: { fubStatus: FUBStatus, user
     })
     .sort((a, b) => {
       // Smart sorting: New leads first, then by last activity
-      const aIsNew = recentContacts.some(rc => rc.id === a.id)
-      const bIsNew = recentContacts.some(rc => rc.id === b.id)
+      const aIsNew = isNewLead(a)
+      const bIsNew = isNewLead(b)
       
       if (aIsNew && !bIsNew) return -1
       if (!aIsNew && bIsNew) return 1
@@ -112,19 +125,6 @@ function LeadHubDashboard({ fubStatus, userEmail }: { fubStatus: FUBStatus, user
       // If both are new or both are old, sort by last activity (most recent first)
       return new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime()
     })
-
-  // Helper function to check if contact is new
-  const isNewLead = (contact: LeadContact) => {
-    return recentContacts.some(rc => rc.id === contact.id)
-  }
-
-  // Get recent contacts (last 7 days)
-  const recentContacts = contacts.filter(contact => {
-    const createdDate = new Date(contact.created)
-    const weekAgo = new Date()
-    weekAgo.setDate(weekAgo.getDate() - 7)
-    return createdDate > weekAgo
-  })
 
   // Get contacts needing follow-up (30+ days since last activity)
   const needsFollowUp = contacts.filter(contact => {
