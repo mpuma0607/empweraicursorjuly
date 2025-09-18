@@ -84,13 +84,6 @@ function LeadHubDashboard({ fubStatus, userEmail }: { fubStatus: FUBStatus, user
     }
   }, [userEmail])
 
-  // Regenerate emails when templates change
-  useEffect(() => {
-    if (editableSubjectTemplate && editableBodyTemplate && recentContacts.length > 0 && userEmail && fubStatus.user) {
-      regenerateFollowUpEmails()
-    }
-  }, [editableSubjectTemplate, editableBodyTemplate, recentContacts.length, userEmail, fubStatus.user])
-
   const loadContacts = async () => {
     try {
       setIsLoadingContacts(true)
@@ -153,6 +146,13 @@ function LeadHubDashboard({ fubStatus, userEmail }: { fubStatus: FUBStatus, user
 
   // Get contacts with recent property inquiries
   const withInquiries = contacts.filter(contact => contact.recentInquiry?.property)
+
+  // Regenerate emails when templates change (moved after all variable definitions)
+  useEffect(() => {
+    if (editableSubjectTemplate && editableBodyTemplate && recentContacts.length > 0 && userEmail && fubStatus.user) {
+      regenerateFollowUpEmails()
+    }
+  }, [editableSubjectTemplate, editableBodyTemplate, recentContacts.length, userEmail, fubStatus.user])
 
   // Generate personalized script for contact
   const generateScriptForContact = async (contact: LeadContact) => {
