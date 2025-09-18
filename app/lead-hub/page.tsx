@@ -287,21 +287,21 @@ function LeadHubDashboard({ fubStatus, userEmail }: { fubStatus: FUBStatus, user
 
       // Create the follow-up template with merge fields
       const template = {
-        subject: `Welcome to your home search, {firstName}!`,
-        body: `Hi {firstName},
+        subject: 'Welcome to your home search, {{firstName}}!',
+        body: `Hi {{firstName}},
 
-Thank you for your interest in {city} properties! I'm {agentName} with {brokerageName}, and I'd love to help you find the perfect home.
+Thank you for your interest in {{city}} properties! I'm {{agentName}} with {{brokerageName}}, and I'd love to help you find the perfect home.
 
-I noticed you came to us through {source}, which tells me you're serious about your home search. I specialize in helping clients in {city} and the surrounding areas find exactly what they're looking for.
+I noticed you came to us through {{source}}, which tells me you're serious about your home search. I specialize in helping clients in {{city}} and the surrounding areas find exactly what they're looking for.
 
 Based on your recent activity, I have some great properties that might be perfect for you. I'd love to schedule a quick 15-minute call to understand your needs and show you what's available in your price range.
 
 When would be a good time to chat this week?
 
 Best regards,
-{agentName}
-{brokerageName}
-{agentPhone} | {agentEmail}`
+{{agentName}}
+{{brokerageName}}
+{{agentPhone}} | {{agentEmail}}`
       }
 
       // Store editable templates
@@ -328,15 +328,15 @@ Best regards,
       contactName: contact.name,
       email: contact.email,
       subject: editableSubjectTemplate
-        .replace('{firstName}', contact.firstName || contact.name.split(' ')[0]),
+        .replace(/\{\{firstName\}\}/g, contact.firstName || contact.name.split(' ')[0]),
       body: editableBodyTemplate
-        .replace(/{firstName}/g, contact.firstName || contact.name.split(' ')[0])
-        .replace(/{city}/g, contact.address?.city || 'your area')
-        .replace(/{source}/g, contact.source)
-        .replace(/{agentName}/g, fubStatus.user?.name || 'Your Agent')
-        .replace(/{brokerageName}/g, 'Your Brokerage')
-        .replace(/{agentPhone}/g, fubStatus.user?.phone || 'Your Phone')
-        .replace(/{agentEmail}/g, userEmail)
+        .replace(/\{\{firstName\}\}/g, contact.firstName || contact.name.split(' ')[0])
+        .replace(/\{\{city\}\}/g, contact.address?.city || 'your area')
+        .replace(/\{\{source\}\}/g, contact.source)
+        .replace(/\{\{agentName\}\}/g, fubStatus.user?.name || 'Your Agent')
+        .replace(/\{\{brokerageName\}\}/g, 'Your Brokerage')
+        .replace(/\{\{agentPhone\}\}/g, fubStatus.user?.phone || 'Your Phone')
+        .replace(/\{\{agentEmail\}\}/g, userEmail)
     }))
     
     setEmailsToSend(updatedEmails)
@@ -693,7 +693,7 @@ Best regards,
                 {/* Template Editor */}
                 <div className="space-y-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
                   <div className="text-sm font-medium text-blue-800 mb-2">
-                    📝 Edit Template (uses merge fields: {firstName}, {city}, {source}, {agentName})
+                    📝 Edit Template (uses merge fields: {{firstName}}, {{city}}, {{source}}, {{agentName}})
                   </div>
                   
                   <div className="space-y-3">
@@ -706,7 +706,7 @@ Best regards,
                         value={editableSubjectTemplate}
                         onChange={(e) => setEditableSubjectTemplate(e.target.value)}
                         className="text-sm"
-                        placeholder="Welcome to your home search, {firstName}!"
+                        placeholder="Welcome to your home search, {{firstName}}!"
                       />
                     </div>
                     
@@ -719,7 +719,7 @@ Best regards,
                         value={editableBodyTemplate}
                         onChange={(e) => setEditableBodyTemplate(e.target.value)}
                         className="w-full min-h-[200px] p-3 border border-gray-300 rounded-md text-sm"
-                        placeholder="Hi {firstName}, Thank you for your interest in {city} properties..."
+                        placeholder="Hi {{firstName}}, Thank you for your interest in {{city}} properties..."
                       />
                     </div>
                   </div>
