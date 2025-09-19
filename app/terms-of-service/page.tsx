@@ -161,10 +161,47 @@ export default function TermsOfServicePage() {
                   Any data you provide is safeguarded using industry-standard security practices.
                 </li>
               </ul>
-              <p className="text-gray-700">
+              <p className="text-gray-700 mb-6">
                 By using our Services, you acknowledge and agree that your data will be handled in accordance with this
                 Privacy Policy.
               </p>
+
+              <div className="bg-gray-50 p-6 rounded-lg">
+                <h3 className="text-xl font-semibold text-gray-900 mb-4">Google User Data Access</h3>
+                <p className="text-gray-700 mb-4">
+                  Our Services may request access to certain Google user data in order to provide functionality such as email integration, calendar syncing, and secure account login. We respect your privacy and strictly limit how this information is used.
+                </p>
+
+                <h4 className="text-lg font-semibold text-gray-900 mb-3">What Google Data We Access</h4>
+                <p className="text-gray-700 mb-3">
+                  Depending on the Services you use, we may request the following Google OAuth scopes:
+                </p>
+                <ul className="list-disc pl-6 text-gray-700 mb-4">
+                  <li><strong>userinfo.email</strong> – Access to your primary Google Account email address.</li>
+                  <li><strong>userinfo.profile</strong> – Access to your basic profile information (such as name and profile picture) that you have made publicly available.</li>
+                  <li><strong>calendar.events</strong> – Permission to view and edit events on your calendars when you choose to integrate your calendar with our Services.</li>
+                  <li><strong>calendar.events.readonly</strong> – Permission to view events on your calendars without editing them, used when read-only access is sufficient.</li>
+                  <li><strong>gmail.send</strong> – Permission to send email on your behalf when you explicitly use our platform to send messages.</li>
+                </ul>
+
+                <h4 className="text-lg font-semibold text-gray-900 mb-3">How We Use This Data</h4>
+                <ul className="list-disc pl-6 text-gray-700 mb-4">
+                  <li>Your email and profile information are used only for authentication, account creation, and personalization within our Services.</li>
+                  <li>Your calendar data is accessed only to provide scheduling features you have opted into (e.g., syncing events, showing availability, creating reminders).</li>
+                  <li>Your Gmail send permissions are used only when you request that our platform send an email on your behalf.</li>
+                </ul>
+
+                <h4 className="text-lg font-semibold text-gray-900 mb-3">What We Don't Do</h4>
+                <ul className="list-disc pl-6 text-gray-700 mb-4">
+                  <li>We do not sell, rent, or share your Google user data with third parties.</li>
+                  <li>We do not use your Google data for advertising or marketing purposes.</li>
+                  <li>We access your Google data only in real time to provide the requested functionality and do not store calendar event details or email contents beyond what is required for the Service.</li>
+                </ul>
+
+                <p className="text-gray-700">
+                  You may revoke our access to your Google data at any time by visiting your <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline">Google Account Permissions page</a>.
+                </p>
+              </div>
             </section>
 
             <section className="mb-8">
