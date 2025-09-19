@@ -180,6 +180,12 @@ export function StageItForm() {
         formData.append('notes', `Furniture density: ${stagingRequest.furnitureDensity}, Lighting: ${stagingRequest.lighting}, Target market: ${stagingRequest.targetMarket}, Property value: ${stagingRequest.propertyValue}, Additional features: ${stagingRequest.additionalFeatures.join(', ')}`)
         formData.append('size', "1536x1024") // landscape format for real estate photos
 
+        console.log('Sending staging request with form data:');
+        console.log('FormData entries:', Array.from(formData.entries()).map(([key, value]) => ({
+          key,
+          value: value instanceof File ? `File: ${value.name} (${value.size} bytes, ${value.type})` : value
+        })));
+
         const response = await fetch('/api/stage-it', {
           method: 'POST',
           body: formData

@@ -30,6 +30,8 @@ function dataUrlToBlob(dataUrl: string) {
 export async function POST(req: Request) {
   console.log('StageIT API called with method:', req.method);
   console.log('Request headers:', Object.fromEntries(req.headers.entries()));
+  console.log('Request timestamp:', new Date().toISOString());
+  
   try {
     const OPENAI_API_KEY = need("OPENAI_API_KEY");
     console.log('OpenAI API key found, length:', OPENAI_API_KEY.length);
@@ -146,13 +148,19 @@ export async function POST(req: Request) {
       );
     }
     
-    // Check file type
+    // Check file type - OpenAI image editing requires PNG
     if (!imageBlob.type.startsWith('image/')) {
       console.log('Invalid file type:', imageBlob.type);
       return NextResponse.json(
         { error: "Invalid file type. Please upload an image file." },
         { status: 400 }
       );
+    }
+    
+    // Log image type for debugging
+    console.log('Image type detected:', imageBlob.type);
+    if (!imageBlob.type.includes('png') && !imageBlob.type.includes('jpeg') && !imageBlob.type.includes('jpg')) {
+      console.log('Warning: Image type may not be supported by OpenAI:', imageBlob.type);
     }
     
     console.log('Image validation passed, proceeding with OpenAI request...');
@@ -171,11 +179,20 @@ export async function POST(req: Request) {
 
     console.log(`Sending request to OpenAI with prompt: ${prompt.substring(0, 100)}...`);
     console.log(`OpenAI request details: size=${finalSize}, imageSize=${imageBlob.size}, imageType=${imageBlob.type}`);
+    console.log('About to make OpenAI API call...');
 
     const aiRes = await fetch("https://api.openai.com/v1/images/edits", {
       method: "POST",
       headers: { Authorization: `Bearer ${OPENAI_API_KEY}` },
       body: aiForm,
+    }).catch(fetchError => {
+      console.error('Fetch error occurred:', fetchError);
+      console.error('Fetch error details:', {
+        message: fetchError.message,
+        name: fetchError.name,
+        stack: fetchError.stack
+      });
+      throw fetchError;
     });
 
     console.log(`OpenAI response status: ${aiRes.status} ${aiRes.statusText}`);
@@ -224,7 +241,34 @@ export async function POST(req: Request) {
     });
   } catch (err: any) {
     console.error("Stage route fatal:", err);
-    return NextResponse.json({ error: err?.message || "Image edit failed" }, { status: 500 });
+    console.error("Error stack:", err?.stack);
+    console.error("Error details:", {
+      name: err?.name,
+      message: err?.message,
+      cause: err?.cause,
+      code: err?.code
+    });
+    
+    // More specific error messages based on error type
+    let errorMessage = "Image edit failed";
+    if (err?.message?.includes("OPENAI_API_KEY")) {
+      errorMessage = "OpenAI API configuration error";
+    } else if (err?.message?.includes("fetch")) {
+      errorMessage = "Network error connecting to AI service";
+    } else if (err?.message?.includes("image")) {
+      errorMessage = "Image processing error";
+    } else if (err?.message) {
+      errorMessage = err.message;
+    }
+    
+    return NextResponse.json({ 
+      error: errorMessage,
+      details: {
+        originalError: err?.message,
+        errorType: err?.name,
+        timestamp: new Date().toISOString()
+      }
+    }, { status: 500 });
   }
 }
 
