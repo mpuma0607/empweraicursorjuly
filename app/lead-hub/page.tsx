@@ -187,9 +187,10 @@ function LeadHubDashboard({ fubStatus, userEmail, user }: { fubStatus: FUBStatus
     try {
       setGeneratingScript(contact.id)
       
-      // Build script data based on contact info
+      // Build script data based on contact info (using same logic as follow-up campaign)
+      const agentName = fubStatus.user?.name || user?.name || user?.email?.split('@')[0] || 'Agent'
       const scriptData = {
-        agentName: fubStatus.user?.name || 'Agent',
+        agentName: agentName,
         brokerageName: 'Your Brokerage', // Could get from user profile
         scriptType: 'email',
         topic: getTopicForContact(contact),
@@ -836,7 +837,7 @@ ${generatedSignature}`
           isOpen={isEmailModalOpen}
           onClose={() => setIsEmailModalOpen(false)}
           scriptContent={generatedScript.script}
-          agentName={fubStatus.user?.name || 'Agent'}
+          agentName={fubStatus.user?.name || user?.name || user?.email?.split('@')[0] || 'Agent'}
           brokerageName="Your Brokerage"
           recipientEmail={editableEmail}
         />
