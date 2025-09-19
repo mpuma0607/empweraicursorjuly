@@ -313,12 +313,36 @@ function LeadHubDashboard({ fubStatus, userEmail }: { fubStatus: FUBStatus, user
     try {
       setIsGenerating(true)
 
-      // Create the follow-up template with merge fields
+      // Get agent data for signature
+      const agentName = fubStatus.user?.name || 'Your Agent'
+      const brokerageName = 'Your Brokerage'
+      const agentPhone = fubStatus.user?.phone || 'Your Phone'
+      
+      // Try to generate a proper signature using the API
+      let generatedSignature = `Best regards,\n${agentName}\n${brokerageName}\n${agentPhone} | ${userEmail}`
+      
+      try {
+        const sigResponse = await fetch('/api/generate-signature', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userEmail })
+        })
+        
+        if (sigResponse.ok) {
+          const sigData = await sigResponse.json()
+          generatedSignature = sigData.signature
+          console.log('Generated signature:', generatedSignature)
+        }
+      } catch (error) {
+        console.log('Could not generate signature, using fallback:', error)
+      }
+      
+      // Create the follow-up template with merge fields (signature pre-populated)
       const template = {
         subject: 'Welcome to your home search, {{firstName}}!',
         body: `Hi {{firstName}},
 
-Thank you for your interest in {{city}} properties! I'm {{agentName}} with {{brokerageName}}, and I'd love to help you find the perfect home.
+Thank you for your interest in {{city}} properties! I'm ${agentName} with ${brokerageName}, and I'd love to help you find the perfect home.
 
 I noticed you came to us through {{source}}, which tells me you're serious about your home search. I specialize in helping clients in {{city}} and the surrounding areas find exactly what they're looking for.
 
@@ -326,10 +350,7 @@ Based on your recent activity, I have some great properties that might be perfec
 
 When would be a good time to chat this week?
 
-Best regards,
-{{agentName}}
-{{brokerageName}}
-{{agentPhone}} | {{agentEmail}}`
+${generatedSignature}`
       }
 
       // Store editable templates
@@ -341,9 +362,6 @@ Best regards,
         const firstName = contact.firstName || contact.name.split(' ')[0] || 'there'
         const city = contact.address?.city || 'your area'
         const source = contact.source || 'your inquiry'
-        const agentName = fubStatus.user?.name || 'Your Agent'
-        const brokerageName = 'Your Brokerage'
-        const agentPhone = fubStatus.user?.phone || 'Your Phone'
         
         return {
           contactId: contact.id,
@@ -355,10 +373,6 @@ Best regards,
             .replace(/\{\{firstName\}\}/g, firstName)
             .replace(/\{\{city\}\}/g, city)
             .replace(/\{\{source\}\}/g, source)
-            .replace(/\{\{agentName\}\}/g, agentName)
-            .replace(/\{\{brokerageName\}\}/g, brokerageName)
-            .replace(/\{\{agentPhone\}\}/g, agentPhone)
-            .replace(/\{\{agentEmail\}\}/g, userEmail)
         }
       })
       
@@ -390,9 +404,6 @@ Best regards,
         const firstName = contact.firstName || contact.name.split(' ')[0] || 'there'
         const city = contact.address?.city || 'your area'
         const source = contact.source || 'your inquiry'
-        const agentName = fubStatus.user?.name || 'Your Agent'
-        const brokerageName = 'Your Brokerage'
-        const agentPhone = fubStatus.user?.phone || 'Your Phone'
         
         return {
           contactId: contact.id,
@@ -404,10 +415,6 @@ Best regards,
             .replace(/\{\{firstName\}\}/g, firstName)
             .replace(/\{\{city\}\}/g, city)
             .replace(/\{\{source\}\}/g, source)
-            .replace(/\{\{agentName\}\}/g, agentName)
-            .replace(/\{\{brokerageName\}\}/g, brokerageName)
-            .replace(/\{\{agentPhone\}\}/g, agentPhone)
-            .replace(/\{\{agentEmail\}\}/g, userEmail)
         }
       })
       
