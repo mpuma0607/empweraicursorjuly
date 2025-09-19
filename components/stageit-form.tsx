@@ -68,11 +68,57 @@ export function StageItForm() {
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
   const [emailContent, setEmailContent] = useState('')
   const [isSaving, setIsSaving] = useState(false)
+  const [isCompressing, setIsCompressing] = useState(false)
   
   const { user, loading: userLoading } = useMemberSpaceUser()
 
+  // Image compression function
+  const compressImage = async (file: File): Promise<File> => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')!
+      const img = new Image()
+      
+      img.onload = () => {
+        // Calculate new dimensions (max 2048x2048 for staging)
+        let { width, height } = img
+        const maxDimension = 2048
+        
+        if (width > maxDimension || height > maxDimension) {
+          if (width > height) {
+            height = (height * maxDimension) / width
+            width = maxDimension
+          } else {
+            width = (width * maxDimension) / height
+            height = maxDimension
+          }
+        }
+        
+        canvas.width = width
+        canvas.height = height
+        
+        // Draw and compress
+        ctx.drawImage(img, 0, 0, width, height)
+        
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const compressedFile = new File([blob], file.name, {
+              type: 'image/jpeg',
+              lastModified: Date.now()
+            })
+            resolve(compressedFile)
+          } else {
+            resolve(file) // Fallback to original if compression fails
+          }
+        }, 'image/jpeg', 0.8) // 80% quality
+      }
+      
+      img.src = URL.createObjectURL(file)
+    })
+  }
+
   // Handle image upload
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
       // Validate file type
@@ -81,16 +127,33 @@ export function StageItForm() {
         return
       }
       
-      // Validate file size (20MB limit)
-      const maxSize = 20 * 1024 * 1024 // 20MB
-      if (file.size > maxSize) {
-        alert(`Image too large. Please select an image smaller than ${maxSize / (1024 * 1024)}MB`)
-        return
+      // Check if file is too large and needs compression
+      const maxUploadSize = 10 * 1024 * 1024 // 10MB server limit
+      let processedFile = file
+      
+      if (file.size > maxUploadSize) {
+        try {
+          setIsCompressing(true)
+          console.log(`File size ${(file.size / (1024 * 1024)).toFixed(2)}MB exceeds limit, compressing...`)
+          processedFile = await compressImage(file)
+          console.log(`Compressed to ${(processedFile.size / (1024 * 1024)).toFixed(2)}MB`)
+          
+          // Check if compressed file is still too large
+          if (processedFile.size > maxUploadSize) {
+            alert('Image is too large even after compression. Please use a smaller image or compress it further.')
+            return
+          }
+        } catch (error) {
+          console.error('Error compressing image:', error)
+          alert('Failed to compress image. Please try a smaller image.')
+          return
+        } finally {
+          setIsCompressing(false)
+        }
       }
       
-      // Simple approach - just proceed with the file
-      setImageFile(file)
-      const url = URL.createObjectURL(file)
+      setImageFile(processedFile)
+      const url = URL.createObjectURL(processedFile)
       setImageUrl(url)
       setImageName(file.name.replace(/\.[^/.]+$/, ''))
       setCurrentStep('configure')
@@ -102,7 +165,7 @@ export function StageItForm() {
     e.preventDefault()
   }, [])
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
     e.preventDefault()
     const file = e.dataTransfer.files[0]
     if (file) {
@@ -112,21 +175,38 @@ export function StageItForm() {
         return
       }
       
-      // Validate file size (20MB limit)
-      const maxSize = 20 * 1024 * 1024 // 20MB
-      if (file.size > maxSize) {
-        alert(`Image too large. Please select an image smaller than ${maxSize / (1024 * 1024)}MB`)
-        return
+      // Check if file is too large and needs compression
+      const maxUploadSize = 10 * 1024 * 1024 // 10MB server limit
+      let processedFile = file
+      
+      if (file.size > maxUploadSize) {
+        try {
+          setIsCompressing(true)
+          console.log(`File size ${(file.size / (1024 * 1024)).toFixed(2)}MB exceeds limit, compressing...`)
+          processedFile = await compressImage(file)
+          console.log(`Compressed to ${(processedFile.size / (1024 * 1024)).toFixed(2)}MB`)
+          
+          // Check if compressed file is still too large
+          if (processedFile.size > maxUploadSize) {
+            alert('Image is too large even after compression. Please use a smaller image or compress it further.')
+            return
+          }
+        } catch (error) {
+          console.error('Error compressing image:', error)
+          alert('Failed to compress image. Please try a smaller image.')
+          return
+        } finally {
+          setIsCompressing(false)
+        }
       }
       
-      // Simple approach - just proceed with the file
-      setImageFile(file)
-      const url = URL.createObjectURL(file)
+      setImageFile(processedFile)
+      const url = URL.createObjectURL(processedFile)
       setImageUrl(url)
       setImageName(file.name.replace(/\.[^/.]+$/, ''))
       setCurrentStep('configure')
     }
-  }, [])
+  }, [compressImage])
 
   // Update staging request
   const updateStagingRequest = (updates: Partial<StagingRequest>) => {
@@ -192,6 +272,11 @@ export function StageItForm() {
         })
 
         if (!response.ok) {
+          // Handle specific HTTP error codes
+          if (response.status === 413) {
+            throw new Error('Image file is too large. Please use an image smaller than 10MB or try compressing your image.')
+          }
+          
           // Try to get detailed error information
           let errorMessage = 'Staging failed'
           let errorDetails = null
@@ -203,7 +288,11 @@ export function StageItForm() {
             console.error('Detailed error:', errorData)
           } catch {
             // If response isn't JSON, use status text
-            errorMessage = response.statusText || errorMessage
+            if (response.status === 413) {
+              errorMessage = 'Image file is too large'
+            } else {
+              errorMessage = response.statusText || errorMessage
+            }
           }
           
           // Log additional details for debugging
@@ -400,9 +489,16 @@ ${user?.name || 'Your Name'}
                 Drag and drop an image here, or click to select. 
                 Best results with empty or minimally furnished rooms.
               </p>
-              <Button onClick={() => document.getElementById('image-upload')?.click()}>
-                Choose Image
-              </Button>
+              {isCompressing ? (
+                <div className="flex items-center justify-center gap-2 text-blue-600">
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <span>Compressing image...</span>
+                </div>
+              ) : (
+                <Button onClick={() => document.getElementById('image-upload')?.click()}>
+                  Choose Image
+                </Button>
+              )}
               <input
                 id="image-upload"
                 type="file"
