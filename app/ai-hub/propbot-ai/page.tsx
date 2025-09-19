@@ -127,9 +127,9 @@ export default function PropBotAIPage() {
           }
         }
 
-        const currentText = finalTranscript || interimTranscript
-        if (currentText.trim()) {
-          setSearchQuery((prev) => prev + (prev ? " " : "") + currentText.trim())
+        // Only append final results to avoid duplication
+        if (finalTranscript.trim()) {
+          setSearchQuery((prev) => prev + (prev ? " " : "") + finalTranscript.trim())
         }
 
         console.log("Voice result:", { final: finalTranscript, interim: interimTranscript })

@@ -120,12 +120,12 @@ export default function ListingForm() {
           }
         }
 
-        const currentText = finalTranscript || interimTranscript
-        if (currentText.trim()) {
+        // Only append final results to avoid duplication
+        if (finalTranscript.trim()) {
           // APPEND the content instead of replacing (same pattern as IdeaHub)
           setFormData((prev) => ({
             ...prev,
-            propertyDescription: prev.propertyDescription + (prev.propertyDescription ? " " : "") + currentText.trim(),
+            propertyDescription: prev.propertyDescription + (prev.propertyDescription ? " " : "") + finalTranscript.trim(),
           }))
         }
 

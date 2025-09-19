@@ -149,13 +149,13 @@ export default function RealBioForm() {
           }
         }
 
-        const currentText = (finalTranscript || interimTranscript).trim()
-        if (currentText) {
+        // Only append final results to avoid duplication
+        if (finalTranscript.trim()) {
           setFormData((prev) => ({
             ...prev,
             [field]: prev[field as keyof typeof prev] 
-              ? `${prev[field as keyof typeof prev]} ${currentText}` 
-              : currentText, // APPEND instead of replace
+              ? `${prev[field as keyof typeof prev]} ${finalTranscript.trim()}` 
+              : finalTranscript.trim(), // APPEND only final results
           }))
         }
 
