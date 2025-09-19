@@ -263,6 +263,20 @@ export default function Navigation() {
     setMobileMenuOpen(false)
   }, [pathname])
 
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.classList.add('mobile-menu-open')
+    } else {
+      document.body.classList.remove('mobile-menu-open')
+    }
+
+    // Cleanup on unmount
+    return () => {
+      document.body.classList.remove('mobile-menu-open')
+    }
+  }, [mobileMenuOpen])
+
   // Filter navigation items based on tenant config
   const filteredNavigationItems = navigationItems
     .map((item) => {
@@ -584,8 +598,21 @@ export default function Navigation() {
 
         {/* Mobile Navigation */}
         {mobileMenuOpen && (
-          <div className="lg:hidden py-4 border-t max-h-[calc(100vh-80px)] overflow-y-auto mobile-nav-scroll">
-            <div className="space-y-2">
+          <>
+            {/* Backdrop */}
+            <div 
+              className="lg:hidden fixed inset-0 bg-black bg-opacity-25 z-30"
+              onClick={() => setMobileMenuOpen(false)}
+            />
+            {/* Menu */}
+            <div 
+              className="lg:hidden fixed inset-x-0 top-[80px] bottom-0 bg-white z-40 overflow-y-auto mobile-nav-scroll border-t shadow-lg"
+              onTouchMove={(e) => {
+                // Allow scrolling within the menu, but prevent it from bubbling to body
+                e.stopPropagation()
+              }}
+            >
+            <div className="space-y-2 p-4">
               {filteredNavigationItems.map(
                 (item) =>
                   item && (
@@ -699,6 +726,7 @@ export default function Navigation() {
               )}
             </div>
           </div>
+          </>
         )}
       </div>
     </nav>
