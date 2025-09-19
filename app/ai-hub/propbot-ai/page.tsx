@@ -129,7 +129,7 @@ export default function PropBotAIPage() {
 
         const currentText = finalTranscript || interimTranscript
         if (currentText.trim()) {
-          setSearchQuery(currentText)
+          setSearchQuery((prev) => prev + (prev ? " " : "") + currentText.trim())
         }
 
         console.log("Voice result:", { final: finalTranscript, interim: interimTranscript })

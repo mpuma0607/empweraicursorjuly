@@ -153,7 +153,9 @@ export default function RealBioForm() {
         if (currentText) {
           setFormData((prev) => ({
             ...prev,
-            [field]: currentText, // REPLACE instead of append
+            [field]: prev[field as keyof typeof prev] 
+              ? `${prev[field as keyof typeof prev]} ${currentText}` 
+              : currentText, // APPEND instead of replace
           }))
         }
 
