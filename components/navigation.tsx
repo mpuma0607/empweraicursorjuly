@@ -482,7 +482,7 @@ export default function Navigation() {
   })()
 
   return (
-    <nav className="bg-white shadow-sm border-b sticky top-0 z-50">
+    <nav className="bg-white shadow-sm border-b sticky top-0 z-50 relative">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center py-4">
           {/* Logo */}
@@ -589,7 +589,7 @@ export default function Navigation() {
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="lg:hidden">
+          <div className="lg:hidden relative z-50">
             <Button variant="ghost" size="sm" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
               {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </Button>
@@ -601,7 +601,7 @@ export default function Navigation() {
           <>
             {/* Backdrop */}
             <div 
-              className="lg:hidden fixed inset-0 bg-black bg-opacity-25 z-30"
+              className="lg:hidden fixed inset-x-0 top-[80px] bottom-0 bg-black bg-opacity-25 z-30"
               onClick={() => setMobileMenuOpen(false)}
             />
             {/* Menu */}
