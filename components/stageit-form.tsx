@@ -55,10 +55,24 @@ const compressImage = async (file: File): Promise<File> => {
     const img = new Image()
     
     img.onload = () => {
-      // Calculate new dimensions (max 2048x2048 for staging)
+      // More aggressive compression for large files
       let { width, height } = img
-      const maxDimension = 2048
       
+      // Calculate target size based on original file size
+      const originalSizeMB = file.size / (1024 * 1024)
+      let maxDimension = 2048
+      let quality = 0.8
+      
+      // More aggressive settings for larger files
+      if (originalSizeMB > 15) {
+        maxDimension = 1536 // Smaller dimensions
+        quality = 0.6 // Lower quality
+      } else if (originalSizeMB > 10) {
+        maxDimension = 1792
+        quality = 0.7
+      }
+      
+      // Scale down dimensions
       if (width > maxDimension || height > maxDimension) {
         if (width > height) {
           height = (height * maxDimension) / width
@@ -81,11 +95,53 @@ const compressImage = async (file: File): Promise<File> => {
             type: 'image/jpeg',
             lastModified: Date.now()
           })
-          resolve(compressedFile)
+          
+          console.log(`Compression result: ${(file.size / (1024 * 1024)).toFixed(2)}MB -> ${(compressedFile.size / (1024 * 1024)).toFixed(2)}MB`)
+          
+          // If still too large, try even more aggressive compression
+          if (compressedFile.size > 8 * 1024 * 1024) { // Still > 8MB
+            console.log('Still too large, applying secondary compression...')
+            // Create smaller canvas for secondary compression
+            const smallerCanvas = document.createElement('canvas')
+            const smallerCtx = smallerCanvas.getContext('2d')!
+            
+            const secondaryMaxDimension = 1024
+            let newWidth = width
+            let newHeight = height
+            
+            if (width > secondaryMaxDimension || height > secondaryMaxDimension) {
+              if (width > height) {
+                newHeight = (height * secondaryMaxDimension) / width
+                newWidth = secondaryMaxDimension
+              } else {
+                newWidth = (width * secondaryMaxDimension) / height
+                newHeight = secondaryMaxDimension
+              }
+            }
+            
+            smallerCanvas.width = newWidth
+            smallerCanvas.height = newHeight
+            smallerCtx.drawImage(img, 0, 0, newWidth, newHeight)
+            
+            smallerCanvas.toBlob((secondBlob) => {
+              if (secondBlob) {
+                const finalFile = new File([secondBlob], file.name, {
+                  type: 'image/jpeg',
+                  lastModified: Date.now()
+                })
+                console.log(`Final compression: ${(finalFile.size / (1024 * 1024)).toFixed(2)}MB`)
+                resolve(finalFile)
+              } else {
+                resolve(compressedFile)
+              }
+            }, 'image/jpeg', 0.5) // Very aggressive quality
+          } else {
+            resolve(compressedFile)
+          }
         } else {
           resolve(file) // Fallback to original if compression fails
         }
-      }, 'image/jpeg', 0.8) // 80% quality
+      }, 'image/jpeg', quality)
     }
     
     img.src = URL.createObjectURL(file)
@@ -173,7 +229,7 @@ export function StageItForm() {
       }
       
       // Check if file is too large and needs compression
-      const maxUploadSize = 10 * 1024 * 1024 // 10MB server limit
+      const maxUploadSize = 8 * 1024 * 1024 // 8MB server limit (more conservative)
       let processedFile = file
       
       if (file.size > maxUploadSize) {
@@ -221,7 +277,7 @@ export function StageItForm() {
       }
       
       // Check if file is too large and needs compression
-      const maxUploadSize = 10 * 1024 * 1024 // 10MB server limit
+      const maxUploadSize = 8 * 1024 * 1024 // 8MB server limit (more conservative)
       let processedFile = file
       
       if (file.size > maxUploadSize) {
@@ -319,7 +375,7 @@ export function StageItForm() {
         if (!response.ok) {
           // Handle specific HTTP error codes
           if (response.status === 413) {
-            throw new Error('Image file is too large. Please use an image smaller than 10MB or try compressing your image.')
+            throw new Error('Image file is too large. Please use an image smaller than 8MB or try compressing your image.')
           }
           
           // Try to get detailed error information
