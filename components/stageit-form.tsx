@@ -47,6 +47,51 @@ interface StagingResult {
   createdAt: Date
 }
 
+// Image compression function (moved outside component to avoid dependency issues)
+const compressImage = async (file: File): Promise<File> => {
+  return new Promise((resolve) => {
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')!
+    const img = new Image()
+    
+    img.onload = () => {
+      // Calculate new dimensions (max 2048x2048 for staging)
+      let { width, height } = img
+      const maxDimension = 2048
+      
+      if (width > maxDimension || height > maxDimension) {
+        if (width > height) {
+          height = (height * maxDimension) / width
+          width = maxDimension
+        } else {
+          width = (width * maxDimension) / height
+          height = maxDimension
+        }
+      }
+      
+      canvas.width = width
+      canvas.height = height
+      
+      // Draw and compress
+      ctx.drawImage(img, 0, 0, width, height)
+      
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const compressedFile = new File([blob], file.name, {
+            type: 'image/jpeg',
+            lastModified: Date.now()
+          })
+          resolve(compressedFile)
+        } else {
+          resolve(file) // Fallback to original if compression fails
+        }
+      }, 'image/jpeg', 0.8) // 80% quality
+    }
+    
+    img.src = URL.createObjectURL(file)
+  })
+}
+
 export function StageItForm() {
   const [currentStep, setCurrentStep] = useState<'upload' | 'configure' | 'process' | 'results'>('upload')
   const [imageFile, setImageFile] = useState<File | null>(null)
@@ -206,7 +251,7 @@ export function StageItForm() {
       setImageName(file.name.replace(/\.[^/.]+$/, ''))
       setCurrentStep('configure')
     }
-  }, [compressImage])
+  }, [])
 
   // Update staging request
   const updateStagingRequest = (updates: Partial<StagingRequest>) => {
