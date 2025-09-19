@@ -50,7 +50,7 @@ interface LeadContact {
   }
 }
 
-function LeadHubDashboard({ fubStatus, userEmail }: { fubStatus: FUBStatus, userEmail: string }) {
+function LeadHubDashboard({ fubStatus, userEmail, user }: { fubStatus: FUBStatus, userEmail: string, user: any }) {
   const [contacts, setContacts] = useState<LeadContact[]>([])
   const [isLoadingContacts, setIsLoadingContacts] = useState(true)
   const [filterStage, setFilterStage] = useState<string>('all')
@@ -1210,5 +1210,5 @@ export default function LeadHubPage() {
   }
 
   // Connected to FUB - show full dashboard
-  return <LeadHubDashboard fubStatus={fubStatus} userEmail={user?.email || ''} />
+  return <LeadHubDashboard fubStatus={fubStatus} userEmail={user?.email || ''} user={user} />
 }
