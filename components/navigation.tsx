@@ -584,7 +584,7 @@ export default function Navigation() {
 
         {/* Mobile Navigation */}
         {mobileMenuOpen && (
-          <div className="lg:hidden py-4 border-t">
+          <div className="lg:hidden py-4 border-t max-h-[calc(100vh-80px)] overflow-y-auto mobile-nav-scroll">
             <div className="space-y-2">
               {filteredNavigationItems.map(
                 (item) =>
@@ -638,8 +638,17 @@ export default function Navigation() {
                       {/* Mobile Submenu */}
                       {activeSubmenu === item.title && item.submenu && item.submenu.length > 0 && (
                         <div
-                          className={`pl-4 space-y-1 mt-1 ${item.submenu.length > 8 ? "max-h-80 overflow-y-auto" : ""}`}
+                          className={`pl-4 space-y-1 mt-1 relative ${
+                            item.submenu.length > 6 
+                              ? "max-h-64 overflow-y-auto border-l-2 border-gray-200 bg-gray-50 rounded-r-md scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 mobile-nav-scroll" 
+                              : ""
+                          }`}
                         >
+                          {item.submenu.length > 6 && (
+                            <div className="sticky top-0 text-center py-1 bg-gray-50 text-xs text-gray-500 border-b border-gray-200">
+                              ↕ Scroll for more options
+                            </div>
+                          )}
                           {item.submenu.map((subItem) =>
                             subItem.isHeader ? (
                               <div
