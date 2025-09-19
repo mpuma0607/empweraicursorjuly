@@ -313,29 +313,37 @@ function LeadHubDashboard({ fubStatus, userEmail }: { fubStatus: FUBStatus, user
     try {
       setIsGenerating(true)
 
-      // Get agent data for signature
-      const agentName = fubStatus.user?.name || 'Your Agent'
-      const brokerageName = 'Your Brokerage'
+      // Get agent data for signature with debugging
+      console.log('FUB Status for signature:', fubStatus)
+      console.log('User email for signature:', userEmail)
+      console.log('MemberSpace user for signature:', user)
+      
+      // Try multiple sources for agent name
+      const agentName = fubStatus.user?.name || user?.name || user?.email?.split('@')[0] || 'Your Agent'
+      const brokerageName = 'Your Brokerage' // Could be enhanced later with branding profile
       const agentPhone = fubStatus.user?.phone || 'Your Phone'
       
-      // Try to generate a proper signature using the API
-      let generatedSignature = `Best regards,\n${agentName}\n${brokerageName}\n${agentPhone} | ${userEmail}`
+      console.log('Agent data:', { agentName, brokerageName, agentPhone, userEmail })
       
-      try {
-        const sigResponse = await fetch('/api/generate-signature', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userEmail })
-        })
-        
-        if (sigResponse.ok) {
-          const sigData = await sigResponse.json()
-          generatedSignature = sigData.signature
-          console.log('Generated signature:', generatedSignature)
-        }
-      } catch (error) {
-        console.log('Could not generate signature, using fallback:', error)
+      // Generate signature directly from available FUB data (more reliable than API)
+      let generatedSignature = `Best regards,\n${agentName}`
+      
+      // Add brokerage if we have it
+      if (brokerageName && brokerageName !== 'Your Brokerage') {
+        generatedSignature += `\n${brokerageName}`
       }
+      
+      // Add phone if we have it
+      if (agentPhone && agentPhone !== 'Your Phone') {
+        generatedSignature += `\n${agentPhone}`
+      }
+      
+      // Always add email
+      if (userEmail) {
+        generatedSignature += `\n${userEmail}`
+      }
+      
+      console.log('Generated signature from FUB data:', generatedSignature)
       
       // Create the follow-up template with merge fields (signature pre-populated)
       const template = {
