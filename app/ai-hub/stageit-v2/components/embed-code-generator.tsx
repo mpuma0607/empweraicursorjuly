@@ -71,20 +71,150 @@ export default function EmbedCodeGenerator({
         
         .staging-widget {
             width: ${width}px;
-            height: ${height}px;
             margin: 0 auto;
             background: white;
             border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.1);
             overflow: hidden;
-            position: relative;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
         
-        .image-container {
+        .results-section {
+            padding: 24px;
+        }
+        
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .section-description {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+        
+        .styles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .style-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .style-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .style-card.selected {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+        
+        .style-image {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            background: #f3f4f6;
+        }
+        
+        .style-content {
+            padding: 12px;
+        }
+        
+        .style-name {
+            font-weight: 500;
+            font-size: 14px;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+        
+        .style-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .action-button {
+            flex: 1;
+            padding: 6px 8px;
+            border: 1px solid #d1d5db;
+            background: white;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+        
+        .action-button:hover {
+            background: #f9fafb;
+            border-color: #9ca3af;
+        }
+        
+        .action-button.primary {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+        
+        .action-button.primary:hover {
+            background: #2563eb;
+        }
+        
+        .comparison-section {
+            background: #f9fafb;
+            border-radius: 8px;
+            padding: 24px;
+            margin-top: 24px;
+        }
+        
+        .comparison-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .comparison-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .comparison-description {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        
+        .image-comparison {
             position: relative;
             width: 100%;
-            height: 70%;
+            height: 300px;
+            border-radius: 8px;
             overflow: hidden;
+            background: #f3f4f6;
         }
         
         .image-layer {
@@ -110,93 +240,47 @@ export default function EmbedCodeGenerator({
             opacity: 1;
         }
         
-        .style-selector {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            z-index: 10;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        
-        .style-button {
-            padding: 8px 12px;
-            background: ${theme === 'dark' ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.9)'};
-            color: ${theme === 'dark' ? 'white' : 'black'};
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: 500;
-            transition: all 0.2s ease;
-            backdrop-filter: blur(10px);
-        }
-        
-        .style-button:hover {
-            background: ${theme === 'dark' ? 'rgba(0,0,0,0.9)' : 'rgba(255,255,255,1)'};
-            transform: translateY(-1px);
-        }
-        
-        .style-button.active {
-            background: #3b82f6;
-            color: white;
-        }
-        
         .slider-container {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            right: 20px;
-            z-index: 10;
+            margin-top: 20px;
         }
         
         .slider {
             width: 100%;
-            height: 4px;
-            background: ${theme === 'dark' ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'};
-            border-radius: 2px;
+            height: 6px;
+            border-radius: 3px;
+            background: #d1d5db;
             outline: none;
             cursor: pointer;
+            -webkit-appearance: none;
         }
         
         .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
             appearance: none;
             width: 20px;
             height: 20px;
-            background: #3b82f6;
             border-radius: 50%;
+            background: #3b82f6;
             cursor: pointer;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
         }
         
         .slider::-moz-range-thumb {
             width: 20px;
             height: 20px;
-            background: #3b82f6;
             border-radius: 50%;
+            background: #3b82f6;
             cursor: pointer;
             border: none;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
         }
         
-        .labels {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            z-index: 10;
+        .slider-labels {
             display: flex;
-            gap: 12px;
-        }
-        
-        .label {
-            padding: 6px 12px;
-            background: ${theme === 'dark' ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.9)'};
-            color: ${theme === 'dark' ? 'white' : 'black'};
-            border-radius: 4px;
+            justify-content: space-between;
+            margin-top: 8px;
             font-size: 12px;
-            font-weight: 500;
-            backdrop-filter: blur(10px);
+            color: #6b7280;
         }
         
         @media (max-width: 768px) {
@@ -205,62 +289,96 @@ export default function EmbedCodeGenerator({
                 max-width: ${width}px;
             }
             
-            .styles-grid {
-                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-                gap: 10px;
+            .results-section {
+                padding: 16px;
             }
             
-            .style-card {
-                padding: 15px;
+            .styles-grid {
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+                gap: 12px;
+            }
+            
+            .style-image {
+                height: 100px;
+            }
+            
+            .style-content {
+                padding: 8px;
+            }
+            
+            .style-name {
+                font-size: 12px;
+            }
+            
+            .action-button {
+                font-size: 11px;
+                padding: 4px 6px;
+            }
+            
+            .comparison-section {
+                padding: 16px;
+            }
+            
+            .image-comparison {
+                height: 250px;
             }
         }
     </style>
 </head>
 <body>
     <div class="staging-widget">
-        <div class="image-container">
-            ${images.map((image, index) => `
-                <img 
-                    src="${imageDataUrls[image.style] || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIFBsYWNlaG9sZGVyPC90ZXh0Pjwvc3ZnPg=='}" 
-                    alt="${image.name}" 
-                    class="image-layer ${image.isOriginal ? 'original-image' : 'staged-image'}"
-                    data-style="${image.style}"
-                    ${image.isOriginal ? 'id="original"' : ''}
-                />
-            `).join('')}
-            
-            ${showLabels ? `
-                <div class="labels">
-                    <div class="label" id="original-label">Original</div>
-                    <div class="label" id="staged-label">Staged</div>
-                </div>
-            ` : ''}
-            
-            <div class="style-selector">
-                ${images.filter(img => !img.isOriginal).map((image, index) => `
-                    <button 
-                        class="style-button ${index === 0 ? 'active' : ''}" 
-                        data-style="${image.style}"
-                        onclick="selectStyle('${image.style}')"
-                    >
-                        ${image.name}
-                    </button>
-                `).join('')}
+        <!-- Staging Results Section -->
+        <div class="results-section">
+            <div class="section-header">
+                <div class="section-title">Staging Results</div>
+            </div>
+            <div class="section-description">
+                All 8 styles have been generated. Click "View" on any style to test the slider comparison.
             </div>
             
-            ${showControls ? `
-                <div class="slider-container">
-                    <input 
-                        type="range" 
-                        min="0" 
-                        max="100" 
-                        value="0" 
-                        class="slider" 
-                        id="comparison-slider"
-                        oninput="updateComparison(this.value)"
-                    />
+            <div class="styles-grid">
+                ${images.map(img => `
+                    <div class="style-card ${img.style === currentStyle ? 'selected' : ''}" data-style="${img.style}">
+                        <img class="style-image" src="${imageDataUrls[img.style] || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIFBsYWNlaG9sZGVyPC90ZXh0Pjwvc3ZnPg=='}" alt="${img.name}" />
+                        <div class="style-content">
+                            <div class="style-name">${img.name}</div>
+                            <div class="style-actions">
+                                <button class="action-button primary" onclick="selectStyle('${img.style}')">
+                                    👁️ View
+                                </button>
+                                <button class="action-button" onclick="downloadImage('${img.style}')">
+                                    💾 Save
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+        
+        <!-- Interactive Comparison Section -->
+        <div class="comparison-section">
+            <div class="comparison-header">
+                <div class="comparison-title">Interactive Comparison</div>
+            </div>
+            <div class="comparison-description">
+                Drag the slider to compare the original photo with the <span id="current-style-name">${images.find(img => !img.isOriginal)?.name || 'staged'}</span> staging.
+            </div>
+            
+            <div class="image-comparison">
+                <img id="original" class="image-layer original-image" src="${originalImageDataUrl}" alt="Original" />
+                ${images.filter(img => !img.isOriginal).map(img => 
+                    `<img data-style="${img.style}" class="image-layer staged-image ${img.style === currentStyle ? 'active' : ''}" src="${imageDataUrls[img.style]}" alt="${img.name}" />`
+                ).join('')}
+            </div>
+            
+            <div class="slider-container">
+                <input type="range" id="comparison-slider" class="slider" min="0" max="100" value="0" oninput="updateComparison(this.value)" />
+                <div class="slider-labels">
+                    <span>Original</span>
+                    <span id="staged-label">${images.find(img => !img.isOriginal)?.name || 'Staged'}</span>
                 </div>
-            ` : ''}
+            </div>
         </div>
     </div>
 
@@ -270,11 +388,11 @@ export default function EmbedCodeGenerator({
         let stagedImage = document.querySelector(\`[data-style="\${currentStyle}"]\`);
         
         function selectStyle(style) {
-            // Update active button
-            document.querySelectorAll('.style-button').forEach(btn => {
-                btn.classList.remove('active');
+            // Update selected card
+            document.querySelectorAll('.style-card').forEach(card => {
+                card.classList.remove('selected');
             });
-            document.querySelector(\`[data-style="\${style}"]\`).classList.add('active');
+            document.querySelector(\`[data-style="\${style}"]\`).classList.add('selected');
             
             // Update staged image
             if (stagedImage) stagedImage.classList.remove('active');
@@ -290,10 +408,14 @@ export default function EmbedCodeGenerator({
                 updateComparison(0);
             }
             
-            // Update staged label
+            // Update staged label and current style name
             const stagedLabel = document.getElementById('staged-label');
+            const currentStyleName = document.getElementById('current-style-name');
             if (stagedLabel) {
                 stagedLabel.textContent = style.charAt(0).toUpperCase() + style.slice(1);
+            }
+            if (currentStyleName) {
+                currentStyleName.textContent = style.charAt(0).toUpperCase() + style.slice(1);
             }
         }
         
@@ -301,6 +423,21 @@ export default function EmbedCodeGenerator({
             if (originalImage && stagedImage) {
                 const opacity = value / 100;
                 stagedImage.style.opacity = opacity;
+            }
+        }
+        
+        function downloadImage(style) {
+            const imageDataUrls = {
+                ${images.filter(img => !img.isOriginal).map(img => `'${img.style}': '${imageDataUrls[img.style]}'`).join(',\n                ')}
+            };
+            const imageDataUrl = imageDataUrls[style];
+            if (imageDataUrl) {
+                const link = document.createElement('a');
+                link.href = imageDataUrl;
+                link.download = \`\${style}-staged.png\`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
             }
         }
         
