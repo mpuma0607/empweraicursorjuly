@@ -38,22 +38,8 @@ export default function EmbedCodeGenerator({
   const [generatedCode, setGeneratedCode] = useState<string>('')
   const [isGenerating, setIsGenerating] = useState(false)
 
-  const generateEmbedCode = async () => {
+  const generateEmbedCode = () => {
     const { width, height, theme, showLabels, showControls, autoPlay } = widgetConfig
-    
-    // Convert images to data URLs for embed
-    const imageDataUrls: {[key: string]: string} = {}
-    
-    for (const image of images) {
-      if (image.blob) {
-        const dataUrl = await new Promise<string>((resolve) => {
-          const reader = new FileReader()
-          reader.onload = () => resolve(reader.result as string)
-          reader.readAsDataURL(image.blob!)
-        })
-        imageDataUrls[image.style] = dataUrl
-      }
-    }
     
     const htmlCode = `<!DOCTYPE html>
 <html lang="en">
@@ -225,13 +211,18 @@ export default function EmbedCodeGenerator({
     <div class="staging-widget">
         <div class="staging-container">
             ${images.map((image, index) => `
-                <img 
-                    src="${imageDataUrls[image.style] || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIFBsYWNlaG9sZGVyPC90ZXh0Pjwvc3ZnPg=='}" 
-                    alt="${image.name}" 
+                <div 
                     class="image-layer ${image.isOriginal ? 'original-image' : 'staged-image'}"
                     data-style="${image.style}"
                     ${image.isOriginal ? 'id="original"' : ''}
-                />
+                    style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); display: flex; align-items: center; justify-content: center; color: #666; font-size: 16px; font-weight: 500;"
+                >
+                    <div style="text-align: center;">
+                        <div style="font-size: 24px; margin-bottom: 8px;">🏠</div>
+                        <div>${image.name}</div>
+                        <div style="font-size: 12px; margin-top: 4px; opacity: 0.7;">Click to view</div>
+                    </div>
+                </div>
             `).join('')}
             
             ${showLabels ? `
@@ -302,6 +293,16 @@ export default function EmbedCodeGenerator({
             }
         }
         
+        // Add click handlers to show style information
+        document.querySelectorAll('.image-layer').forEach(layer => {
+            layer.addEventListener('click', function() {
+                const style = this.getAttribute('data-style');
+                if (style && style !== 'original') {
+                    selectStyle(style);
+                }
+            });
+        });
+        
         // Initialize
         if (stagedImage) {
             stagedImage.classList.add('active');
@@ -324,10 +325,10 @@ export default function EmbedCodeGenerator({
     return htmlCode
   }
 
-  const generateCode = async () => {
+  const generateCode = () => {
     setIsGenerating(true)
     try {
-      const code = await generateEmbedCode()
+      const code = generateEmbedCode()
       setGeneratedCode(code)
     } catch (error) {
       console.error('Error generating code:', error)
@@ -339,7 +340,7 @@ export default function EmbedCodeGenerator({
 
   const handleCopy = async () => {
     if (!generatedCode) {
-      await generateCode()
+      generateCode()
       return
     }
     await navigator.clipboard.writeText(generatedCode)
@@ -347,9 +348,9 @@ export default function EmbedCodeGenerator({
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const handleDownload = async () => {
+  const handleDownload = () => {
     if (!generatedCode) {
-      await generateCode()
+      generateCode()
       return
     }
     const blob = new Blob([generatedCode], { type: 'text/html' })
