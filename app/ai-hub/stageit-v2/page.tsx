@@ -42,6 +42,7 @@ interface StagedImage {
   name: string
   url: string
   isOriginal?: boolean
+  blob?: Blob
 }
 
 export default function StageITV2Page() {
@@ -111,19 +112,16 @@ export default function StageITV2Page() {
             throw new Error(`API error: ${response.status}`)
           }
 
-          // Convert response to data URL for embed compatibility
+          // Convert response to blob URL for display, but we'll handle embed differently
           const blob = await response.blob()
-          const dataUrl = await new Promise<string>((resolve) => {
-            const reader = new FileReader()
-            reader.onload = () => resolve(reader.result as string)
-            reader.readAsDataURL(blob)
-          })
+          const imageUrl = URL.createObjectURL(blob)
           
           results.push({
             style: style.id,
             name: style.name,
-            url: dataUrl,
-            isOriginal: false
+            url: imageUrl,
+            isOriginal: false,
+            blob: blob // Store the blob for embed code generation
           })
           
           setProcessingStatus(prev => ({ ...prev, [style.id]: 'completed' }))
@@ -143,18 +141,14 @@ export default function StageITV2Page() {
         }
       }
 
-      // Add original image as data URL
-      const originalDataUrl = await new Promise<string>((resolve) => {
-        const reader = new FileReader()
-        reader.onload = () => resolve(reader.result as string)
-        reader.readAsDataURL(uploadedImage)
-      })
-      
+      // Add original image
+      const originalUrl = URL.createObjectURL(uploadedImage)
       results.push({
         style: 'original',
         name: 'Original',
-        url: originalDataUrl,
-        isOriginal: true
+        url: originalUrl,
+        isOriginal: true,
+        blob: uploadedImage
       })
 
       setStagedImages(results)

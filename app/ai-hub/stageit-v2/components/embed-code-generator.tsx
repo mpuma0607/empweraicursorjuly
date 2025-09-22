@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Copy, Check, Code, Eye, Download } from "lucide-react"
+import { Copy, Check, Code, Eye, Download, Loader2 } from "lucide-react"
 
 interface StagedImage {
   style: string
@@ -35,9 +35,25 @@ export default function EmbedCodeGenerator({
   })
   const [copied, setCopied] = useState(false)
   const [previewMode, setPreviewMode] = useState(false)
+  const [generatedCode, setGeneratedCode] = useState<string>('')
+  const [isGenerating, setIsGenerating] = useState(false)
 
-  const generateEmbedCode = () => {
+  const generateEmbedCode = async () => {
     const { width, height, theme, showLabels, showControls, autoPlay } = widgetConfig
+    
+    // Convert images to data URLs for embed
+    const imageDataUrls: {[key: string]: string} = {}
+    
+    for (const image of images) {
+      if (image.blob) {
+        const dataUrl = await new Promise<string>((resolve) => {
+          const reader = new FileReader()
+          reader.onload = () => resolve(reader.result as string)
+          reader.readAsDataURL(image.blob!)
+        })
+        imageDataUrls[image.style] = dataUrl
+      }
+    }
     
     const htmlCode = `<!DOCTYPE html>
 <html lang="en">
@@ -210,7 +226,7 @@ export default function EmbedCodeGenerator({
         <div class="staging-container">
             ${images.map((image, index) => `
                 <img 
-                    src="${image.url}" 
+                    src="${imageDataUrls[image.style] || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIFBsYWNlaG9sZGVyPC90ZXh0Pjwvc3ZnPg=='}" 
                     alt="${image.name}" 
                     class="image-layer ${image.isOriginal ? 'original-image' : 'staged-image'}"
                     data-style="${image.style}"
@@ -308,16 +324,35 @@ export default function EmbedCodeGenerator({
     return htmlCode
   }
 
+  const generateCode = async () => {
+    setIsGenerating(true)
+    try {
+      const code = await generateEmbedCode()
+      setGeneratedCode(code)
+    } catch (error) {
+      console.error('Error generating code:', error)
+      setGeneratedCode('Error generating embed code')
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
   const handleCopy = async () => {
-    const code = generateEmbedCode()
-    await navigator.clipboard.writeText(code)
+    if (!generatedCode) {
+      await generateCode()
+      return
+    }
+    await navigator.clipboard.writeText(generatedCode)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const handleDownload = () => {
-    const code = generateEmbedCode()
-    const blob = new Blob([code], { type: 'text/html' })
+  const handleDownload = async () => {
+    if (!generatedCode) {
+      await generateCode()
+      return
+    }
+    const blob = new Blob([generatedCode], { type: 'text/html' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
@@ -420,7 +455,26 @@ export default function EmbedCodeGenerator({
               <Button
                 size="sm"
                 variant="outline"
+                onClick={generateCode}
+                disabled={isGenerating}
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Code className="w-4 h-4 mr-1" />
+                    Generate Code
+                  </>
+                )}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
                 onClick={() => setPreviewMode(!previewMode)}
+                disabled={!generatedCode}
               >
                 <Eye className="w-4 h-4 mr-1" />
                 {previewMode ? 'Hide' : 'Preview'}
@@ -429,6 +483,7 @@ export default function EmbedCodeGenerator({
                 size="sm"
                 variant="outline"
                 onClick={handleDownload}
+                disabled={!generatedCode}
               >
                 <Download className="w-4 h-4 mr-1" />
                 Download
@@ -436,7 +491,7 @@ export default function EmbedCodeGenerator({
               <Button
                 size="sm"
                 onClick={handleCopy}
-                disabled={copied}
+                disabled={copied || !generatedCode}
               >
                 {copied ? (
                   <>
@@ -483,7 +538,7 @@ export default function EmbedCodeGenerator({
             </div>
           ) : (
             <Textarea
-              value={generateEmbedCode()}
+              value={generatedCode || "Click 'Generate Code' to create the embed code with images..."}
               readOnly
               className="font-mono text-xs h-96 resize-none"
             />
