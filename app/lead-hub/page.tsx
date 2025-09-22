@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Loader2, Users, Zap, Home, Activity, ArrowRight, Database, Filter, Mail, FileText, Clock, MapPin, Phone, X, Download, RefreshCw, Edit } from 'lucide-react'
 import { useMemberSpaceUser } from '@/hooks/use-memberspace-user'
 import EmailCompositionModal from '@/components/email-composition-modal'
+import ScriptGenerationForm from '@/components/lead-script-form'
 import Link from 'next/link'
 
 interface FUBStatus {
@@ -86,6 +87,10 @@ function LeadHubDashboard({ fubStatus, userEmail, user }: { fubStatus: FUBStatus
   const [activityType, setActivityType] = useState('email')
   const [activityNotes, setActivityNotes] = useState('')
   const [isLoggingActivity, setIsLoggingActivity] = useState(false)
+  
+  // Script generation modal state
+  const [isScriptModalOpen, setIsScriptModalOpen] = useState(false)
+  const [selectedContactForScript, setSelectedContactForScript] = useState<LeadContact | null>(null)
 
   // Load contacts from Follow Up Boss
   useEffect(() => {
@@ -580,6 +585,12 @@ ${generatedSignature}`
     setActivityNotes('')
     setIsActivityModalOpen(true)
   }
+  
+  // Open script generation modal
+  const openScriptModal = (contact: LeadContact) => {
+    setSelectedContactForScript(contact)
+    setIsScriptModalOpen(true)
+  }
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
@@ -834,6 +845,14 @@ ${generatedSignature}`
                         <Phone className="w-3 h-3" />
                         Log
                       </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => openScriptModal(contact)}
+                      >
+                        <FileText className="w-3 h-3" />
+                        Script
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -1074,6 +1093,35 @@ ${generatedSignature}`
                   </Button>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Script Generation Modal */}
+      {isScriptModalOpen && selectedContactForScript && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-4xl max-h-[90vh] overflow-hidden">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                Generate Phone/SMS Script for {selectedContactForScript.name}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsScriptModalOpen(false)}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="overflow-y-auto max-h-[calc(90vh-120px)]">
+              <ScriptGenerationForm 
+                contact={selectedContactForScript}
+                onClose={() => setIsScriptModalOpen(false)}
+                userEmail={userEmail}
+                fubStatus={fubStatus}
+                user={user}
+              />
             </CardContent>
           </Card>
         </div>
