@@ -134,7 +134,14 @@ export default function EmailCompositionModal({
   // Generate signature using the API
   const generateSignature = async () => {
     try {
-      if (!user?.email) return
+      // Use user email if available, otherwise use agentName as fallback
+      const emailToUse = user?.email || agentName
+      
+      if (!emailToUse) {
+        // Final fallback to basic signature
+        setSignature(`Best regards,\n${agentName}\n${brokerageName}`)
+        return
+      }
       
       const response = await fetch('/api/generate-signature', {
         method: 'POST',
@@ -142,7 +149,7 @@ export default function EmailCompositionModal({
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          userEmail: user.email
+          userEmail: emailToUse
         })
       })
       
