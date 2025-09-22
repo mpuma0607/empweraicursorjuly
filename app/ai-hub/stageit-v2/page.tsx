@@ -54,6 +54,7 @@ export default function StageITV2Page() {
   const [selectedStyle, setSelectedStyle] = useState<string>('')
   const [showSlider, setShowSlider] = useState(false)
   const [showEmbedCode, setShowEmbedCode] = useState(false)
+  const [processingStatus, setProcessingStatus] = useState<{[key: string]: 'pending' | 'processing' | 'completed' | 'failed'}>({})
 
   const handleImageUpload = (file: File) => {
     setUploadedImage(file)
@@ -69,61 +70,98 @@ export default function StageITV2Page() {
     setIsProcessing(true)
     setProcessingProgress(0)
     setStagedImages([])
+    setProcessingStatus({})
 
     try {
-      // Create form data for API call
-      const formData = new FormData()
-      formData.append('image', uploadedImage)
-      formData.append('roomType', roomType)
-      formData.append('userEmail', user?.email || '')
-
-      // Simulate progress updates during processing
+      console.log('Starting batch staging - processing each style individually...')
+      
+      // Process each style one by one, just like the original StageIT
+      const results: StagedImage[] = []
       const totalStyles = STAGING_STYLES.length
-      const progressInterval = setInterval(() => {
-        setProcessingProgress(prev => {
-          if (prev >= 90) {
-            clearInterval(progressInterval)
-            return 90 // Leave 10% for completion
-          }
-          return prev + (90 / (totalStyles * 10)) // Gradual progress to 90%
-        })
-      }, 200)
+      
+      for (let i = 0; i < STAGING_STYLES.length; i++) {
+        const style = STAGING_STYLES[i]
+        
+        // Update status
+        setProcessingStatus(prev => ({ ...prev, [style.id]: 'processing' }))
+        setProcessingProgress((i / totalStyles) * 100)
+        
+        try {
+          console.log(`Processing style ${i + 1}/${totalStyles}: ${style.name}`)
+          
+          // Create form data for each individual API call (same as original StageIT)
+          const formData = new FormData()
+          formData.append('image', uploadedImage)
+          formData.append('roomType', roomType)
+          formData.append('style', style.name)
+          formData.append('colors', '')
+          formData.append('notes', '')
+          formData.append('size', '1024x1024')
 
-      // Call the batch staging API
-      const response = await fetch('/api/stageit-v2/batch-staging', {
-        method: 'POST',
-        body: formData
+          // Call the original StageIT API for each style
+          const response = await fetch('/api/stage-it', {
+            method: 'POST',
+            body: formData
+          })
+
+          if (!response.ok) {
+            if (response.status === 413) {
+              throw new Error('Image file is too large. Please use an image smaller than 8MB or try compressing your image.')
+            }
+            throw new Error(`API error: ${response.status}`)
+          }
+
+          // Convert response to blob URL (same as original StageIT)
+          const blob = await response.blob()
+          const imageUrl = URL.createObjectURL(blob)
+          
+          results.push({
+            style: style.id,
+            name: style.name,
+            url: imageUrl,
+            isOriginal: false
+          })
+          
+          setProcessingStatus(prev => ({ ...prev, [style.id]: 'completed' }))
+          console.log(`Successfully processed ${style.name}`)
+          
+        } catch (error) {
+          console.error(`Error processing ${style.name}:`, error)
+          setProcessingStatus(prev => ({ ...prev, [style.id]: 'failed' }))
+          
+          // Add failed result
+          results.push({
+            style: style.id,
+            name: style.name,
+            url: '',
+            isOriginal: false
+          })
+        }
+      }
+
+      // Add original image
+      const originalUrl = URL.createObjectURL(uploadedImage)
+      results.push({
+        style: 'original',
+        name: 'Original',
+        url: originalUrl,
+        isOriginal: true
       })
 
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status}`)
-      }
-
-      const data = await response.json()
-      
-      // Clear progress interval
-      clearInterval(progressInterval)
+      setStagedImages(results)
+      setSelectedStyle('modern')
       setProcessingProgress(100)
-
-      if (data.success) {
-        // Transform API results to our format
-        const transformedResults: StagedImage[] = data.results.map((result: any) => ({
-          style: result.style,
-          name: result.name,
-          url: result.url,
-          isOriginal: result.isOriginal || false
-        }))
-
-        setStagedImages(transformedResults)
-        setSelectedStyle('modern')
-        
-        console.log(`Batch staging completed: ${data.stats.successful}/${data.stats.total} styles successful`)
-      } else {
-        throw new Error(data.error || 'Unknown error')
+      
+      const successfulCount = results.filter(r => r.url && !r.isOriginal).length
+      console.log(`Batch staging completed: ${successfulCount}/${totalStyles} styles successful`)
+      
+      if (successfulCount < totalStyles) {
+        const failedStyles = results.filter(r => !r.url && !r.isOriginal).map(r => r.name).join(', ')
+        alert(`Warning: ${totalStyles - successfulCount} styles failed to process: ${failedStyles}`)
       }
+      
     } catch (error) {
       console.error('Error processing batch staging:', error)
-      // Show error to user
       alert(`Error: ${error instanceof Error ? error.message : 'Failed to process staging'}`)
     } finally {
       setIsProcessing(false)
@@ -198,11 +236,19 @@ export default function StageITV2Page() {
                 {STAGING_STYLES.map((style) => (
                   <div key={style.id} className="flex items-center gap-2">
                     <div className={`w-2 h-2 rounded-full ${
-                      processingProgress > (STAGING_STYLES.indexOf(style) + 1) * 12.5 
+                      processingStatus[style.id] === 'completed' 
                         ? 'bg-green-500' 
+                        : processingStatus[style.id] === 'processing'
+                        ? 'bg-blue-500 animate-pulse'
+                        : processingStatus[style.id] === 'failed'
+                        ? 'bg-red-500'
                         : 'bg-gray-300'
                     }`} />
-                    <span>{style.name}</span>
+                    <span className={processingStatus[style.id] === 'failed' ? 'text-red-600' : ''}>
+                      {style.name}
+                      {processingStatus[style.id] === 'processing' && ' (processing...)'}
+                      {processingStatus[style.id] === 'failed' && ' (failed)'}
+                    </span>
                   </div>
                 ))}
               </div>
