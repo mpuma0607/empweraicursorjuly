@@ -65,10 +65,14 @@ export async function POST(request: NextRequest) {
 
     console.log(`Starting batch staging for ${roomType} - ${STAGING_STYLES.length} styles`)
 
-    // Process all styles in parallel
+    // Process all styles with staggered delays to avoid rate limiting
     const stagingPromises = STAGING_STYLES.map(async (style, index) => {
+      // Add a small delay between requests to avoid rate limiting
+      await new Promise(resolve => setTimeout(resolve, index * 1000))
       try {
         console.log(`Processing style ${index + 1}/${STAGING_STYLES.length}: ${style.name}`)
+        console.log(`Image buffer size: ${imageBuffer.byteLength} bytes`)
+        console.log(`Room type: ${roomType}`)
         
         // Use the same API format as original StageIT
         const aiForm = new FormData()
@@ -77,20 +81,37 @@ export async function POST(request: NextRequest) {
         aiForm.append("size", "1024x1024")
         aiForm.append("image", imageBuffer, "image.png")
 
+        console.log(`Sending request to OpenAI for ${style.name}...`)
         const aiRes = await fetch("https://api.openai.com/v1/images/edits", {
           method: "POST",
           headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
           body: aiForm,
         })
 
+        console.log(`OpenAI response for ${style.name}: ${aiRes.status} ${aiRes.statusText}`)
+
         if (!aiRes.ok) {
-          const errorDetails = await aiRes.json().catch(() => ({ error: { message: `OpenAI error ${aiRes.status}` } }))
-          throw new Error(errorDetails?.error?.message || `OpenAI error ${aiRes.status}`)
+          let errorDetails
+          try {
+            errorDetails = await aiRes.json()
+            console.error(`OpenAI error for ${style.name}:`, errorDetails)
+          } catch (jsonError) {
+            const errorText = await aiRes.text()
+            console.error(`OpenAI text error for ${style.name}:`, errorText)
+            errorDetails = { text: errorText }
+          }
+          throw new Error(errorDetails?.error?.message || errorDetails?.text || `OpenAI error ${aiRes.status}`)
         }
 
         const json = await aiRes.json()
+        console.log(`OpenAI response data for ${style.name}:`, json)
         const imageUrl = json?.data?.[0]?.url
 
+        if (!imageUrl) {
+          throw new Error(`No image URL returned for ${style.name}`)
+        }
+
+        console.log(`Successfully processed ${style.name}: ${imageUrl}`)
         return {
           style: style.id,
           name: style.name,
