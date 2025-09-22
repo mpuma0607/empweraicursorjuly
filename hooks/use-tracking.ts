@@ -2,9 +2,11 @@
 
 import { useEffect } from "react"
 import { usePathname } from "next/navigation"
+import { useMemberSpaceUser } from "./useMemberSpaceUser"
 
 export function useTracking() {
   const pathname = usePathname()
+  const { user } = useMemberSpaceUser()
 
   useEffect(() => {
     // Generate a session ID if it doesn't exist
@@ -29,6 +31,7 @@ export function useTracking() {
             referrer: document.referrer,
             userAgent: navigator.userAgent,
             ipAddress: null, // Will be extracted server-side
+            userEmail: user?.email || null,
           }),
         })
 
@@ -40,7 +43,7 @@ export function useTracking() {
     }
 
     trackPageView()
-  }, [pathname])
+  }, [pathname, user?.email])
 
   const trackEvent = async (eventType: string, eventData?: any) => {
     try {

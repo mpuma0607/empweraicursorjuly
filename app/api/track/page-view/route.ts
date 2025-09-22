@@ -4,7 +4,7 @@ import { createOrUpdateSession, trackPageView } from "@/lib/tracking"
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { sessionId, pagePath, pageTitle, referrer, userAgent } = body
+    const { sessionId, pagePath, pageTitle, referrer, userAgent, userEmail } = body
 
     if (!sessionId || !pagePath) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
@@ -14,8 +14,8 @@ export async function POST(request: NextRequest) {
     const ipAddress =
       request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || request.ip || "unknown"
 
-    // Create or update session
-    await createOrUpdateSession(sessionId, userAgent, ipAddress)
+    // Create or update session with user email
+    await createOrUpdateSession(sessionId, userAgent, ipAddress, userEmail)
 
     // Track page view
     await trackPageView(sessionId, pagePath, pageTitle, referrer)
