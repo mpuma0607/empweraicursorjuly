@@ -137,8 +137,11 @@ export default function EmailCompositionModal({
       // Use user email if available, otherwise use agentName as fallback
       const emailToUse = user?.email || agentName
       
+      console.log('Signature generation - user?.email:', user?.email, 'agentName:', agentName, 'emailToUse:', emailToUse)
+      
       if (!emailToUse) {
         // Final fallback to basic signature
+        console.log('No email available, using basic signature with agentName:', agentName)
         setSignature(`Best regards,\n${agentName}\n${brokerageName}`)
         return
       }
@@ -155,14 +158,17 @@ export default function EmailCompositionModal({
       
       if (response.ok) {
         const data = await response.json()
+        console.log('API signature generated:', data.signature)
         setSignature(data.signature)
       } else {
         // Fallback to basic signature
+        console.log('API failed, using basic signature with agentName:', agentName)
         setSignature(`Best regards,\n${agentName}\n${brokerageName}`)
       }
     } catch (error) {
       console.error('Error generating signature:', error)
       // Fallback to basic signature
+      console.log('Error occurred, using basic signature with agentName:', agentName)
       setSignature(`Best regards,\n${agentName}\n${brokerageName}`)
     }
   }
@@ -275,9 +281,11 @@ export default function EmailCompositionModal({
       /Thank you,?\s*$/gm,
       // Remove specific placeholder patterns
       /\[Your Name\]/g,
+      /\[Your Full Name\]/g,
       /\[Your Contact Information\]/g,
       /\[Your Agency\]/g,
       /\[Your Real Estate Agency\]/g,
+      /\[Your Real Estate Agency Name\]/g,
       /\[Agent Name\]/g,
       /\[Brokerage Name\]/g,
       /\[Your Real Estate Company\]/g,

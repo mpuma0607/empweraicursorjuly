@@ -189,6 +189,7 @@ function LeadHubDashboard({ fubStatus, userEmail, user }: { fubStatus: FUBStatus
       
       // Build script data based on contact info (using same logic as follow-up campaign)
       const agentName = fubStatus.user?.name || user?.name || user?.email?.split('@')[0] || 'Agent'
+      console.log('Lead Hub - generateScriptForContact agentName:', agentName, 'fubStatus.user?.name:', fubStatus.user?.name, 'user?.name:', user?.name, 'user?.email:', user?.email)
       const scriptData = {
         agentName: agentName,
         brokerageName: 'Your Brokerage', // Could get from user profile
@@ -837,7 +838,11 @@ ${generatedSignature}`
           isOpen={isEmailModalOpen}
           onClose={() => setIsEmailModalOpen(false)}
           scriptContent={generatedScript.script}
-          agentName={fubStatus.user?.name || user?.name || user?.email?.split('@')[0] || 'Agent'}
+          agentName={(() => {
+            const agentName = fubStatus.user?.name || user?.name || user?.email?.split('@')[0] || 'Agent'
+            console.log('Lead Hub - EmailCompositionModal agentName:', agentName, 'fubStatus.user?.name:', fubStatus.user?.name, 'user?.name:', user?.name, 'user?.email:', user?.email)
+            return agentName
+          })()}
           brokerageName="Your Brokerage"
           recipientEmail={editableEmail}
         />
