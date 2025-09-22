@@ -176,24 +176,6 @@ const steps = [
     },
   },
   {
-    id: 8,
-    title: "Ring Central Phone Set Up",
-    description: "Configure your business phone system",
-    icon: Phone,
-    content: {
-      overview: "Ring Central provides your professional phone number and calling features.",
-      steps: [
-        "Download and install Ring Central app",
-        "Set up your business phone number",
-        "Configure call forwarding and routing",
-        "Set up conference calling capabilities",
-        "Test all phone features and integrations",
-      ],
-      tips: "Use the mobile app to maintain professionalism even when away from your desk!",
-      hasCustomContent: true,
-    },
-  },
-  {
     id: 10,
     title: "MLS Set Up",
     description: "Get access to the Multiple Listing Service",
@@ -650,43 +632,6 @@ export default function AgentProfileSetupPage() {
     </div>
   )
 
-  const renderRingCentralContent = () => (
-    <div className="flex-1 overflow-y-auto space-y-6">
-      <div>
-        <h4 className="font-semibold mb-3">RingCentral Setup:</h4>
-        <div className="mb-6">
-          <Image
-            src="/images/ringcentral-setup.png"
-            alt="RingCentral Setup - Professional Communication Tools"
-            width={800}
-            height={500}
-            className="w-full h-auto rounded-lg border shadow-sm"
-          />
-        </div>
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-          <h5 className="font-semibold text-yellow-800 mb-3 flex items-center gap-2">
-            <Smartphone className="w-4 h-4" />
-            RingCentral Setup:
-          </h5>
-          <ol className="list-decimal list-inside space-y-2 text-sm text-yellow-700">
-            <li>
-              Go to <strong>RingCentral.com</strong>
-            </li>
-            <li>Create an account using your Century21 credentials</li>
-            <li>Set up your phone number and voicemail</li>
-            <li>Configure call forwarding and other settings</li>
-          </ol>
-        </div>
-      </div>
-      <div className="bg-yellow-50 p-3 rounded-lg">
-        <h4 className="font-semibold text-yellow-900 mb-1">💡 Pro Tip:</h4>
-        <p className="text-sm text-yellow-800">
-          RingCentral provides professional communication tools that can help you manage your calls and messages
-          efficiently. Make sure your settings are configured correctly to ensure smooth communication with clients.
-        </p>
-      </div>
-    </div>
-  )
 
   const renderMLSSetupContent = () => (
     <div className="flex-1 overflow-y-auto space-y-6">
@@ -1950,9 +1895,6 @@ export default function AgentProfileSetupPage() {
                       ) : step.id === 7 && step.content.hasCustomContent ? (
                         /* Custom content for Step 7 - Business Cards */
                         renderBusinessCardsContent()
-                      ) : step.id === 8 && step.content.hasCustomContent ? (
-                        /* Custom content for Step 8 - RingCentral */
-                        renderRingCentralContent()
                       ) : step.id === 10 && step.content.hasCustomContent ? (
                         /* Custom content for Step 10 - MLS Setup */
                         renderMLSSetupContent()
