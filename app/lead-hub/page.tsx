@@ -210,7 +210,6 @@ function LeadHubDashboard({ fubStatus, userEmail, user }: { fubStatus: FUBStatus
       const result = await generateScript(scriptData, userEmail)
       
       // Generate signature directly (same as follow-up campaign)
-      const agentName = fubStatus.user?.name || user?.name || user?.email?.split('@')[0] || 'Agent'
       const brokerageName = 'Your Brokerage'
       const agentPhone = fubStatus.user?.phone || 'Your Phone'
       
