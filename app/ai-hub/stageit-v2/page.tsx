@@ -111,14 +111,18 @@ export default function StageITV2Page() {
             throw new Error(`API error: ${response.status}`)
           }
 
-          // Convert response to blob URL (same as original StageIT)
+          // Convert response to data URL for embed compatibility
           const blob = await response.blob()
-          const imageUrl = URL.createObjectURL(blob)
+          const dataUrl = await new Promise<string>((resolve) => {
+            const reader = new FileReader()
+            reader.onload = () => resolve(reader.result as string)
+            reader.readAsDataURL(blob)
+          })
           
           results.push({
             style: style.id,
             name: style.name,
-            url: imageUrl,
+            url: dataUrl,
             isOriginal: false
           })
           
@@ -139,12 +143,17 @@ export default function StageITV2Page() {
         }
       }
 
-      // Add original image
-      const originalUrl = URL.createObjectURL(uploadedImage)
+      // Add original image as data URL
+      const originalDataUrl = await new Promise<string>((resolve) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(reader.result as string)
+        reader.readAsDataURL(uploadedImage)
+      })
+      
       results.push({
         style: 'original',
         name: 'Original',
-        url: originalUrl,
+        url: originalDataUrl,
         isOriginal: true
       })
 
