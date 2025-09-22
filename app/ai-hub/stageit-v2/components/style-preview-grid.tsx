@@ -23,9 +23,52 @@ export default function StylePreviewGrid({
   onStyleSelect,
   selectedStyle
 }: StylePreviewGridProps) {
-  const handleDownload = (image: StagedImage) => {
-    // In a real implementation, this would trigger a download
-    console.log('Downloading:', image.name)
+  const handleDownload = async (image: StagedImage) => {
+    try {
+      if (image.blob) {
+        // Convert blob to download
+        const url = URL.createObjectURL(image.blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `${image.name.toLowerCase().replace(' ', '-')}-staged.png`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+      } else if (image.url) {
+        // For blob URLs, fetch and download
+        const response = await fetch(image.url)
+        const blob = await response.blob()
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `${image.name.toLowerCase().replace(' ', '-')}-staged.png`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+      }
+    } catch (error) {
+      console.error('Error downloading image:', error)
+    }
+  }
+
+  const handleDownloadAll = async () => {
+    try {
+      // Download all images with a small delay between each
+      for (let i = 0; i < images.length; i++) {
+        const image = images[i]
+        if (image.url && !image.isOriginal) {
+          await handleDownload(image)
+          // Small delay to prevent browser blocking multiple downloads
+          if (i < images.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 500))
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error downloading all images:', error)
+    }
   }
 
   return (
@@ -75,6 +118,13 @@ export default function StylePreviewGrid({
                     onClick={(e) => {
                       e.stopPropagation()
                       onStyleSelect(image.style)
+                      // Scroll to slider
+                      setTimeout(() => {
+                        const sliderElement = document.querySelector('[data-testid="interactive-slider"]')
+                        if (sliderElement) {
+                          sliderElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                        }
+                      }, 100)
                     }}
                   >
                     <Eye className="w-3 h-3 mr-1" />
@@ -102,35 +152,26 @@ export default function StylePreviewGrid({
       {/* Selected Style Info */}
       {selectedStyle && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-semibold text-blue-900">
-                {images.find(img => img.style === selectedStyle)?.name} Style Selected
-              </h3>
-              <p className="text-sm text-blue-700">
-                Click "View" above to see the interactive comparison slider
-              </p>
-            </div>
-            <Button
-              onClick={() => onStyleSelect(selectedStyle)}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              <Eye className="w-4 h-4 mr-2" />
-              Compare Now
-            </Button>
+          <div>
+            <h3 className="font-semibold text-blue-900">
+              {images.find(img => img.style === selectedStyle)?.name} Style Selected
+            </h3>
+            <p className="text-sm text-blue-700">
+              The interactive comparison slider is now active below. Drag the slider to compare original vs staged.
+            </p>
           </div>
         </div>
       )}
 
       {/* Batch Actions */}
       <div className="flex flex-wrap gap-2 justify-center">
-        <Button variant="outline" size="sm">
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={handleDownloadAll}
+        >
           <Download className="w-4 h-4 mr-2" />
           Download All
-        </Button>
-        <Button variant="outline" size="sm">
-          <Eye className="w-4 h-4 mr-2" />
-          View All in Grid
         </Button>
       </div>
     </div>

@@ -268,7 +268,7 @@ export default function StageITV2Page() {
                 Staging Results
               </CardTitle>
               <CardDescription>
-                All 8 styles have been generated. Click any style to compare with the original.
+                All 8 styles have been generated. Click "View" on any style to test the slider comparison.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -283,7 +283,7 @@ export default function StageITV2Page() {
 
         {/* Interactive Slider */}
         {showSlider && selectedStyle && stagedImages.length > 0 && (
-          <Card className="lg:col-span-2">
+          <Card className="lg:col-span-2" data-testid="interactive-slider">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Eye className="w-5 h-5" />

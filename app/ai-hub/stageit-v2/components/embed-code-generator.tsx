@@ -35,7 +35,6 @@ export default function EmbedCodeGenerator({
     autoPlay: false
   })
   const [copied, setCopied] = useState(false)
-  const [previewMode, setPreviewMode] = useState(false)
   const [generatedCode, setGeneratedCode] = useState<string>('')
   const [isGenerating, setIsGenerating] = useState(false)
 
@@ -284,6 +283,13 @@ export default function EmbedCodeGenerator({
             
             currentStyle = style;
             
+            // Reset slider to show original (0%) when switching styles
+            const slider = document.getElementById('comparison-slider');
+            if (slider) {
+                slider.value = 0;
+                updateComparison(0);
+            }
+            
             // Update staged label
             const stagedLabel = document.getElementById('staged-label');
             if (stagedLabel) {
@@ -497,15 +503,6 @@ export default function EmbedCodeGenerator({
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => setPreviewMode(!previewMode)}
-                disabled={!generatedCode}
-              >
-                <Eye className="w-4 h-4 mr-1" />
-                {previewMode ? 'Hide' : 'Preview'}
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
                 onClick={handleDownload}
                 disabled={!generatedCode}
               >
@@ -533,32 +530,11 @@ export default function EmbedCodeGenerator({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {previewMode ? (
-            <div className="border rounded-lg p-4 bg-gray-50">
-              <div className="text-center text-gray-600 mb-4">
-                Widget Preview ({widgetConfig.width} × {widgetConfig.height}px)
-              </div>
-              <div 
-                className="mx-auto border rounded-lg overflow-hidden bg-white"
-                style={{ 
-                  width: Math.min(parseInt(widgetConfig.width), 400),
-                  height: Math.min(parseInt(widgetConfig.height), 300)
-                }}
-              >
-                <div className="p-4 text-center">
-                  <div className="text-2xl mb-2">🏠</div>
-                  <div className="font-semibold">Virtual Staging Widget</div>
-                  <div className="text-sm text-gray-600 mt-1">Interactive Preview</div>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <Textarea
-              value={generatedCode || "Click 'Generate Code' to create the embed code..."}
-              readOnly
-              className="font-mono text-xs h-96 resize-none"
-            />
-          )}
+          <Textarea
+            value={generatedCode || "Click 'Generate Code' to create the embed code..."}
+            readOnly
+            className="font-mono text-xs h-96 resize-none"
+          />
         </CardContent>
       </Card>
 

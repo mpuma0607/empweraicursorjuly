@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
-import { Download, RotateCcw, Maximize2 } from "lucide-react"
+import { RotateCcw, Maximize2 } from "lucide-react"
 
 interface InteractiveSliderProps {
   originalImage: string
@@ -42,10 +42,6 @@ export default function InteractiveSlider({
     setIsFullscreen(!isFullscreen)
   }
 
-  const handleDownload = () => {
-    // In a real implementation, this would download the current view
-    console.log('Downloading current view')
-  }
 
   // Calculate the clip path for the reveal effect
   const clipPath = `inset(0 ${100 - sliderValue[0]}% 0 0)`
@@ -80,13 +76,6 @@ export default function InteractiveSlider({
           >
             <Maximize2 className="w-4 h-4 mr-1" />
             {isFullscreen ? 'Exit' : 'Fullscreen'}
-          </Button>
-          <Button
-            size="sm"
-            onClick={handleDownload}
-          >
-            <Download className="w-4 h-4 mr-1" />
-            Download
           </Button>
         </div>
       </div>
