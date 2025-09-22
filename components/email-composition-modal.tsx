@@ -33,6 +33,7 @@ interface EmailCompositionModalProps {
     fileName?: string // Name for the attachment
   }
   recipientEmail?: string // Pre-populate recipient email (e.g., from CRM contact)
+  preGeneratedSignature?: string // Pre-generated signature (e.g., from Lead Hub)
 }
 
 interface EmailConnectionStatus {
@@ -54,7 +55,8 @@ export default function EmailCompositionModal({
   brokerageName,
   contentType = 'script', // Default to script if not specified
   attachments,
-  recipientEmail
+  recipientEmail,
+  preGeneratedSignature
 }: EmailCompositionModalProps) {
   const { user } = useMemberSpaceUser()
   const [providerStatus, setProviderStatus] = useState<ProviderStatus>({
@@ -107,8 +109,13 @@ export default function EmailCompositionModal({
     } else {
       setSubject(extractedSubject || `Script from ${agentName} - ${brokerageName}`)
     }
-    // Generate signature using the API
-    generateSignature()
+    // Use pre-generated signature if available, otherwise generate via API
+    if (preGeneratedSignature) {
+      console.log('Using pre-generated signature:', preGeneratedSignature)
+      setSignature(preGeneratedSignature)
+    } else {
+      generateSignature()
+    }
     
     // Set email body to cleaned script content
     setEmailBody(cleanedContent)

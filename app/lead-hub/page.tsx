@@ -209,8 +209,32 @@ function LeadHubDashboard({ fubStatus, userEmail, user }: { fubStatus: FUBStatus
       const { generateScript } = await import('@/app/ai-hub/scriptit-ai/actions')
       const result = await generateScript(scriptData, userEmail)
       
+      // Generate signature directly (same as follow-up campaign)
+      const agentName = fubStatus.user?.name || user?.name || user?.email?.split('@')[0] || 'Agent'
+      const brokerageName = 'Your Brokerage'
+      const agentPhone = fubStatus.user?.phone || 'Your Phone'
+      
+      let generatedSignature = `Best regards,\n${agentName}`
+      
+      // Add brokerage if we have it
+      if (brokerageName && brokerageName !== 'Your Brokerage') {
+        generatedSignature += `\n${brokerageName}`
+      }
+      
+      // Add phone if we have it
+      if (agentPhone && agentPhone !== 'Your Phone') {
+        generatedSignature += `\n${agentPhone}`
+      }
+      
+      // Add email
+      if (userEmail) {
+        generatedSignature += `\n${userEmail}`
+      }
+      
+      console.log('Individual email signature generated:', generatedSignature)
+      
       // Store the generated script and open email modal directly
-      setGeneratedScript({ contact, script: result.script })
+      setGeneratedScript({ contact, script: result.script, signature: generatedSignature })
       setEditableEmail(contact.email)
       setSelectedTonality('Professional & Authoritative')
       setSelectedLanguage('English')
@@ -845,6 +869,7 @@ ${generatedSignature}`
           })()}
           brokerageName="Your Brokerage"
           recipientEmail={editableEmail}
+          preGeneratedSignature={generatedScript.signature}
         />
       )}
 
