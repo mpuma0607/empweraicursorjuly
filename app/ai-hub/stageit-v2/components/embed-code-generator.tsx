@@ -14,6 +14,7 @@ interface StagedImage {
   name: string
   url: string
   isOriginal?: boolean
+  blob?: Blob
 }
 
 interface EmbedCodeGeneratorProps {
@@ -38,8 +39,22 @@ export default function EmbedCodeGenerator({
   const [generatedCode, setGeneratedCode] = useState<string>('')
   const [isGenerating, setIsGenerating] = useState(false)
 
-  const generateEmbedCode = () => {
+  const generateEmbedCode = async () => {
     const { width, height, theme, showLabels, showControls, autoPlay } = widgetConfig
+    
+    // Convert images to data URLs for embed
+    const imageDataUrls: {[key: string]: string} = {}
+    
+    for (const image of images) {
+      if (image.blob) {
+        const dataUrl = await new Promise<string>((resolve) => {
+          const reader = new FileReader()
+          reader.onload = () => resolve(reader.result as string)
+          reader.readAsDataURL(image.blob!)
+        })
+        imageDataUrls[image.style] = dataUrl
+      }
+    }
     
     const htmlCode = `<!DOCTYPE html>
 <html lang="en">
@@ -48,21 +63,29 @@ export default function EmbedCodeGenerator({
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Virtual Staging - ${roomType}</title>
     <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+        }
+        
         .staging-widget {
             width: ${width}px;
             height: ${height}px;
-            position: relative;
-            border-radius: 8px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
             overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            position: relative;
         }
         
-        .staging-container {
+        .image-container {
             position: relative;
             width: 100%;
-            height: 100%;
-            background: #f5f5f5;
+            height: 70%;
+            overflow: hidden;
         }
         
         .image-layer {
@@ -181,48 +204,30 @@ export default function EmbedCodeGenerator({
             .staging-widget {
                 width: 100%;
                 max-width: ${width}px;
-                height: ${parseInt(height) * 0.75}px;
             }
             
-            .style-selector {
-                top: 10px;
-                right: 10px;
+            .styles-grid {
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+                gap: 10px;
             }
             
-            .style-button {
-                padding: 6px 8px;
-                font-size: 10px;
-            }
-            
-            .labels {
-                top: 10px;
-                left: 10px;
-            }
-            
-            .slider-container {
-                bottom: 10px;
-                left: 10px;
-                right: 10px;
+            .style-card {
+                padding: 15px;
             }
         }
     </style>
 </head>
 <body>
     <div class="staging-widget">
-        <div class="staging-container">
+        <div class="image-container">
             ${images.map((image, index) => `
-                <div 
+                <img 
+                    src="${imageDataUrls[image.style] || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIFBsYWNlaG9sZGVyPC90ZXh0Pjwvc3ZnPg=='}" 
+                    alt="${image.name}" 
                     class="image-layer ${image.isOriginal ? 'original-image' : 'staged-image'}"
                     data-style="${image.style}"
                     ${image.isOriginal ? 'id="original"' : ''}
-                    style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); display: flex; align-items: center; justify-content: center; color: #666; font-size: 16px; font-weight: 500;"
-                >
-                    <div style="text-align: center;">
-                        <div style="font-size: 24px; margin-bottom: 8px;">🏠</div>
-                        <div>${image.name}</div>
-                        <div style="font-size: 12px; margin-top: 4px; opacity: 0.7;">Click to view</div>
-                    </div>
-                </div>
+                />
             `).join('')}
             
             ${showLabels ? `
@@ -293,16 +298,6 @@ export default function EmbedCodeGenerator({
             }
         }
         
-        // Add click handlers to show style information
-        document.querySelectorAll('.image-layer').forEach(layer => {
-            layer.addEventListener('click', function() {
-                const style = this.getAttribute('data-style');
-                if (style && style !== 'original') {
-                    selectStyle(style);
-                }
-            });
-        });
-        
         // Initialize
         if (stagedImage) {
             stagedImage.classList.add('active');
@@ -325,10 +320,38 @@ export default function EmbedCodeGenerator({
     return htmlCode
   }
 
-  const generateCode = () => {
+  const getStyleIcon = (style: string) => {
+    const icons: {[key: string]: string} = {
+      'modern': '🏢',
+      'scandinavian': '🏠',
+      'industrial': '🏭',
+      'midcentury': '🕰️',
+      'luxury': '💎',
+      'farmhouse': '🚜',
+      'coastal': '🌊',
+      'original': '📷'
+    }
+    return icons[style] || '🏠'
+  }
+
+  const getStyleDescription = (style: string) => {
+    const descriptions: {[key: string]: string} = {
+      'modern': 'Clean & Contemporary',
+      'scandinavian': 'Minimal & Cozy',
+      'industrial': 'Urban & Raw',
+      'midcentury': 'Retro & Bold',
+      'luxury': 'Elegant & Rich',
+      'farmhouse': 'Rustic & Charming',
+      'coastal': 'Nautical & Fresh',
+      'original': 'Original Photo'
+    }
+    return descriptions[style] || 'Style Preview'
+  }
+
+  const generateCode = async () => {
     setIsGenerating(true)
     try {
-      const code = generateEmbedCode()
+      const code = await generateEmbedCode()
       setGeneratedCode(code)
     } catch (error) {
       console.error('Error generating code:', error)
@@ -340,7 +363,7 @@ export default function EmbedCodeGenerator({
 
   const handleCopy = async () => {
     if (!generatedCode) {
-      generateCode()
+      await generateCode()
       return
     }
     await navigator.clipboard.writeText(generatedCode)
@@ -348,9 +371,9 @@ export default function EmbedCodeGenerator({
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!generatedCode) {
-      generateCode()
+      await generateCode()
       return
     }
     const blob = new Blob([generatedCode], { type: 'text/html' })
@@ -516,30 +539,22 @@ export default function EmbedCodeGenerator({
                 Widget Preview ({widgetConfig.width} × {widgetConfig.height}px)
               </div>
               <div 
-                className="mx-auto border rounded-lg overflow-hidden"
+                className="mx-auto border rounded-lg overflow-hidden bg-white"
                 style={{ 
                   width: Math.min(parseInt(widgetConfig.width), 400),
                   height: Math.min(parseInt(widgetConfig.height), 300)
                 }}
               >
-                <div className="relative w-full h-full bg-gray-200">
-                  <img
-                    src={images.find(img => img.isOriginal)?.url || ''}
-                    alt="Original"
-                    className="absolute inset-0 w-full h-full object-cover"
-                  />
-                  <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-xs">
-                    Original
-                  </div>
-                  <div className="absolute top-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-xs">
-                    {images.find(img => !img.isOriginal)?.name || 'Staged'}
-                  </div>
+                <div className="p-4 text-center">
+                  <div className="text-2xl mb-2">🏠</div>
+                  <div className="font-semibold">Virtual Staging Widget</div>
+                  <div className="text-sm text-gray-600 mt-1">Interactive Preview</div>
                 </div>
               </div>
             </div>
           ) : (
             <Textarea
-              value={generatedCode || "Click 'Generate Code' to create the embed code with images..."}
+              value={generatedCode || "Click 'Generate Code' to create the embed code..."}
               readOnly
               className="font-mono text-xs h-96 resize-none"
             />
@@ -553,11 +568,16 @@ export default function EmbedCodeGenerator({
           <div className="space-y-2 text-sm text-gray-600">
             <h4 className="font-semibold text-gray-900">How to use this widget:</h4>
             <ol className="list-decimal list-inside space-y-1">
-              <li>Copy the generated HTML code above</li>
+              <li>Click "Generate Code" to create the HTML widget</li>
+              <li>Copy the generated HTML code</li>
               <li>Paste it into your website's HTML editor or create a new HTML file</li>
               <li>Upload the file to your web server or hosting platform</li>
-              <li>Embed the widget using an iframe: <code className="bg-gray-100 px-1 rounded">&lt;iframe src="your-widget-url" width="800" height="600"&gt;&lt;/iframe&gt;</code></li>
+              <li>The widget will display an interactive style selection interface</li>
             </ol>
+            <p className="mt-4 text-xs text-gray-500">
+              Note: This is a preview widget that demonstrates the virtual staging concept. 
+              The actual staged images would need to be integrated separately.
+            </p>
           </div>
         </CardContent>
       </Card>
