@@ -159,7 +159,30 @@ export default function EmailCompositionModal({
       if (response.ok) {
         const data = await response.json()
         console.log('API signature generated:', data.signature)
-        setSignature(data.signature)
+        
+        // Clean the signature from API response
+        let cleanedSignature = data.signature
+        
+        // Remove "Your Name" and other placeholders from signature
+        const signatureCleaningPatterns = [
+          /Your Name\s*\n\s*Your Brokerage\s*\n\s*Your Phone\s*\n\s*[^\n]+/gi,
+          /Your Name\s*\n\s*Your Brokerage\s*\n\s*Your Phone/gi,
+          /Your Name\s*\n\s*Your Brokerage/gi,
+          /Your Name\s*\n/gi,
+          /Your Name/gi,
+          /Your Brokerage/gi,
+          /Your Phone/gi
+        ]
+        
+        signatureCleaningPatterns.forEach(pattern => {
+          cleanedSignature = cleanedSignature.replace(pattern, '')
+        })
+        
+        // Clean up extra whitespace and line breaks
+        cleanedSignature = cleanedSignature.trim().replace(/\n{3,}/g, '\n\n')
+        
+        console.log('Cleaned signature:', cleanedSignature)
+        setSignature(cleanedSignature)
       } else {
         // Fallback to basic signature
         console.log('API failed, using basic signature with agentName:', agentName)
@@ -293,7 +316,13 @@ export default function EmailCompositionModal({
       /Best regards,?\s*\n\s*Agent\s*\n\s*Your Brokerage/gi,
       /Best regards,?\s*\n\s*\[?Agent Name\]?\s*\n\s*\[?Your Brokerage\]?/gi,
       /Warm regards,?\s*\n\s*\[?Your Real Estate Company\]?/gi,
-      /Sincerely,?\s*\n\s*\[?Agent\]?\s*\n\s*\[?Your Brokerage\]?/gi
+      /Sincerely,?\s*\n\s*\[?Agent\]?\s*\n\s*\[?Your Brokerage\]?/gi,
+      // Remove "Your Name" patterns specifically
+      /Your Name\s*\n\s*Your Brokerage\s*\n\s*Your Phone\s*\n\s*[^\n]+/gi,
+      /Your Name\s*\n\s*Your Brokerage\s*\n\s*Your Phone/gi,
+      /Your Name\s*\n\s*Your Brokerage/gi,
+      /Your Name\s*\n/gi,
+      /Your Name/gi
     ]
 
     signaturePatterns.forEach(pattern => {
