@@ -16,6 +16,7 @@ interface BatchStagingFormProps {
 
 const ROOM_TYPES = [
   'Living Room',
+  'Family Room',
   'Bedroom', 
   'Kitchen',
   'Dining Room',
@@ -37,14 +38,80 @@ export default function BatchStagingForm({
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [isDragOver, setIsDragOver] = useState(false)
+  const [isCompressing, setIsCompressing] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const handleFileSelect = (file: File) => {
+  const compressImage = async (file: File): Promise<File> => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      const img = new Image()
+      
+      img.onload = () => {
+        // Calculate new dimensions (max 2048x2048)
+        const maxSize = 2048
+        let { width, height } = img
+        
+        if (width > height) {
+          if (width > maxSize) {
+            height = (height * maxSize) / width
+            width = maxSize
+          }
+        } else {
+          if (height > maxSize) {
+            width = (width * maxSize) / height
+            height = maxSize
+          }
+        }
+        
+        canvas.width = width
+        canvas.height = height
+        
+        // Draw and compress
+        ctx?.drawImage(img, 0, 0, width, height)
+        
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              const compressedFile = new File([blob], file.name, {
+                type: 'image/jpeg',
+                lastModified: Date.now()
+              })
+              resolve(compressedFile)
+            } else {
+              resolve(file)
+            }
+          },
+          'image/jpeg',
+          0.8 // 80% quality
+        )
+      }
+      
+      img.src = URL.createObjectURL(file)
+    })
+  }
+
+  const handleFileSelect = async (file: File) => {
     if (file && file.type.startsWith('image/')) {
-      setUploadedFile(file)
-      const url = URL.createObjectURL(file)
+      // Compress if file is larger than 8MB
+      const maxSize = 8 * 1024 * 1024 // 8MB
+      let processedFile = file
+      
+      if (file.size > maxSize) {
+        setIsCompressing(true)
+        try {
+          processedFile = await compressImage(file)
+        } catch (error) {
+          console.error('Error compressing image:', error)
+        } finally {
+          setIsCompressing(false)
+        }
+      }
+      
+      setUploadedFile(processedFile)
+      const url = URL.createObjectURL(processedFile)
       setPreviewUrl(url)
-      onImageUpload(file)
+      onImageUpload(processedFile)
     }
   }
 
@@ -118,6 +185,12 @@ export default function BatchStagingForm({
             </div>
             <div className="text-sm text-gray-600">
               {uploadedFile?.name} ({(uploadedFile?.size! / 1024 / 1024).toFixed(2)} MB)
+              {isCompressing && (
+                <div className="flex items-center gap-1 mt-1 text-blue-600">
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  <span className="text-xs">Compressing image...</span>
+                </div>
+              )}
             </div>
           </div>
         ) : (
