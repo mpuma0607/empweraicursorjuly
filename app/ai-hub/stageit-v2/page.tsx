@@ -74,7 +74,6 @@ export default function StageITV2Page() {
     setProcessingStatus({})
 
     try {
-      console.log('Starting batch staging - processing each style individually...')
       
       // Process each style one by one, just like the original StageIT
       const results: StagedImage[] = []
