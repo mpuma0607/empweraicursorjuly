@@ -505,7 +505,6 @@ export default function EmbedCodeGenerator({
     <script>
         let currentStyle = '${currentStyle}';
         let originalImage = document.getElementById('original');
-        let stagedImage = document.querySelector('[data-style="' + currentStyle + '"]');
         
         function selectStyle(style) {
             console.log('selectStyle called with:', style);
@@ -525,7 +524,7 @@ export default function EmbedCodeGenerator({
             });
             
             // Find and activate the selected staged image
-            stagedImage = document.querySelector('[data-style="' + style + '"]');
+            const stagedImage = document.querySelector('[data-style="' + style + '"]');
             if (stagedImage) {
                 stagedImage.classList.add('active');
                 console.log('Activated staged image for style:', style);
