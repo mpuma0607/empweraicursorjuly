@@ -39,23 +39,41 @@ export default function EmbedCodeGenerator({
   const [isGenerating, setIsGenerating] = useState(false)
 
   const generateEmbedCode = async () => {
-    const { width, height, theme, showLabels, showControls, autoPlay } = widgetConfig
-    
-    // Convert images to data URLs for embed
-    const imageDataUrls: {[key: string]: string} = {}
-    
-    for (const image of images) {
-      if (image.blob) {
-        const dataUrl = await new Promise<string>((resolve) => {
-          const reader = new FileReader()
-          reader.onload = () => resolve(reader.result as string)
-          reader.readAsDataURL(image.blob!)
-        })
-        imageDataUrls[image.style] = dataUrl
+    try {
+      setIsGenerating(true)
+      
+      if (!images || images.length === 0) {
+        throw new Error('No images available for embed code generation')
       }
-    }
-    
-    const htmlCode = `<!DOCTYPE html>
+      
+      const { width, height, theme, showLabels, showControls, autoPlay } = widgetConfig
+      
+      // Convert images to data URLs for embed
+      const imageDataUrls: {[key: string]: string} = {}
+      
+      for (const image of images) {
+        if (image.blob) {
+          const dataUrl = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader()
+            reader.onload = () => resolve(reader.result as string)
+            reader.onerror = () => reject(new Error('Failed to read image blob'))
+            reader.readAsDataURL(image.blob!)
+          })
+          imageDataUrls[image.style] = dataUrl
+        } else if (image.url) {
+          // Fallback to URL if no blob
+          imageDataUrls[image.style] = image.url
+        }
+      }
+      
+      if (Object.keys(imageDataUrls).length === 0) {
+        throw new Error('No valid images found for embed code generation')
+      }
+      
+      const originalImageDataUrl = imageDataUrls['original'] || images.find(img => img.isOriginal)?.url || ''
+      const currentStyle = images.find(img => !img.isOriginal)?.style || 'modern'
+      
+      const htmlCode = `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -338,7 +356,7 @@ export default function EmbedCodeGenerator({
             
             <div class="styles-grid">
                 ${images.map(img => `
-                    <div class="style-card ${img.style === currentStyle ? 'selected' : ''}" data-style="${img.style}">
+                    <div class="style-card ${img.style === '${currentStyle}' ? 'selected' : ''}" data-style="${img.style}">
                         <img class="style-image" src="${imageDataUrls[img.style] || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIFBsYWNlaG9sZGVyPC90ZXh0Pjwvc3ZnPg=='}" alt="${img.name}" />
                         <div class="style-content">
                             <div class="style-name">${img.name}</div>
@@ -368,7 +386,7 @@ export default function EmbedCodeGenerator({
             <div class="image-comparison">
                 <img id="original" class="image-layer original-image" src="${originalImageDataUrl}" alt="Original" />
                 ${images.filter(img => !img.isOriginal).map(img => 
-                    `<img data-style="${img.style}" class="image-layer staged-image ${img.style === currentStyle ? 'active' : ''}" src="${imageDataUrls[img.style]}" alt="${img.name}" />`
+                    `<img data-style="${img.style}" class="image-layer staged-image ${img.style === '${currentStyle}' ? 'active' : ''}" src="${imageDataUrls[img.style]}" alt="${img.name}" />`
                 ).join('')}
             </div>
             
@@ -383,7 +401,7 @@ export default function EmbedCodeGenerator({
     </div>
 
     <script>
-        let currentStyle = '${images.find(img => !img.isOriginal)?.style || ''}';
+        let currentStyle = '${currentStyle}';
         let originalImage = document.getElementById('original');
         let stagedImage = document.querySelector(\`[data-style="\${currentStyle}"]\`);
         
@@ -460,7 +478,15 @@ export default function EmbedCodeGenerator({
 </body>
 </html>`
 
-    return htmlCode
+      setGeneratedCode(htmlCode)
+      return htmlCode
+    } catch (error) {
+      console.error('Error generating embed code:', error)
+      setGeneratedCode(`Error generating embed code: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      throw error
+    } finally {
+      setIsGenerating(false)
+    }
   }
 
   const getStyleIcon = (style: string) => {
