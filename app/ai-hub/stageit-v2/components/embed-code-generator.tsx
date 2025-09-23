@@ -105,12 +105,12 @@ export default function EmbedCodeGenerator({
             grid-template-columns: repeat(1, minmax(0, 1fr));
         }
         
-        .lg\\:grid-cols-2 {
+        .lg:grid-cols-2 {
             grid-template-columns: repeat(1, minmax(0, 1fr));
         }
         
         @media (min-width: 1024px) {
-            .lg\\:grid-cols-2 {
+            .lg:grid-cols-2 {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }
             
@@ -505,7 +505,7 @@ export default function EmbedCodeGenerator({
     <script>
         let currentStyle = '${currentStyle}';
         let originalImage = document.getElementById('original');
-        let stagedImage = document.querySelector(\`[data-style="\${currentStyle}"]\`);
+        let stagedImage = document.querySelector('[data-style="' + currentStyle + '"]');
         
         function selectStyle(style) {
             console.log('selectStyle called with:', style);
@@ -514,7 +514,7 @@ export default function EmbedCodeGenerator({
             document.querySelectorAll('.style-card').forEach(card => {
                 card.classList.remove('selected');
             });
-            const selectedCard = document.querySelector(\`[data-style="\${style}"]\`);
+            const selectedCard = document.querySelector('[data-style="' + style + '"]');
             if (selectedCard) {
                 selectedCard.classList.add('selected');
             }
@@ -525,7 +525,7 @@ export default function EmbedCodeGenerator({
             });
             
             // Find and activate the selected staged image
-            stagedImage = document.querySelector(\`[data-style="\${style}"]\`);
+            stagedImage = document.querySelector('[data-style="' + style + '"]');
             if (stagedImage) {
                 stagedImage.classList.add('active');
                 console.log('Activated staged image for style:', style);
@@ -549,14 +549,15 @@ export default function EmbedCodeGenerator({
                 stagedLabel.textContent = style.charAt(0).toUpperCase() + style.slice(1);
             }
             if (sliderDescription) {
-                sliderDescription.textContent = \`Drag the slider to compare the original photo with the \${style} staging.\`;
+                sliderDescription.textContent = 'Drag the slider to compare the original photo with the ' + style + ' staging.';
             }
         }
         
         function updateComparison(value) {
-            if (originalImage && stagedImage) {
+            const activeStagedImage = document.querySelector('.staged-image.active');
+            if (originalImage && activeStagedImage) {
                 const opacity = value / 100;
-                stagedImage.style.opacity = opacity;
+                activeStagedImage.style.opacity = opacity;
             }
         }
         
@@ -568,7 +569,7 @@ export default function EmbedCodeGenerator({
             if (imageDataUrl) {
                 const link = document.createElement('a');
                 link.href = imageDataUrl;
-                link.download = \`\${style}-staged.png\`;
+                link.download = style + '-staged.png';
                 link.style.display = 'none';
                 document.body.appendChild(link);
                 link.click();
