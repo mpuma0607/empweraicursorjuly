@@ -113,6 +113,22 @@ export default function EmbedCodeGenerator({
             .lg\\:grid-cols-2 {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }
+            
+            /* Desktop: Step 2 (slider) on left, Step 1 (styles) on right */
+            .step-1-card {
+                order: 2;
+            }
+            .step-2-card {
+                order: 1;
+            }
+        }
+        
+        /* Mobile: Step 1 first, Step 2 second */
+        .step-1-card {
+            order: 1;
+        }
+        .step-2-card {
+            order: 2;
         }
         
         .gap-6 {
@@ -332,22 +348,40 @@ export default function EmbedCodeGenerator({
         .slider::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
-            width: 20px;
-            height: 20px;
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
             background: #3b82f6;
             cursor: pointer;
             box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            border: 2px solid white;
         }
         
         .slider::-moz-range-thumb {
-            width: 20px;
-            height: 20px;
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
             background: #3b82f6;
             cursor: pointer;
-            border: none;
+            border: 2px solid white;
             box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+        
+        /* Mobile-specific slider improvements */
+        @media (max-width: 768px) {
+            .slider {
+                height: 8px;
+            }
+            
+            .slider::-webkit-slider-thumb {
+                width: 28px;
+                height: 28px;
+            }
+            
+            .slider::-moz-range-thumb {
+                width: 28px;
+                height: 28px;
+            }
         }
         
         .slider-labels {
@@ -404,37 +438,8 @@ export default function EmbedCodeGenerator({
     <div class="staging-widget">
         <!-- Desktop Layout: Slider on Left, Styles on Right -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <!-- Left Side: Interactive Slider -->
-            <div class="card" data-testid="interactive-slider">
-                <div class="card-header">
-                    <div class="card-title">
-                        <span class="icon">👁️</span>
-                        Step 2: Play with Slider
-                    </div>
-                    <div class="card-description" id="slider-description">
-                        Select a style from the right to start comparing.
-                    </div>
-                </div>
-                <div class="card-content">
-                    <div class="image-comparison">
-                        <img id="original" class="image-layer original-image" src="${originalImageDataUrl}" alt="Original" />
-                        ${images.filter(img => !img.isOriginal).map(img => 
-                            `<img data-style="${img.style}" class="image-layer staged-image" src="${imageDataUrls[img.style]}" alt="${img.name}" />`
-                        ).join('')}
-                    </div>
-                    
-                    <div class="slider-container">
-                        <input type="range" id="comparison-slider" class="slider" min="0" max="100" value="0" oninput="updateComparison(this.value)" />
-                        <div class="slider-labels">
-                            <span>Original</span>
-                            <span id="staged-label">Select a style</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Right Side: Staging Results -->
-            <div class="card">
+            <!-- Mobile: Step 1 First, Desktop: Right Side -->
+            <div class="card step-1-card">
                 <div class="card-header">
                     <div class="card-title">
                         <span class="icon">🎨</span>
@@ -462,6 +467,35 @@ export default function EmbedCodeGenerator({
                                 </div>
                             </div>
                         `).join('')}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile: Step 2 Second, Desktop: Left Side -->
+            <div class="card step-2-card" data-testid="interactive-slider">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span class="icon">👁️</span>
+                        Step 2: Play with Slider
+                    </div>
+                    <div class="card-description" id="slider-description">
+                        Select a style from the right to start comparing.
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="image-comparison">
+                        <img id="original" class="image-layer original-image" src="${originalImageDataUrl}" alt="Original" />
+                        ${images.filter(img => !img.isOriginal).map(img => 
+                            `<img data-style="${img.style}" class="image-layer staged-image" src="${imageDataUrls[img.style]}" alt="${img.name}" />`
+                        ).join('')}
+                    </div>
+                    
+                    <div class="slider-container">
+                        <input type="range" id="comparison-slider" class="slider" min="0" max="100" value="0" oninput="updateComparison(this.value)" />
+                        <div class="slider-labels">
+                            <span>Original</span>
+                            <span id="staged-label">Select a style</span>
+                        </div>
                     </div>
                 </div>
             </div>

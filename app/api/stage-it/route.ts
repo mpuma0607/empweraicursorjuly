@@ -122,11 +122,13 @@ export async function POST(req: Request) {
 
     const prompt = [
       `Virtual-stage this ${roomType} in ${style} style.`,
-      `IMPORTANT: Do not add windows, doors, or any architectural elements that don't exist in the original room.`,
+      `CRITICAL: Do not add, remove, resize, or modify any existing windows, doors, or architectural elements.`,
+      `Do not change the size, shape, or position of any existing windows, doors, trim, or structural features.`,
       `Only add furniture, decor, and staging elements. Preserve the exact room layout and architecture.`,
       colors ? `Palette: ${colors}.` : null,
       `Cohesive furniture layout; correct rug size; layered lighting; tasteful wall art.`,
-      `Preserve architecture (windows, doors, trim, flooring) exactly as shown. Realistic perspective, scale, and shadows.`,
+      `Preserve ALL existing architecture (windows, doors, trim, flooring, walls) exactly as shown with identical size and proportions.`,
+      `Maintain the exact same window dimensions, door positions, and room proportions as the original.`,
       notes ? `Notes: ${notes}` : null,
       `Photorealistic, listing-quality output.`
     ].filter(Boolean).join(" ");
