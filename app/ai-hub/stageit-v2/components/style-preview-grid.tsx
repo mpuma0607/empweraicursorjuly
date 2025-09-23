@@ -118,13 +118,6 @@ export default function StylePreviewGrid({
                     onClick={(e) => {
                       e.stopPropagation()
                       onStyleSelect(image.style)
-                      // Scroll to slider
-                      setTimeout(() => {
-                        const sliderElement = document.querySelector('[data-testid="interactive-slider"]')
-                        if (sliderElement) {
-                          sliderElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
-                        }
-                      }, 100)
                     }}
                   >
                     <Eye className="w-3 h-3 mr-1" />

@@ -406,16 +406,30 @@ export default function EmbedCodeGenerator({
         let stagedImage = document.querySelector(\`[data-style="\${currentStyle}"]\`);
         
         function selectStyle(style) {
+            console.log('selectStyle called with:', style);
+            
             // Update selected card
             document.querySelectorAll('.style-card').forEach(card => {
                 card.classList.remove('selected');
             });
-            document.querySelector(\`[data-style="\${style}"]\`).classList.add('selected');
+            const selectedCard = document.querySelector(\`[data-style="\${style}"]\`);
+            if (selectedCard) {
+                selectedCard.classList.add('selected');
+            }
             
-            // Update staged image
-            if (stagedImage) stagedImage.classList.remove('active');
+            // Update staged image - remove active from all staged images first
+            document.querySelectorAll('.staged-image').forEach(img => {
+                img.classList.remove('active');
+            });
+            
+            // Find and activate the selected staged image
             stagedImage = document.querySelector(\`[data-style="\${style}"]\`);
-            if (stagedImage) stagedImage.classList.add('active');
+            if (stagedImage) {
+                stagedImage.classList.add('active');
+                console.log('Activated staged image for style:', style);
+            } else {
+                console.error('Could not find staged image for style:', style);
+            }
             
             currentStyle = style;
             
@@ -453,15 +467,28 @@ export default function EmbedCodeGenerator({
                 const link = document.createElement('a');
                 link.href = imageDataUrl;
                 link.download = \`\${style}-staged.png\`;
+                link.style.display = 'none';
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
+            } else {
+                console.error('No image data found for style:', style);
             }
         }
         
-        // Initialize
-        if (stagedImage) {
-            stagedImage.classList.add('active');
+        // Initialize - select first style and activate it
+        function initializeWidget() {
+            const firstStyle = '${images.find(img => !img.isOriginal)?.style || ''}';
+            if (firstStyle) {
+                selectStyle(firstStyle);
+            }
+        }
+        
+        // Initialize when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeWidget);
+        } else {
+            initializeWidget();
         }
         
         ${autoPlay ? `

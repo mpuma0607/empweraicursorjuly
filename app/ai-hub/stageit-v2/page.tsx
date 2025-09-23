@@ -173,6 +173,14 @@ export default function StageITV2Page() {
   const handleStyleSelect = (style: string) => {
     setSelectedStyle(style)
     setShowSlider(true)
+    
+    // Scroll to slider on mobile
+    setTimeout(() => {
+      const sliderElement = document.querySelector('[data-testid="interactive-slider"]')
+      if (sliderElement) {
+        sliderElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
+    }, 100)
   }
 
   const handleGenerateEmbedCode = () => {
@@ -258,48 +266,58 @@ export default function StageITV2Page() {
           </Card>
         )}
 
-        {/* Results Section */}
+        {/* Desktop Layout: Slider on Left, Styles on Right */}
         {stagedImages.length > 0 && !isProcessing && (
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Palette className="w-5 h-5" />
-                Staging Results
-              </CardTitle>
-              <CardDescription>
-                All 8 styles have been generated. Click "View" on any style to test the slider comparison.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <StylePreviewGrid
-                images={stagedImages}
-                onStyleSelect={handleStyleSelect}
-                selectedStyle={selectedStyle}
-              />
-            </CardContent>
-          </Card>
-        )}
+          <div className="lg:col-span-2 grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Left Side: Interactive Slider */}
+            <Card data-testid="interactive-slider">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Eye className="w-5 h-5" />
+                  Step 2: Play with Slider
+                </CardTitle>
+                <CardDescription>
+                  {selectedStyle ? `Drag the slider to compare the original photo with the ${selectedStyle} staging.` : 'Select a style from the right to start comparing.'}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {selectedStyle && stagedImages.length > 0 ? (
+                  <InteractiveSlider
+                    originalImage={stagedImages.find(img => img.isOriginal)?.url || ''}
+                    stagedImage={stagedImages.find(img => img.style === selectedStyle)?.url || ''}
+                    styleName={selectedStyle}
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-64 bg-gray-50 rounded-lg">
+                    <div className="text-center text-gray-500">
+                      <Eye className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                      <p>Select a style to view comparison</p>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
-        {/* Interactive Slider */}
-        {showSlider && selectedStyle && stagedImages.length > 0 && (
-          <Card className="lg:col-span-2" data-testid="interactive-slider">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Eye className="w-5 h-5" />
-                Interactive Comparison
-              </CardTitle>
-              <CardDescription>
-                Drag the slider to compare the original photo with the {selectedStyle} staging.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <InteractiveSlider
-                originalImage={stagedImages.find(img => img.isOriginal)?.url || ''}
-                stagedImage={stagedImages.find(img => img.style === selectedStyle)?.url || ''}
-                styleName={selectedStyle}
-              />
-            </CardContent>
-          </Card>
+            {/* Right Side: Staging Results */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Palette className="w-5 h-5" />
+                  Step 1: Select Style
+                </CardTitle>
+                <CardDescription>
+                  All 8 styles have been generated. Click "View" on any style to test the slider comparison.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <StylePreviewGrid
+                  images={stagedImages}
+                  onStyleSelect={handleStyleSelect}
+                  selectedStyle={selectedStyle}
+                />
+              </CardContent>
+            </Card>
+          </div>
         )}
 
         {/* Embed Code Generator */}
