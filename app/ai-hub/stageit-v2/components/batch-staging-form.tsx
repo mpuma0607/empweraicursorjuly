@@ -247,7 +247,7 @@ export default function BatchStagingForm({
           Staging Styles (8 styles will be generated)
         </label>
         <div className="grid grid-cols-2 gap-2 text-xs">
-          {['Modern', 'Scandinavian', 'Industrial', 'Midcentury', 'Luxury', 'Farmhouse', 'Coastal', 'Original'].map((style) => (
+          {['Modern', 'Scandinavian', 'Industrial', 'Midcentury', 'Luxury', 'Farmhouse', 'Coastal', 'Remove Furniture'].map((style) => (
             <div key={style} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
               <div className="w-2 h-2 bg-blue-500 rounded-full" />
               <span>{style}</span>

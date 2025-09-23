@@ -627,7 +627,7 @@ export default function EmbedCodeGenerator({
       'luxury': '💎',
       'farmhouse': '🚜',
       'coastal': '🌊',
-      'original': '📷'
+      'vacant': '🪑'
     }
     return icons[style] || '🏠'
   }
@@ -641,7 +641,7 @@ export default function EmbedCodeGenerator({
       'luxury': 'Elegant & Rich',
       'farmhouse': 'Rustic & Charming',
       'coastal': 'Nautical & Fresh',
-      'original': 'Original Photo'
+      'vacant': 'Remove Furniture'
     }
     return descriptions[style] || 'Style Preview'
   }

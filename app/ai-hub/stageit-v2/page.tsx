@@ -21,7 +21,7 @@ const STAGING_STYLES = [
   { id: 'luxury', name: 'Luxury', description: 'High-end finishes, marble, gold accents' },
   { id: 'farmhouse', name: 'Farmhouse', description: 'Rustic charm, shiplap, vintage elements' },
   { id: 'coastal', name: 'Coastal', description: 'Nautical themes, light blues, beachy vibes' },
-  { id: 'original', name: 'Original', description: 'The actual uploaded photo' }
+  { id: 'vacant', name: 'Remove Furniture', description: 'Remove all furniture to show empty space' }
 ]
 
 const ROOM_TYPES = [
@@ -95,7 +95,14 @@ export default function StageITV2Page() {
           formData.append('roomType', roomType)
           formData.append('style', style.name)
           formData.append('colors', '')
-          formData.append('notes', '')
+          
+          // Special handling for vacant room - add notes to remove furniture
+          if (style.id === 'vacant') {
+            formData.append('notes', 'Remove all furniture, decor, and staging elements to show the empty room. Keep all architectural elements like windows, doors, and built-ins exactly as they are.')
+          } else {
+            formData.append('notes', '')
+          }
+          
           formData.append('size', '1024x1024')
 
           // Call the original StageIT API for each style
