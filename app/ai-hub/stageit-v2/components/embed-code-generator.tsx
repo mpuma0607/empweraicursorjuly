@@ -97,6 +97,63 @@ export default function EmbedCodeGenerator({
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
         
+        .grid {
+            display: grid;
+        }
+        
+        .grid-cols-1 {
+            grid-template-columns: repeat(1, minmax(0, 1fr));
+        }
+        
+        .lg\\:grid-cols-2 {
+            grid-template-columns: repeat(1, minmax(0, 1fr));
+        }
+        
+        @media (min-width: 1024px) {
+            .lg\\:grid-cols-2 {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+        
+        .gap-6 {
+            gap: 1.5rem;
+        }
+        
+        .card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .card-header {
+            padding: 1.5rem 1.5rem 0 1.5rem;
+        }
+        
+        .card-content {
+            padding: 1.5rem;
+        }
+        
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+        
+        .card-description {
+            color: #6b7280;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+        
+        .icon {
+            font-size: 1.25rem;
+        }
+        
         .results-section {
             padding: 24px;
         }
@@ -345,56 +402,67 @@ export default function EmbedCodeGenerator({
 </head>
 <body>
     <div class="staging-widget">
-        <!-- Staging Results Section -->
-        <div class="results-section">
-            <div class="section-header">
-                <div class="section-title">Staging Results</div>
-            </div>
-            <div class="section-description">
-                All 8 styles have been generated. Click "View" on any style to test the slider comparison.
-            </div>
-            
-            <div class="styles-grid">
-                ${images.map(img => `
-                    <div class="style-card ${img.style === '${currentStyle}' ? 'selected' : ''}" data-style="${img.style}">
-                        <img class="style-image" src="${imageDataUrls[img.style] || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIFBsYWNlaG9sZGVyPC90ZXh0Pjwvc3ZnPg=='}" alt="${img.name}" />
-                        <div class="style-content">
-                            <div class="style-name">${img.name}</div>
-                            <div class="style-actions">
-                                <button class="action-button primary" onclick="selectStyle('${img.style}')">
-                                    👁️ View
-                                </button>
-                                <button class="action-button" onclick="downloadImage('${img.style}')">
-                                    💾 Save
-                                </button>
-                            </div>
+        <!-- Desktop Layout: Slider on Left, Styles on Right -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Left Side: Interactive Slider -->
+            <div class="card" data-testid="interactive-slider">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span class="icon">👁️</span>
+                        Step 2: Play with Slider
+                    </div>
+                    <div class="card-description" id="slider-description">
+                        Select a style from the right to start comparing.
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="image-comparison">
+                        <img id="original" class="image-layer original-image" src="${originalImageDataUrl}" alt="Original" />
+                        ${images.filter(img => !img.isOriginal).map(img => 
+                            `<img data-style="${img.style}" class="image-layer staged-image" src="${imageDataUrls[img.style]}" alt="${img.name}" />`
+                        ).join('')}
+                    </div>
+                    
+                    <div class="slider-container">
+                        <input type="range" id="comparison-slider" class="slider" min="0" max="100" value="0" oninput="updateComparison(this.value)" />
+                        <div class="slider-labels">
+                            <span>Original</span>
+                            <span id="staged-label">Select a style</span>
                         </div>
                     </div>
-                `).join('')}
+                </div>
             </div>
-        </div>
-        
-        <!-- Interactive Comparison Section -->
-        <div class="comparison-section">
-            <div class="comparison-header">
-                <div class="comparison-title">Interactive Comparison</div>
-            </div>
-            <div class="comparison-description">
-                Drag the slider to compare the original photo with the <span id="current-style-name">${images.find(img => !img.isOriginal)?.name || 'staged'}</span> staging.
-            </div>
-            
-            <div class="image-comparison">
-                <img id="original" class="image-layer original-image" src="${originalImageDataUrl}" alt="Original" />
-                ${images.filter(img => !img.isOriginal).map(img => 
-                    `<img data-style="${img.style}" class="image-layer staged-image ${img.style === '${currentStyle}' ? 'active' : ''}" src="${imageDataUrls[img.style]}" alt="${img.name}" />`
-                ).join('')}
-            </div>
-            
-            <div class="slider-container">
-                <input type="range" id="comparison-slider" class="slider" min="0" max="100" value="0" oninput="updateComparison(this.value)" />
-                <div class="slider-labels">
-                    <span>Original</span>
-                    <span id="staged-label">${images.find(img => !img.isOriginal)?.name || 'Staged'}</span>
+
+            <!-- Right Side: Staging Results -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span class="icon">🎨</span>
+                        Step 1: Select Style
+                    </div>
+                    <div class="card-description">
+                        All 8 styles have been generated. Click "View" on any style to test the slider comparison.
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="styles-grid">
+                        ${images.map(img => `
+                            <div class="style-card" data-style="${img.style}">
+                                <img class="style-image" src="${imageDataUrls[img.style] || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIFBsYWNlaG9sZGVyPC90ZXh0Pjwvc3ZnPg=='}" alt="${img.name}" />
+                                <div class="style-content">
+                                    <div class="style-name">${img.name}</div>
+                                    <div class="style-actions">
+                                        <button class="action-button primary" onclick="selectStyle('${img.style}')">
+                                            👁️ View
+                                        </button>
+                                        <button class="action-button" onclick="downloadImage('${img.style}')">
+                                            💾 Save
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
                 </div>
             </div>
         </div>
@@ -440,14 +508,14 @@ export default function EmbedCodeGenerator({
                 updateComparison(0);
             }
             
-            // Update staged label and current style name
+            // Update staged label and slider description
             const stagedLabel = document.getElementById('staged-label');
-            const currentStyleName = document.getElementById('current-style-name');
+            const sliderDescription = document.getElementById('slider-description');
             if (stagedLabel) {
                 stagedLabel.textContent = style.charAt(0).toUpperCase() + style.slice(1);
             }
-            if (currentStyleName) {
-                currentStyleName.textContent = style.charAt(0).toUpperCase() + style.slice(1);
+            if (sliderDescription) {
+                sliderDescription.textContent = \`Drag the slider to compare the original photo with the \${style} staging.\`;
             }
         }
         
