@@ -183,62 +183,6 @@ export function StageItForm() {
   
   const { user, loading: userLoading } = useMemberSpaceUser()
 
-  // Image compression function
-  const compressImage = async (file: File): Promise<File> => {
-    return new Promise((resolve) => {
-      const canvas = document.createElement('canvas')
-      const ctx = canvas.getContext('2d')!
-      const img = new Image()
-      
-      img.onload = () => {
-        // Calculate new dimensions (max 2048x2048 for staging)
-        let { width, height } = img
-        const maxDimension = 2048
-        
-        if (width > maxDimension || height > maxDimension) {
-          if (width > height) {
-            height = (height * maxDimension) / width
-            width = maxDimension
-          } else {
-            width = (width * maxDimension) / height
-            height = maxDimension
-          }
-        }
-        
-        canvas.width = width
-        canvas.height = height
-        
-        // Draw and compress
-        ctx.drawImage(img, 0, 0, width, height)
-        
-        canvas.toBlob((blob) => {
-          if (blob) {
-            const compressedFile = new File([blob], file.name, {
-              type: 'image/jpeg',
-              lastModified: Date.now()
-            })
-            
-            resolve(compressedFile)
-          } else {
-            resolve(file) // Fallback to original if compression fails
-          }
-        }, 'image/jpeg', quality) // Use dynamic quality
-      } catch (error) {
-        clearTimeout(timeout)
-        console.error('Compression error:', error)
-        reject(error)
-      }
-    }
-    
-    img.onerror = () => {
-      clearTimeout(timeout)
-      console.error('Image load error')
-      reject(new Error('Failed to load image'))
-    }
-    
-    img.src = URL.createObjectURL(file)
-  })
-}
 
   // Handle image upload
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
