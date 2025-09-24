@@ -65,10 +65,13 @@ const compressImage = async (file: File): Promise<File> => {
       
       // More aggressive settings for larger files
       if (originalSizeMB > 15) {
-        maxDimension = 1536 // Smaller dimensions
-        quality = 0.6 // Lower quality
+        maxDimension = 1200 // Much smaller dimensions
+        quality = 0.5 // Much lower quality
       } else if (originalSizeMB > 10) {
-        maxDimension = 1792
+        maxDimension = 1400
+        quality = 0.6
+      } else if (originalSizeMB > 8) {
+        maxDimension = 1600
         quality = 0.7
       }
       
@@ -207,11 +210,55 @@ export function StageItForm() {
               type: 'image/jpeg',
               lastModified: Date.now()
             })
-            resolve(compressedFile)
+            
+            // If still too large, try a second compression pass
+            if (compressedFile.size > 8 * 1024 * 1024 && quality > 0.3) {
+              console.log('First compression not enough, trying second pass...')
+              const secondCanvas = document.createElement('canvas')
+              const secondCtx = secondCanvas.getContext('2d')!
+              const secondImg = new Image()
+              
+              secondImg.onload = () => {
+                const secondMaxDim = Math.min(maxDimension * 0.8, 1000)
+                let secondWidth = secondImg.width
+                let secondHeight = secondImg.height
+                
+                if (secondWidth > secondMaxDim || secondHeight > secondMaxDim) {
+                  if (secondWidth > secondHeight) {
+                    secondHeight = (secondHeight * secondMaxDim) / secondWidth
+                    secondWidth = secondMaxDim
+                  } else {
+                    secondWidth = (secondWidth * secondMaxDim) / secondHeight
+                    secondHeight = secondMaxDim
+                  }
+                }
+                
+                secondCanvas.width = secondWidth
+                secondCanvas.height = secondHeight
+                secondCtx.drawImage(secondImg, 0, 0, secondWidth, secondHeight)
+                
+                secondCanvas.toBlob((secondBlob) => {
+                  if (secondBlob) {
+                    const finalFile = new File([secondBlob], file.name, {
+                      type: 'image/jpeg',
+                      lastModified: Date.now()
+                    })
+                    console.log(`Second compression: ${(compressedFile.size / (1024 * 1024)).toFixed(2)}MB -> ${(finalFile.size / (1024 * 1024)).toFixed(2)}MB`)
+                    resolve(finalFile)
+                  } else {
+                    resolve(compressedFile)
+                  }
+                }, 'image/jpeg', Math.max(quality * 0.7, 0.3))
+              }
+              
+              secondImg.src = URL.createObjectURL(compressedFile)
+            } else {
+              resolve(compressedFile)
+            }
           } else {
             resolve(file) // Fallback to original if compression fails
           }
-        }, 'image/jpeg', 0.8) // 80% quality
+        }, 'image/jpeg', quality) // Use dynamic quality
       }
       
       img.src = URL.createObjectURL(file)
