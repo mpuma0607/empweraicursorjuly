@@ -19,10 +19,19 @@ interface Message {
 
 export async function POST(request: NextRequest) {
   try {
-    const { message, userContext, conversationHistory } = await request.json()
+    const { message, userContext, conversationHistory, knowledgeResults } = await request.json()
 
     if (!message) {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 })
+    }
+
+    // Build knowledge base context
+    let knowledgeContext = ''
+    if (knowledgeResults && knowledgeResults.length > 0) {
+      knowledgeContext = '\n\nRelevant Knowledge Base Information:\n'
+      knowledgeResults.forEach((result: any, index: number) => {
+        knowledgeContext += `${index + 1}. Q: ${result.question}\nA: ${result.answer}\n\n`
+      })
     }
 
     // Build system prompt based on user context
@@ -48,7 +57,9 @@ ${userContext?.gmailConnected || userContext?.outlookConnected ? '- Help with em
 ${userContext?.gmailConnected || userContext?.outlookConnected ? '- Assist with calendar scheduling\n' : ''}
 ${userContext?.fubConnected ? '- Help with CRM tasks and lead management\n' : ''}
 
-Always be helpful, professional, and specific to real estate. If you don't know something, say so and offer to help them find the right resource.`
+${knowledgeContext}
+
+Always be helpful, professional, and specific to real estate. Use the knowledge base information when relevant to provide accurate answers. If you don't know something, say so and offer to help them find the right resource.`
 
     // Prepare conversation history
     const messages: Message[] = [

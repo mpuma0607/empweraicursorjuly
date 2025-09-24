@@ -132,6 +132,28 @@ export default function AIAssistantPage() {
     setIsLoading(true)
 
     try {
+      // First, search knowledge base for relevant information
+      let knowledgeResults = []
+      try {
+        const knowledgeResponse = await fetch('/api/knowledge-base/search', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            query: input.trim(),
+            userEmail: user?.email
+          })
+        })
+        
+        if (knowledgeResponse.ok) {
+          const knowledgeData = await knowledgeResponse.json()
+          knowledgeResults = knowledgeData.results || []
+        }
+      } catch (error) {
+        console.error('Error searching knowledge base:', error)
+      }
+
       const response = await fetch('/api/ai-assistant/chat', {
         method: 'POST',
         headers: {
@@ -140,7 +162,8 @@ export default function AIAssistantPage() {
         body: JSON.stringify({
           message: input.trim(),
           userContext,
-          conversationHistory: messages.slice(-10) // Last 10 messages for context
+          conversationHistory: messages.slice(-10), // Last 10 messages for context
+          knowledgeResults: knowledgeResults
         })
       })
 

@@ -49,6 +49,7 @@
     "clsx": "^2.1.1",
     "cmdk": "latest",
     "convex": "latest",
+    "csv-parse": "^6.1.0",
     "date-fns": "4.1.0",
     "dotenv": "latest",
     "embla-carousel-react": "latest",
