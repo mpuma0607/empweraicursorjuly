@@ -1,5 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { parse } from 'csv-parse/sync'
+
+// Simple CSV parser function
+function parseCSV(csvText: string) {
+  const lines = csvText.split('\n').filter(line => line.trim())
+  if (lines.length === 0) return []
+  
+  // Get headers from first line
+  const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''))
+  
+  // Parse data rows
+  const records = []
+  for (let i = 1; i < lines.length; i++) {
+    const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''))
+    if (values.length === headers.length) {
+      const record: any = {}
+      headers.forEach((header, index) => {
+        record[header] = values[index]
+      })
+      records.push(record)
+    }
+  }
+  
+  return records
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,11 +36,7 @@ export async function POST(req: NextRequest) {
 
     // Read and parse CSV
     const csvText = await file.text()
-    const records = parse(csvText, {
-      columns: true,
-      skip_empty_lines: true,
-      trim: true
-    })
+    const records = parseCSV(csvText)
 
     // Validate CSV format
     if (records.length === 0) {
