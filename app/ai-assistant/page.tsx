@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useMemberSpaceUser } from "@/hooks/useMemberSpaceUser"
+import { useMemberSpaceUser } from "@/hooks/use-memberspace-user"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -23,7 +23,7 @@ interface UserContext {
 }
 
 export default function AIAssistantPage() {
-  const { user, loading: userLoading } = useMemberSpaceUser()
+  const { user } = useMemberSpaceUser()
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -135,15 +135,7 @@ export default function AIAssistantPage() {
     }
   }
 
-  if (userLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin" />
-      </div>
-    )
-  }
-
-  if (!user) {
+  if (!user?.email) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Card className="w-96">
