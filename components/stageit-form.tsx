@@ -63,17 +63,25 @@ const compressImage = async (file: File): Promise<File> => {
       let maxDimension = 2048
       let quality = 0.8
       
-      // More aggressive settings for larger files
-      if (originalSizeMB > 15) {
-        maxDimension = 1200 // Much smaller dimensions
-        quality = 0.5 // Much lower quality
-      } else if (originalSizeMB > 10) {
+      // Reasonable compression settings
+      if (originalSizeMB > 20) {
+        maxDimension = 1200 // Small dimensions for very large files
+        quality = 0.5 // Lower quality
+      } else if (originalSizeMB > 15) {
         maxDimension = 1400
         quality = 0.6
-      } else if (originalSizeMB > 8) {
+      } else if (originalSizeMB > 10) {
         maxDimension = 1600
         quality = 0.7
+      } else if (originalSizeMB >= 4) { // 4MB files
+        maxDimension = 2000 // Good size for 4MB files
+        quality = 0.85 // High quality
+      } else if (originalSizeMB > 5) {
+        maxDimension = 2000
+        quality = 0.85
       }
+      
+      console.log(`Compression settings: ${originalSizeMB.toFixed(2)}MB -> maxDim: ${maxDimension}, quality: ${quality}`)
       
       // Scale down dimensions
       if (width > maxDimension || height > maxDimension) {
@@ -212,7 +220,7 @@ export function StageItForm() {
             })
             
             // If still too large, try a second compression pass
-            if (compressedFile.size > 8 * 1024 * 1024 && quality > 0.3) {
+            if (compressedFile.size > 8 * 1024 * 1024 && quality > 0.2) {
               console.log('First compression not enough, trying second pass...')
               const secondCanvas = document.createElement('canvas')
               const secondCtx = secondCanvas.getContext('2d')!
@@ -244,11 +252,55 @@ export function StageItForm() {
                       lastModified: Date.now()
                     })
                     console.log(`Second compression: ${(compressedFile.size / (1024 * 1024)).toFixed(2)}MB -> ${(finalFile.size / (1024 * 1024)).toFixed(2)}MB`)
-                    resolve(finalFile)
+                    
+                    // If STILL too large, try a third compression pass
+                    if (finalFile.size > 8 * 1024 * 1024 && quality > 0.1) {
+                      console.log('Second compression not enough, trying third pass...')
+                      const thirdCanvas = document.createElement('canvas')
+                      const thirdCtx = thirdCanvas.getContext('2d')!
+                      const thirdImg = new Image()
+                      
+                      thirdImg.onload = () => {
+                        const thirdMaxDim = Math.min(maxDimension * 0.6, 600)
+                        let thirdWidth = thirdImg.width
+                        let thirdHeight = thirdImg.height
+                        
+                        if (thirdWidth > thirdMaxDim || thirdHeight > thirdMaxDim) {
+                          if (thirdWidth > thirdHeight) {
+                            thirdHeight = (thirdHeight * thirdMaxDim) / thirdWidth
+                            thirdWidth = thirdMaxDim
+                          } else {
+                            thirdWidth = (thirdWidth * thirdMaxDim) / thirdHeight
+                            thirdHeight = thirdMaxDim
+                          }
+                        }
+                        
+                        thirdCanvas.width = thirdWidth
+                        thirdCanvas.height = thirdHeight
+                        thirdCtx.drawImage(thirdImg, 0, 0, thirdWidth, thirdHeight)
+                        
+                        thirdCanvas.toBlob((thirdBlob) => {
+                          if (thirdBlob) {
+                            const ultraFile = new File([thirdBlob], file.name, {
+                              type: 'image/jpeg',
+                              lastModified: Date.now()
+                            })
+                            console.log(`Third compression: ${(finalFile.size / (1024 * 1024)).toFixed(2)}MB -> ${(ultraFile.size / (1024 * 1024)).toFixed(2)}MB`)
+                            resolve(ultraFile)
+                          } else {
+                            resolve(finalFile)
+                          }
+                        }, 'image/jpeg', Math.max(quality * 0.5, 0.1))
+                      }
+                      
+                      thirdImg.src = URL.createObjectURL(finalFile)
+                    } else {
+                      resolve(finalFile)
+                    }
                   } else {
                     resolve(compressedFile)
                   }
-                }, 'image/jpeg', Math.max(quality * 0.7, 0.3))
+                }, 'image/jpeg', Math.max(quality * 0.7, 0.2))
               }
               
               secondImg.src = URL.createObjectURL(compressedFile)
@@ -276,10 +328,10 @@ export function StageItForm() {
       }
       
       // Check if file is too large and needs compression
-      const maxUploadSize = 8 * 1024 * 1024 // 8MB server limit (more conservative)
+      const maxUploadSize = 4 * 1024 * 1024 // 4MB limit to avoid Vercel 413 errors
       let processedFile = file
       
-      if (file.size > maxUploadSize) {
+      if (file.size >= maxUploadSize) { // Changed from > to >= to compress 8MB files
         try {
           setIsCompressing(true)
           console.log(`File size ${(file.size / (1024 * 1024)).toFixed(2)}MB exceeds limit, compressing...`)
@@ -324,10 +376,10 @@ export function StageItForm() {
       }
       
       // Check if file is too large and needs compression
-      const maxUploadSize = 8 * 1024 * 1024 // 8MB server limit (more conservative)
+      const maxUploadSize = 4 * 1024 * 1024 // 4MB limit to avoid Vercel 413 errors
       let processedFile = file
       
-      if (file.size > maxUploadSize) {
+      if (file.size >= maxUploadSize) { // Changed from > to >= to compress 8MB files
         try {
           setIsCompressing(true)
           console.log(`File size ${(file.size / (1024 * 1024)).toFixed(2)}MB exceeds limit, compressing...`)
