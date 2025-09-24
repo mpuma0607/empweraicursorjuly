@@ -98,7 +98,7 @@ export default function StageITV2Page() {
           
           // Special handling for vacant room - add notes to remove furniture
           if (style.id === 'vacant') {
-            formData.append('notes', 'Remove all furniture, decor, and staging elements to show the empty room. Keep all architectural elements like windows, doors, and built-ins exactly as they are.')
+            formData.append('notes', 'CRITICAL: Remove ALL furniture, decor, lighting fixtures, rugs, and staging elements to show a completely empty room. Keep ONLY the architectural elements like windows, doors, walls, flooring, and built-ins exactly as they are. The room must be completely vacant with no furniture or decor items.')
           } else {
             formData.append('notes', '')
           }
@@ -281,7 +281,7 @@ export default function StageITV2Page() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Eye className="w-5 h-5" />
-                  Step 2: Play with Slider
+                  Play with Slider
                 </CardTitle>
                 <CardDescription>
                   {selectedStyle ? `Drag the slider to compare the original photo with the ${selectedStyle} staging.` : 'Select a style from the right to start comparing.'}
@@ -310,7 +310,7 @@ export default function StageITV2Page() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Palette className="w-5 h-5" />
-                  Step 1: Select Style
+                  Select Style
                 </CardTitle>
                 <CardDescription>
                   All 8 styles have been generated. Click "View" on any style to test the slider comparison.
