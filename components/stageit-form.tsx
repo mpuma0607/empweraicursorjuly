@@ -231,14 +231,14 @@ export function StageItForm() {
     }
     
     img.onerror = () => {
-        clearTimeout(timeout)
-        console.error('Image load error')
-        reject(new Error('Failed to load image'))
-      }
-      
-      img.src = URL.createObjectURL(file)
-    })
-  }
+      clearTimeout(timeout)
+      console.error('Image load error')
+      reject(new Error('Failed to load image'))
+    }
+    
+    img.src = URL.createObjectURL(file)
+  })
+}
 
   // Handle image upload
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
