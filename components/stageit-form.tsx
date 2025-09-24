@@ -49,12 +49,20 @@ interface StagingResult {
 
 // Image compression function (moved outside component to avoid dependency issues)
 const compressImage = async (file: File): Promise<File> => {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const canvas = document.createElement('canvas')
     const ctx = canvas.getContext('2d')!
     const img = new Image()
     
+    // Add timeout to prevent hanging
+    const timeout = setTimeout(() => {
+      console.error('Compression timeout')
+      reject(new Error('Compression timeout'))
+    }, 10000) // 10 second timeout
+    
     img.onload = () => {
+      clearTimeout(timeout)
+      try {
       // More aggressive compression for large files
       let { width, height } = img
       
@@ -215,6 +223,17 @@ export function StageItForm() {
             resolve(file) // Fallback to original if compression fails
           }
         }, 'image/jpeg', quality) // Use dynamic quality
+      } catch (error) {
+        clearTimeout(timeout)
+        console.error('Compression error:', error)
+        reject(error)
+      }
+    }
+    
+    img.onerror = () => {
+        clearTimeout(timeout)
+        console.error('Image load error')
+        reject(new Error('Failed to load image'))
       }
       
       img.src = URL.createObjectURL(file)
