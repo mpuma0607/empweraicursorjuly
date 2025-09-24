@@ -93,7 +93,11 @@ export default function AIAssistantPage() {
       // Check FUB connection
       let fubConnected = false
       try {
-        const fubResponse = await fetch('/api/fub/status')
+        const fubResponse = await fetch('/api/fub/status', {
+          headers: {
+            'x-user-email': currentUserEmail
+          }
+        })
         if (fubResponse.ok) {
           const data = await fubResponse.json()
           fubConnected = data.connected
