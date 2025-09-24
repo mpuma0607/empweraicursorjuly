@@ -122,15 +122,19 @@ export async function POST(req: Request) {
 
     const prompt = [
       `Virtual-stage this ${roomType} in ${style} style.`,
-      `CRITICAL: Do not add, remove, resize, or modify any existing windows, doors, or architectural elements.`,
-      `Do not change the size, shape, or position of any existing windows, doors, trim, or structural features.`,
-      `Only add furniture, decor, and staging elements. Preserve the exact room layout and architecture.`,
+      `ABSOLUTELY CRITICAL ARCHITECTURAL PRESERVATION:`,
+      `- DO NOT modify, remove, resize, or change ANY windows, doors, or architectural openings`,
+      `- DO NOT alter window frames, door frames, trim, or structural elements`,
+      `- DO NOT change the size, shape, position, or proportions of any existing architectural features`,
+      `- DO NOT add new windows, doors, or architectural openings`,
+      `- DO NOT remove or modify existing windows, doors, or structural elements`,
+      `- PRESERVE the exact room layout, dimensions, and architectural integrity`,
+      `- ONLY add furniture, decor, lighting, and staging elements`,
+      `- Keep all existing walls, flooring, ceiling, and structural features completely unchanged`,
       colors ? `Palette: ${colors}.` : null,
       `Cohesive furniture layout; correct rug size; layered lighting; tasteful wall art.`,
-      `Preserve ALL existing architecture (windows, doors, trim, flooring, walls) exactly as shown with identical size and proportions.`,
-      `Maintain the exact same window dimensions, door positions, and room proportions as the original.`,
       notes ? `Notes: ${notes}` : null,
-      `Photorealistic, listing-quality output.`
+      `Photorealistic, listing-quality output that maintains the original room's architectural integrity.`
     ].filter(Boolean).join(" ");
 
     // Validate image before processing

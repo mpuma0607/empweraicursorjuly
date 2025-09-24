@@ -114,7 +114,7 @@ export default function StylePreviewGrid({
                   <Button
                     size="sm"
                     variant="outline"
-                    className="flex-1 text-xs"
+                    className="flex-1 text-xs min-w-0"
                     onClick={(e) => {
                       e.stopPropagation()
                       onStyleSelect(image.style)
@@ -126,7 +126,7 @@ export default function StylePreviewGrid({
                   <Button
                     size="sm"
                     variant="outline"
-                    className="flex-1 text-xs"
+                    className="flex-1 text-xs min-w-0"
                     onClick={(e) => {
                       e.stopPropagation()
                       handleDownload(image)

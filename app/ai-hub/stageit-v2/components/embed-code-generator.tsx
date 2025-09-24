@@ -27,8 +27,8 @@ export default function EmbedCodeGenerator({
   roomType
 }: EmbedCodeGeneratorProps) {
   const [widgetConfig, setWidgetConfig] = useState({
-    width: '800',
-    height: '600',
+    width: '1080',
+    height: '800',
     theme: 'light',
     showLabels: true,
     showControls: true,
@@ -364,7 +364,7 @@ export default function EmbedCodeGenerator({
                 <div class="card-header">
                     <div class="card-title">
                         <span class="icon">👁️</span>
-                        Step 2: Play with Slider
+                        Play with Slider
                     </div>
                     <div class="card-description" id="slider-description">
                         Select a style from the right to start comparing.
@@ -396,7 +396,7 @@ export default function EmbedCodeGenerator({
                 <div class="card-header">
                     <div class="card-title">
                         <span class="icon">🎨</span>
-                        Step 1: Select Style
+                        Select Style
                     </div>
                     <div class="card-description">
                         All 8 styles have been generated. Click "View" on any style to test the slider comparison.
