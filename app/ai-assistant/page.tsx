@@ -50,20 +50,60 @@ export default function AIAssistantPage() {
 
   const checkUserConnections = async () => {
     try {
-      // Check Gmail connection
-      const gmailResponse = await fetch('/api/check-gmail-status')
-      const gmailConnected = gmailResponse.ok
+      const currentUserEmail = user?.email
+      
+      if (!currentUserEmail) {
+        setUserContext({
+          email: '',
+          gmailConnected: false,
+          outlookConnected: false,
+          fubConnected: false
+        })
+        return
+      }
 
-      // Check Outlook connection  
-      const outlookResponse = await fetch('/api/check-outlook-status')
-      const outlookConnected = outlookResponse.ok
+      // Check Gmail connection (same as ScriptIT)
+      let gmailConnected = false
+      try {
+        const googleResponse = await fetch('/api/auth/google/status', {
+          headers: {
+            'x-user-email': currentUserEmail
+          }
+        })
+        if (googleResponse.ok) {
+          const data = await googleResponse.json()
+          gmailConnected = data.status.connected
+        }
+      } catch (error) {
+        console.error('Error checking Gmail:', error)
+      }
+
+      // Check Outlook connection (same as ScriptIT)
+      let outlookConnected = false
+      try {
+        const microsoftResponse = await fetch(`/api/outlook/auth/status?email=${encodeURIComponent(currentUserEmail)}`)
+        if (microsoftResponse.ok) {
+          const data = await microsoftResponse.json()
+          outlookConnected = data.connected
+        }
+      } catch (error) {
+        console.error('Error checking Outlook:', error)
+      }
 
       // Check FUB connection
-      const fubResponse = await fetch('/api/fub/status')
-      const fubConnected = fubResponse.ok
+      let fubConnected = false
+      try {
+        const fubResponse = await fetch('/api/fub/status')
+        if (fubResponse.ok) {
+          const data = await fubResponse.json()
+          fubConnected = data.connected
+        }
+      } catch (error) {
+        console.error('Error checking FUB:', error)
+      }
 
       setUserContext({
-        email: user?.email || '',
+        email: currentUserEmail,
         gmailConnected,
         outlookConnected,
         fubConnected
