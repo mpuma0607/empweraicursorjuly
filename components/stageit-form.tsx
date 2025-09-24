@@ -152,6 +152,17 @@ const compressImage = async (file: File): Promise<File> => {
           resolve(file) // Fallback to original if compression fails
         }
       }, 'image/jpeg', quality)
+      } catch (error) {
+        clearTimeout(timeout)
+        console.error('Compression error:', error)
+        reject(error)
+      }
+    }
+    
+    img.onerror = () => {
+      clearTimeout(timeout)
+      console.error('Image load error')
+      reject(new Error('Failed to load image'))
     }
     
     img.src = URL.createObjectURL(file)
