@@ -97,42 +97,16 @@ export default function EmbedCodeGenerator({
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
         
-        .grid {
+        .main-grid {
             display: grid;
-        }
-        
-        .grid-cols-1 {
-            grid-template-columns: repeat(1, minmax(0, 1fr));
-        }
-        
-        .lg:grid-cols-2 {
-            grid-template-columns: repeat(1, minmax(0, 1fr));
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
         }
         
         @media (min-width: 1024px) {
-            .lg:grid-cols-2 {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
+            .main-grid {
+                grid-template-columns: 1fr 1fr;
             }
-            
-            /* Desktop: Step 2 (slider) on left, Step 1 (styles) on right */
-            .step-1-card {
-                order: 2;
-            }
-            .step-2-card {
-                order: 1;
-            }
-        }
-        
-        /* Mobile: Step 1 first, Step 2 second */
-        .step-1-card {
-            order: 1;
-        }
-        .step-2-card {
-            order: 2;
-        }
-        
-        .gap-6 {
-            gap: 1.5rem;
         }
         
         .card {
@@ -170,34 +144,10 @@ export default function EmbedCodeGenerator({
             font-size: 1.25rem;
         }
         
-        .results-section {
-            padding: 24px;
-        }
-        
-        .section-header {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 16px;
-        }
-        
-        .section-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #1f2937;
-        }
-        
-        .section-description {
-            color: #6b7280;
-            font-size: 14px;
-            margin-bottom: 24px;
-        }
-        
         .styles-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 16px;
-            margin-bottom: 24px;
         }
         
         .style-card {
@@ -273,39 +223,14 @@ export default function EmbedCodeGenerator({
             background: #2563eb;
         }
         
-        .comparison-section {
-            background: #f9fafb;
-            border-radius: 8px;
-            padding: 24px;
-            margin-top: 24px;
-        }
-        
-        .comparison-header {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 16px;
-        }
-        
-        .comparison-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: #1f2937;
-        }
-        
-        .comparison-description {
-            color: #6b7280;
-            font-size: 14px;
-            margin-bottom: 20px;
-        }
-        
         .image-comparison {
             position: relative;
             width: 100%;
-            height: 300px;
+            height: 400px;
             border-radius: 8px;
             overflow: hidden;
             background: #f3f4f6;
+            margin-bottom: 20px;
         }
         
         .image-layer {
@@ -337,69 +262,56 @@ export default function EmbedCodeGenerator({
         
         .slider {
             width: 100%;
-            height: 6px;
-            border-radius: 3px;
+            height: 12px;
+            border-radius: 6px;
             background: #d1d5db;
             outline: none;
             cursor: pointer;
             -webkit-appearance: none;
+            margin-bottom: 10px;
         }
         
         .slider::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
-            width: 24px;
-            height: 24px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             background: #3b82f6;
             cursor: pointer;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-            border: 2px solid white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            border: 3px solid white;
         }
         
         .slider::-moz-range-thumb {
-            width: 24px;
-            height: 24px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             background: #3b82f6;
             cursor: pointer;
-            border: 2px solid white;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-        }
-        
-        /* Mobile-specific slider improvements */
-        @media (max-width: 768px) {
-            .slider {
-                height: 8px;
-            }
-            
-            .slider::-webkit-slider-thumb {
-                width: 28px;
-                height: 28px;
-            }
-            
-            .slider::-moz-range-thumb {
-                width: 28px;
-                height: 28px;
-            }
+            border: 3px solid white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
         }
         
         .slider-labels {
             display: flex;
             justify-content: space-between;
-            margin-top: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        .slider-instructions {
+            text-align: center;
             font-size: 12px;
             color: #6b7280;
+            margin-top: 8px;
         }
         
         @media (max-width: 768px) {
             .staging-widget {
                 width: 100%;
                 max-width: ${width}px;
-            }
-            
-            .results-section {
-                padding: 16px;
             }
             
             .styles-grid {
@@ -424,22 +336,63 @@ export default function EmbedCodeGenerator({
                 padding: 4px 6px;
             }
             
-            .comparison-section {
-                padding: 16px;
+            .image-comparison {
+                height: 300px;
             }
             
-            .image-comparison {
-                height: 250px;
+            .slider {
+                height: 16px;
+            }
+            
+            .slider::-webkit-slider-thumb {
+                width: 40px;
+                height: 40px;
+            }
+            
+            .slider::-moz-range-thumb {
+                width: 40px;
+                height: 40px;
             }
         }
     </style>
 </head>
 <body>
     <div class="staging-widget">
-        <!-- Desktop Layout: Slider on Left, Styles on Right -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <!-- Mobile: Step 1 First, Desktop: Right Side -->
-            <div class="card step-1-card">
+        <div class="main-grid">
+            <!-- Left Side: Interactive Slider (Desktop) / Second (Mobile) -->
+            <div class="card" data-testid="interactive-slider">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span class="icon">👁️</span>
+                        Step 2: Play with Slider
+                    </div>
+                    <div class="card-description" id="slider-description">
+                        Select a style from the right to start comparing.
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="image-comparison">
+                        <img id="original" class="image-layer original-image" src="${originalImageDataUrl}" alt="Original" />
+                        ${images.filter(img => !img.isOriginal).map(img => 
+                            `<img data-style="${img.style}" class="image-layer staged-image" src="${imageDataUrls[img.style]}" alt="${img.name}" />`
+                        ).join('')}
+                    </div>
+                    
+                    <div class="slider-container">
+                        <input type="range" id="comparison-slider" class="slider" min="0" max="100" value="0" oninput="updateComparison(this.value)" />
+                        <div class="slider-labels">
+                            <span>Original</span>
+                            <span id="staged-label">Select a style</span>
+                        </div>
+                        <div class="slider-instructions">
+                            Drag the slider to blend between original and staged images
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Staging Results (Desktop) / First (Mobile) -->
+            <div class="card">
                 <div class="card-header">
                     <div class="card-title">
                         <span class="icon">🎨</span>
@@ -467,35 +420,6 @@ export default function EmbedCodeGenerator({
                                 </div>
                             </div>
                         `).join('')}
-                    </div>
-                </div>
-            </div>
-
-            <!-- Mobile: Step 2 Second, Desktop: Left Side -->
-            <div class="card step-2-card" data-testid="interactive-slider">
-                <div class="card-header">
-                    <div class="card-title">
-                        <span class="icon">👁️</span>
-                        Step 2: Play with Slider
-                    </div>
-                    <div class="card-description" id="slider-description">
-                        Select a style from the right to start comparing.
-                    </div>
-                </div>
-                <div class="card-content">
-                    <div class="image-comparison">
-                        <img id="original" class="image-layer original-image" src="${originalImageDataUrl}" alt="Original" />
-                        ${images.filter(img => !img.isOriginal).map(img => 
-                            `<img data-style="${img.style}" class="image-layer staged-image" src="${imageDataUrls[img.style]}" alt="${img.name}" />`
-                        ).join('')}
-                    </div>
-                    
-                    <div class="slider-container">
-                        <input type="range" id="comparison-slider" class="slider" min="0" max="100" value="0" oninput="updateComparison(this.value)" />
-                        <div class="slider-labels">
-                            <span>Original</span>
-                            <span id="staged-label">Select a style</span>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -549,6 +473,14 @@ export default function EmbedCodeGenerator({
             }
             if (sliderDescription) {
                 sliderDescription.textContent = 'Drag the slider to compare the original photo with the ' + style + ' staging.';
+            }
+            
+            // Auto-scroll to slider on mobile
+            if (window.innerWidth <= 768) {
+                const sliderCard = document.querySelector('[data-testid="interactive-slider"]');
+                if (sliderCard) {
+                    sliderCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
             }
         }
         
