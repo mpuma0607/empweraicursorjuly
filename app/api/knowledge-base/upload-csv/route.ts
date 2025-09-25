@@ -74,18 +74,38 @@ export async function POST(req: NextRequest) {
     }
 
     const firstRecord = records[0]
-    if (!firstRecord.question || !firstRecord.answer) {
+    console.log('First record:', firstRecord)
+    console.log('Available columns:', Object.keys(firstRecord))
+    
+    // Try to find question and answer columns with flexible matching
+    const questionKey = Object.keys(firstRecord).find(key => 
+      key.toLowerCase().includes('question') || 
+      key.toLowerCase().includes('q') ||
+      key.toLowerCase().includes('ask')
+    )
+    
+    const answerKey = Object.keys(firstRecord).find(key => 
+      key.toLowerCase().includes('answer') || 
+      key.toLowerCase().includes('response') ||
+      key.toLowerCase().includes('reply') ||
+      key.toLowerCase().includes('a')
+    )
+    
+    if (!questionKey || !answerKey) {
       return NextResponse.json({ 
-        error: 'CSV must have "question" and "answer" columns' 
+        error: `CSV must have question and answer columns. Found columns: ${Object.keys(firstRecord).join(', ')}` 
       }, { status: 400 })
     }
+    
+    console.log('Using question column:', questionKey)
+    console.log('Using answer column:', answerKey)
 
-    // Process Q&A pairs
+    // Process Q&A pairs using flexible column names
     const qaPairs = records.map((record: any, index: number) => ({
       id: `qa_${Date.now()}_${index}`,
-      question: record.question.trim(),
-      answer: record.answer.trim(),
-      category: record.category?.trim() || 'General',
+      question: record[questionKey]?.trim() || '',
+      answer: record[answerKey]?.trim() || '',
+      category: record.category?.trim() || record.Category?.trim() || 'General',
       created_at: new Date().toISOString(),
       user_email: userEmail
     }))
