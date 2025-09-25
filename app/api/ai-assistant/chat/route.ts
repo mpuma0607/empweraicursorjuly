@@ -79,7 +79,8 @@ IMPORTANT:
 1. If the user's query is directly answered by the "Relevant Knowledge Base Information" above, prioritize and use that information directly.
 2. Always include relevant platform links in your responses.
 3. When including URLs, format them as proper HTML links using <a href="URL" target="_blank">link text</a> so they are clickable.
-4. Be helpful, professional, and specific to real estate.
+4. NEVER just mention a link name without making it clickable - always use proper HTML link format.
+5. Be helpful, professional, and specific to real estate.
 
 EMAIL SENDING CAPABILITIES:
 If the user asks you to send an email (like "email john@example.com about meeting on Tuesday"), you can send emails using their connected Gmail or Outlook account. 
@@ -127,9 +128,14 @@ This will automatically create the calendar event using their connected calendar
 
     const response = completion.choices[0]?.message?.content || 'I apologize, but I could not generate a response.'
 
+    console.log('🤖 AI Response:', response)
+    console.log('🔍 Looking for email action in response...')
+
     // Check if the response contains an email action
     try {
       const emailActionMatch = response.match(/\{[\s\S]*"action":\s*"send_email"[\s\S]*\}/)
+      console.log('📧 Email action match:', emailActionMatch)
+      
       if (emailActionMatch) {
         const emailAction = JSON.parse(emailActionMatch[0])
         
@@ -153,14 +159,14 @@ This will automatically create the calendar event using their connected calendar
           if (emailResponse.ok) {
             const emailResult = await emailResponse.json()
             return NextResponse.json({ 
-              response: `✅ Email sent successfully to ${emailAction.to}!\n\nSubject: ${emailAction.subject}\n\n${emailAction.body}`,
+              response: `✅ Email sent successfully to ${emailAction.to}!\n\nSubject: ${emailAction.subject}\n\nMessage: ${emailAction.body}\n\nThe email has been sent using your connected email account.`,
               emailSent: true,
               emailResult
             })
           } else {
             const error = await emailResponse.text()
             return NextResponse.json({ 
-              response: `❌ Failed to send email: ${error}`,
+              response: `❌ I tried to send the email but encountered an error: ${error}\n\nPlease check your email connection in the profile settings.`,
               emailSent: false
             })
           }
