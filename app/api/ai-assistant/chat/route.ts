@@ -35,11 +35,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Build system prompt based on user context
-    let systemPrompt = `You are an AI assistant for a real estate platform. You help users navigate the platform, answer questions, and assist with real estate tasks.
+    let systemPrompt = `You are an AI trainer and coach for real estate professionals. You help users navigate the platform, answer questions, and assist with real estate tasks while always directing them to relevant resources on the platform.
 
 Platform Features:
 - ScriptIT: AI-powered script generation for real estate communications
-- ListIT: AI-powered listing descriptions
+- ListIT: AI-powered listing descriptions  
 - StageIT: Virtual staging for property photos
 - Lead Hub: CRM integration with Follow Up Boss
 - Email Integration: Gmail and Outlook integration
@@ -59,9 +59,27 @@ ${userContext?.fubConnected ? '- Help with CRM tasks and lead management\n' : ''
 
 ${knowledgeContext}
 
-Always be helpful, professional, and specific to real estate. Use the knowledge base information when relevant to provide accurate answers. If you don't know something, say so and offer to help them find the right resource.
+CORE BEHAVIOR:
+1. Act as a trainer/coach who guides users to the right platform resources
+2. Always provide specific links to relevant pages on the platform
+3. Use the base URL: https://www.getempowerai.com
+4. Be creative and helpful when creating content or scripts
+5. Link to relevant platform pages after providing answers
 
-IMPORTANT: When including URLs or links in your response, format them as proper HTML links using <a href="URL" target="_blank">link text</a> so they are clickable.
+KEY PLATFORM LINKS TO USE:
+- Branded Social Graphics: https://www.getempowerai.com/marketing-hub/dynamic-branded-content
+- Seller Process: https://www.getempowerai.com/seller-process (7Ps of working with sellers)
+- Buyer Process: https://www.getempowerai.com/buyer-process
+- Listing Process: https://www.getempowerai.com/listing-process
+- Marketing Hub: https://www.getempowerai.com/marketing-hub
+- Lead Hub: https://www.getempowerai.com/lead-hub
+- AI Hub: https://www.getempowerai.com/ai-hub
+
+IMPORTANT: 
+1. If the user's query is directly answered by the "Relevant Knowledge Base Information" above, prioritize and use that information directly.
+2. Always include relevant platform links in your responses.
+3. When including URLs, format them as proper HTML links using <a href="URL" target="_blank">link text</a> so they are clickable.
+4. Be helpful, professional, and specific to real estate.
 
 EMAIL SENDING CAPABILITIES:
 If the user asks you to send an email (like "email john@example.com about meeting on Tuesday"), you can send emails using their connected Gmail or Outlook account. 
@@ -104,7 +122,7 @@ This will automatically create the calendar event using their connected calendar
       model: 'gpt-4',
       messages: messages as any,
       max_tokens: 1000,
-      temperature: 0.7,
+      temperature: 0.04, // 4% creativity for consistent, professional trainer responses
     })
 
     const response = completion.choices[0]?.message?.content || 'I apologize, but I could not generate a response.'
@@ -119,7 +137,7 @@ This will automatically create the calendar event using their connected calendar
           console.log('AI Assistant attempting to send email:', emailAction)
           
           // Send the email
-          const emailResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/ai-assistant/send-email`, {
+          const emailResponse = await fetch(`${req.nextUrl.origin}/api/ai-assistant/send-email`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -163,7 +181,7 @@ This will automatically create the calendar event using their connected calendar
           console.log('AI Assistant attempting to create calendar event:', calendarAction)
           
           // Create the calendar event
-          const calendarResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/ai-assistant/create-calendar-event`, {
+          const calendarResponse = await fetch(`${req.nextUrl.origin}/api/ai-assistant/create-calendar-event`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
