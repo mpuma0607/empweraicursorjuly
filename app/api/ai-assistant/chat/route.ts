@@ -59,7 +59,9 @@ ${userContext?.fubConnected ? '- Help with CRM tasks and lead management\n' : ''
 
 ${knowledgeContext}
 
-Always be helpful, professional, and specific to real estate. Use the knowledge base information when relevant to provide accurate answers. If you don't know something, say so and offer to help them find the right resource.`
+Always be helpful, professional, and specific to real estate. Use the knowledge base information when relevant to provide accurate answers. If you don't know something, say so and offer to help them find the right resource.
+
+IMPORTANT: When including URLs or links in your response, format them as proper HTML links using <a href="URL" target="_blank">link text</a> so they are clickable.`
 
     // Prepare conversation history
     const messages: Message[] = [

@@ -343,7 +343,12 @@ export default function AIAssistantPage() {
                               <User className="w-4 h-4 mt-0.5 flex-shrink-0" />
                             )}
                             <div className="flex-1">
-                              <p className="text-sm">{message.content}</p>
+                              <div 
+                                className="text-sm prose prose-sm max-w-none"
+                                dangerouslySetInnerHTML={{ 
+                                  __html: message.content.replace(/\n/g, '<br>') 
+                                }}
+                              />
                               <p className="text-xs opacity-70 mt-1">
                                 {message.timestamp.toLocaleTimeString()}
                               </p>
