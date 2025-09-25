@@ -14,23 +14,33 @@ export async function POST(req: NextRequest) {
     }
 
     console.log('Searching knowledge base for:', query, 'user:', userEmail)
+    console.log('🔍 DEBUGGING: Let me check what\'s actually in the database...')
 
-    // First, let's see what Q&A pairs exist for this user
+    // First, let's see what Q&A pairs exist (GLOBAL, not user-specific)
     const allQAs = await sql`
       SELECT id, question, answer, category
       FROM knowledge_base 
-      WHERE user_email = ${userEmail}
       LIMIT 10
     `
     console.log('All Q&A pairs for user:', allQAs.length)
     console.log('Sample Q&A pairs:', allQAs.slice(0, 3))
     
-    // Search the knowledge base for relevant Q&A pairs
+    // Debug: Show all questions to see what's actually stored
+    if (allQAs.length > 0) {
+      console.log('🔍 All stored questions:')
+      allQAs.forEach((qa, index) => {
+        console.log(`${index + 1}. Q: "${qa.question}"`)
+        console.log(`   A: "${qa.answer.substring(0, 100)}..."`)
+      })
+    } else {
+      console.log('❌ NO Q&A DATA FOUND FOR USER:', userEmail)
+    }
+    
+    // Search the knowledge base for relevant Q&A pairs (GLOBAL, not user-specific)
     const results = await sql`
       SELECT id, question, answer, category
       FROM knowledge_base 
-      WHERE user_email = ${userEmail}
-      AND (
+      WHERE (
         LOWER(question) LIKE LOWER(${'%' + query + '%'}) OR
         LOWER(answer) LIKE LOWER(${'%' + query + '%'})
       )

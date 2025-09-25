@@ -105,17 +105,15 @@ function parseCSVLine(line: string): string[] {
 export async function POST(req: NextRequest) {
   try {
     console.log('CSV upload API called')
-    const formData = await req.formData()
-    const file = formData.get('file') as File
-    const userEmail = formData.get('userEmail') as string
+  const formData = await req.formData()
+  const file = formData.get('file') as File
 
-    console.log('File:', file?.name, file?.size, 'bytes')
-    console.log('User email:', userEmail)
+  console.log('File:', file?.name, file?.size, 'bytes')
 
-    if (!file || !userEmail) {
-      console.error('Missing file or user email')
-      return NextResponse.json({ error: 'File and user email are required' }, { status: 400 })
-    }
+  if (!file) {
+    console.error('Missing file')
+    return NextResponse.json({ error: 'File is required' }, { status: 400 })
+  }
 
     // Read and parse CSV
     const csvText = await file.text()
@@ -155,14 +153,13 @@ export async function POST(req: NextRequest) {
     console.log('Using question column:', questionKey)
     console.log('Using answer column:', answerKey)
 
-    // Process Q&A pairs using flexible column names
+    // Process Q&A pairs using flexible column names (GLOBAL, not user-specific)
     const qaPairs = records.map((record: any, index: number) => ({
       id: `qa_${Date.now()}_${index}`,
       question: record[questionKey]?.trim() || '',
       answer: record[answerKey]?.trim() || '',
       category: record.category?.trim() || record.Category?.trim() || 'General',
-      created_at: new Date().toISOString(),
-      user_email: userEmail
+      created_at: new Date().toISOString()
     }))
 
     // Store in database
@@ -181,11 +178,11 @@ export async function POST(req: NextRequest) {
       )
     `
     
-    // Insert Q&A pairs into database
+    // Insert Q&A pairs into database (GLOBAL, not user-specific)
     for (const qa of qaPairs) {
       await sql`
-        INSERT INTO knowledge_base (question, answer, category, user_email)
-        VALUES (${qa.question}, ${qa.answer}, ${qa.category}, ${qa.user_email})
+        INSERT INTO knowledge_base (question, answer, category)
+        VALUES (${qa.question}, ${qa.answer}, ${qa.category})
       `
     }
 

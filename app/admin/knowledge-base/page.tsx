@@ -85,9 +85,8 @@ export default function KnowledgeBasePage() {
 
     setIsUploading(true)
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('userEmail', user.email)
+        const formData = new FormData()
+        formData.append('file', file)
 
       const response = await fetch('/api/knowledge-base/upload-csv', {
         method: 'POST',
