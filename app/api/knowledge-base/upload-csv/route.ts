@@ -5,22 +5,31 @@ function parseCSV(csvText: string) {
   const lines = csvText.split('\n').filter(line => line.trim())
   if (lines.length === 0) return []
   
+  console.log('Total lines in CSV:', lines.length)
+  console.log('First few lines:', lines.slice(0, 3))
+  
   // Get headers from first line
   const headers = parseCSVLine(lines[0])
+  console.log('Headers found:', headers)
   
   // Parse data rows
   const records = []
   for (let i = 1; i < lines.length; i++) {
     const values = parseCSVLine(lines[i])
-    if (values.length === headers.length) {
+    console.log(`Line ${i}: ${values.length} values, headers: ${headers.length}`)
+    
+    if (values.length >= headers.length) {
       const record: any = {}
       headers.forEach((header, index) => {
-        record[header] = values[index]
+        record[header] = values[index] || ''
       })
       records.push(record)
+    } else {
+      console.log(`Skipping line ${i} - not enough values:`, values)
     }
   }
   
+  console.log('Total records parsed:', records.length)
   return records
 }
 
@@ -34,7 +43,13 @@ function parseCSVLine(line: string): string[] {
     const char = line[i]
     
     if (char === '"') {
-      inQuotes = !inQuotes
+      if (inQuotes && i + 1 < line.length && line[i + 1] === '"') {
+        // Handle escaped quotes ""
+        current += '"'
+        i++ // Skip next quote
+      } else {
+        inQuotes = !inQuotes
+      }
     } else if (char === ',' && !inQuotes) {
       result.push(current.trim())
       current = ''
