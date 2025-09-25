@@ -30,7 +30,7 @@ const navigationItems = [
       { title: "Who's Who AI", href: "/ai-hub/whos-who-ai", description: "Property Owner Skip Tracing" },
       // AI Tools For Buyers & Listings
       { title: "── AI Tools For Buyers & Listings ──", href: "#", description: "", isHeader: true },
-      { title: "StageIT", href: "/ai-hub/stageit", description: "AI-Powered Virtual Staging Tool" },
+      { title: "StageIT", href: "/ai-hub/staging-hub", description: "AI-Powered Virtual Staging Tool" },
       { title: "ListIT", href: "/ai-hub/listit-ai", description: "Property Listing Descriptions" },
       { title: "PropBot AI", href: "/ai-hub/propbot-ai", description: "Intelligent Property Search & Analysis" },
       { title: "MyMarket AI", href: "/ai-hub/mymarket-ai", description: "Housing & Rental Market Analysis" },

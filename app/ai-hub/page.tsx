@@ -241,7 +241,7 @@ const aiTools = {
   "AI Tools For Buyers & Listings": [
     {
       title: "StageIT",
-      href: "/ai-hub/stageit",
+      href: "/ai-hub/staging-hub",
       description: "AI-Powered Virtual Staging Tool",
       icon: Image,
       color: "purple",
