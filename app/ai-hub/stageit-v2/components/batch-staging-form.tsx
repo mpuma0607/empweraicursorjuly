@@ -44,23 +44,41 @@ export default function BatchStagingForm({
   const compressImage = async (file: File): Promise<File> => {
     return new Promise((resolve) => {
       const canvas = document.createElement('canvas')
-      const ctx = canvas.getContext('2d')
+      const ctx = canvas.getContext('2d')!
       const img = new Image()
       
       img.onload = () => {
-        // Calculate new dimensions (max 2048x2048)
-        const maxSize = 2048
+        // More aggressive compression for large files
         let { width, height } = img
         
-        if (width > height) {
-          if (width > maxSize) {
-            height = (height * maxSize) / width
-            width = maxSize
-          }
-        } else {
-          if (height > maxSize) {
-            width = (width * maxSize) / height
-            height = maxSize
+        // Calculate target size based on original file size
+        const originalSizeMB = file.size / (1024 * 1024)
+        let maxDimension = 2048
+        let quality = 0.8
+        
+        // More aggressive settings for larger files
+        if (originalSizeMB > 15) {
+          maxDimension = 1000 // Even smaller dimensions
+          quality = 0.4 // Even lower quality
+        } else if (originalSizeMB > 10) {
+          maxDimension = 1200
+          quality = 0.5
+        } else if (originalSizeMB > 8) {
+          maxDimension = 1400
+          quality = 0.6
+        } else if (originalSizeMB > 5) {
+          maxDimension = 1600
+          quality = 0.7
+        }
+        
+        // Scale down dimensions
+        if (width > maxDimension || height > maxDimension) {
+          if (width > height) {
+            height = (height * maxDimension) / width
+            width = maxDimension
+          } else {
+            width = (width * maxDimension) / height
+            height = maxDimension
           }
         }
         
@@ -68,23 +86,63 @@ export default function BatchStagingForm({
         canvas.height = height
         
         // Draw and compress
-        ctx?.drawImage(img, 0, 0, width, height)
+        ctx.drawImage(img, 0, 0, width, height)
         
-        canvas.toBlob(
-          (blob) => {
-            if (blob) {
-              const compressedFile = new File([blob], file.name, {
-                type: 'image/jpeg',
-                lastModified: Date.now()
-              })
-              resolve(compressedFile)
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const compressedFile = new File([blob], file.name, {
+              type: 'image/jpeg',
+              lastModified: Date.now()
+            })
+            
+            // If still too large, try a second compression pass
+            if (compressedFile.size > 8 * 1024 * 1024 && quality > 0.2) {
+              console.log('First compression not enough, trying second pass...')
+              const secondCanvas = document.createElement('canvas')
+              const secondCtx = secondCanvas.getContext('2d')!
+              const secondImg = new Image()
+              
+              secondImg.onload = () => {
+                const secondMaxDim = Math.min(maxDimension * 0.8, 1000)
+                let secondWidth = secondImg.width
+                let secondHeight = secondImg.height
+                
+                if (secondWidth > secondMaxDim || secondHeight > secondMaxDim) {
+                  if (secondWidth > secondHeight) {
+                    secondHeight = (secondHeight * secondMaxDim) / secondWidth
+                    secondWidth = secondMaxDim
+                  } else {
+                    secondWidth = (secondWidth * secondMaxDim) / secondHeight
+                    secondHeight = secondMaxDim
+                  }
+                }
+                
+                secondCanvas.width = secondWidth
+                secondCanvas.height = secondHeight
+                secondCtx.drawImage(secondImg, 0, 0, secondWidth, secondHeight)
+                
+                secondCanvas.toBlob((secondBlob) => {
+                  if (secondBlob) {
+                    const finalFile = new File([secondBlob], file.name, {
+                      type: 'image/jpeg',
+                      lastModified: Date.now()
+                    })
+                    console.log(`Second compression: ${(compressedFile.size / (1024 * 1024)).toFixed(2)}MB -> ${(finalFile.size / (1024 * 1024)).toFixed(2)}MB`)
+                    resolve(finalFile)
+                  } else {
+                    resolve(compressedFile)
+                  }
+                }, 'image/jpeg', Math.max(quality * 0.7, 0.3))
+              }
+              
+              secondImg.src = URL.createObjectURL(compressedFile)
             } else {
-              resolve(file)
+              resolve(compressedFile)
             }
-          },
-          'image/jpeg',
-          0.8 // 80% quality
-        )
+          } else {
+            resolve(file) // Fallback to original if compression fails
+          }
+        }, 'image/jpeg', quality) // Use dynamic quality
       }
       
       img.src = URL.createObjectURL(file)
@@ -97,12 +155,28 @@ export default function BatchStagingForm({
       const maxSize = 8 * 1024 * 1024 // 8MB
       let processedFile = file
       
-      if (file.size > maxSize) {
+      if (file.size >= maxSize) { // Changed from > to >= to compress 8MB files
         setIsCompressing(true)
         try {
+          console.log(`File size ${(file.size / (1024 * 1024)).toFixed(2)}MB exceeds limit, compressing...`)
           processedFile = await compressImage(file)
+          console.log(`Compressed to ${(processedFile.size / (1024 * 1024)).toFixed(2)}MB`)
+          
+          // Check if compressed file is still too large
+          if (processedFile.size > maxSize) {
+            alert(`Image is still too large after compression (${(processedFile.size / (1024 * 1024)).toFixed(2)}MB). Please use a smaller image or try a different file.`)
+            setIsCompressing(false)
+            return
+          }
+          
+          // Show compression success message
+          const compressionRatio = ((file.size - processedFile.size) / file.size * 100).toFixed(1)
+          console.log(`Compression successful: ${compressionRatio}% size reduction`)
         } catch (error) {
           console.error('Error compressing image:', error)
+          alert('Failed to compress image. Please try a smaller image or a different file format.')
+          setIsCompressing(false)
+          return
         } finally {
           setIsCompressing(false)
         }

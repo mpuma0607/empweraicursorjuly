@@ -11,12 +11,6 @@ import { isFeatureHidden } from "@/lib/tenant-config"
 
 const navigationItems = [
   {
-    title: "AI Assistant",
-    href: "/ai-assistant",
-    submenu: [],
-    beta: true,
-  },
-  {
     title: "AI Hub",
     href: "/ai-hub",
     submenu: [
