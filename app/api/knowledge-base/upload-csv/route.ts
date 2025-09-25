@@ -1,22 +1,62 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-// Improved CSV parser function
+// Improved CSV parser function that handles multi-line fields
 function parseCSV(csvText: string) {
-  const lines = csvText.split('\n').filter(line => line.trim())
-  if (lines.length === 0) return []
+  console.log('CSV text length:', csvText.length)
+  console.log('First 500 chars:', csvText.substring(0, 500))
   
-  console.log('Total lines in CSV:', lines.length)
-  console.log('First few lines:', lines.slice(0, 3))
+  // Split by lines but reconstruct proper CSV rows
+  const lines = csvText.split('\n')
+  console.log('Raw lines count:', lines.length)
   
-  // Get headers from first line
-  const headers = parseCSVLine(lines[0])
+  // Reconstruct proper CSV rows (handle multi-line fields)
+  const csvRows = []
+  let currentRow = ''
+  let inQuotes = false
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    
+    // Check if we're starting a new field or continuing one
+    if (!inQuotes && line.includes(',')) {
+      // This looks like a new row
+      if (currentRow) {
+        csvRows.push(currentRow)
+        currentRow = line
+      } else {
+        currentRow = line
+      }
+    } else {
+      // This is a continuation of a multi-line field
+      currentRow += '\n' + line
+    }
+    
+    // Check if we're in quotes
+    const quoteCount = (line.match(/"/g) || []).length
+    if (quoteCount % 2 === 1) {
+      inQuotes = !inQuotes
+    }
+  }
+  
+  // Add the last row
+  if (currentRow) {
+    csvRows.push(currentRow)
+  }
+  
+  console.log('Reconstructed CSV rows:', csvRows.length)
+  console.log('First few rows:', csvRows.slice(0, 3))
+  
+  if (csvRows.length === 0) return []
+  
+  // Get headers from first row
+  const headers = parseCSVLine(csvRows[0])
   console.log('Headers found:', headers)
   
   // Parse data rows
   const records = []
-  for (let i = 1; i < lines.length; i++) {
-    const values = parseCSVLine(lines[i])
-    console.log(`Line ${i}: ${values.length} values, headers: ${headers.length}`)
+  for (let i = 1; i < csvRows.length; i++) {
+    const values = parseCSVLine(csvRows[i])
+    console.log(`Row ${i}: ${values.length} values, headers: ${headers.length}`)
     
     if (values.length >= headers.length) {
       const record: any = {}
@@ -25,7 +65,7 @@ function parseCSV(csvText: string) {
       })
       records.push(record)
     } else {
-      console.log(`Skipping line ${i} - not enough values:`, values)
+      console.log(`Skipping row ${i} - not enough values:`, values)
     }
   }
   
