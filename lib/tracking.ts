@@ -31,20 +31,34 @@ export interface UserEvent {
 
 export async function createOrUpdateSession(sessionId: string, userAgent?: string, ipAddress?: string, userEmail?: string): Promise<void> {
   try {
-    await sql`
-      INSERT INTO user_sessions (session_id, user_agent, ip_address, user_email)
-      VALUES (${sessionId}, ${userAgent}, ${ipAddress}, ${userEmail})
-      ON CONFLICT (session_id) 
-      DO UPDATE SET 
-        updated_at = CURRENT_TIMESTAMP,
-        user_agent = COALESCE(EXCLUDED.user_agent, user_sessions.user_agent),
-        ip_address = COALESCE(EXCLUDED.ip_address, user_sessions.ip_address),
-        user_email = COALESCE(EXCLUDED.user_email, user_sessions.user_email)
-    `
+    // Check if user_email column exists, if not, don't include it
+    if (userEmail) {
+      await sql`
+        INSERT INTO user_sessions (session_id, user_agent, ip_address, user_email)
+        VALUES (${sessionId}, ${userAgent}, ${ipAddress}, ${userEmail})
+        ON CONFLICT (session_id) 
+        DO UPDATE SET 
+          updated_at = CURRENT_TIMESTAMP,
+          user_agent = COALESCE(EXCLUDED.user_agent, user_sessions.user_agent),
+          ip_address = COALESCE(EXCLUDED.ip_address, user_sessions.ip_address),
+          user_email = COALESCE(EXCLUDED.user_email, user_sessions.user_email)
+      `
+    } else {
+      await sql`
+        INSERT INTO user_sessions (session_id, user_agent, ip_address)
+        VALUES (${sessionId}, ${userAgent}, ${ipAddress})
+        ON CONFLICT (session_id) 
+        DO UPDATE SET 
+          updated_at = CURRENT_TIMESTAMP,
+          user_agent = COALESCE(EXCLUDED.user_agent, user_sessions.user_agent),
+          ip_address = COALESCE(EXCLUDED.ip_address, user_sessions.ip_address)
+      `
+    }
     console.log("Session created/updated:", sessionId, userEmail ? `for user: ${userEmail}` : '')
   } catch (error) {
     console.error("Error creating/updating session:", error)
-    throw error
+    // Don't throw error to prevent breaking the app
+    console.warn("Continuing without session tracking due to database error")
   }
 }
 

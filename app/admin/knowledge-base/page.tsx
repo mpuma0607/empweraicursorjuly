@@ -69,10 +69,13 @@ export default function KnowledgeBasePage() {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to upload CSV')
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+        console.error('CSV upload error:', errorData)
+        throw new Error(errorData.error || 'Failed to upload CSV')
       }
 
       const data = await response.json()
+      console.log('CSV upload success:', data)
       setQaPairs(data.qaPairs)
       
       toast({
