@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { neon } from '@neondatabase/serverless'
+
+const sql = neon(process.env.DATABASE_URL!)
 
 export async function POST(req: NextRequest) {
   try {
@@ -10,30 +13,37 @@ export async function POST(req: NextRequest) {
       }, { status: 400 })
     }
 
-    // TODO: Implement semantic search with vector database
-    // For now, we'll return mock data
-    // In the next step, we'll add vector embeddings and similarity search
+    console.log('Searching knowledge base for:', query, 'user:', userEmail)
 
-    const mockResults = [
-      {
-        id: 'qa_1',
-        question: 'How do I create a CMA?',
-        answer: 'To create a CMA, go to the QuickCMA AI tool in the AI Hub. Upload your property photos and fill in the property details. The AI will generate a comprehensive market analysis.',
-        category: 'Platform',
-        score: 0.95
-      },
-      {
-        id: 'qa_2', 
-        question: 'What is virtual staging?',
-        answer: 'Virtual staging uses AI to add furniture and decor to empty rooms in property photos. Use the StageIT tool to virtually stage your listings.',
-        category: 'Features',
-        score: 0.87
-      }
-    ]
+    // Search the knowledge base for relevant Q&A pairs
+    const results = await sql`
+      SELECT id, question, answer, category
+      FROM knowledge_base 
+      WHERE user_email = ${userEmail}
+      AND (
+        LOWER(question) LIKE LOWER(${'%' + query + '%'}) OR
+        LOWER(answer) LIKE LOWER(${'%' + query + '%'})
+      )
+      ORDER BY 
+        CASE 
+          WHEN LOWER(question) LIKE LOWER(${'%' + query + '%'}) THEN 1
+          ELSE 2
+        END,
+        LENGTH(question) ASC
+      LIMIT 5
+    `
+
+    console.log('Found', results.length, 'relevant Q&A pairs')
 
     return NextResponse.json({ 
       success: true, 
-      results: mockResults,
+      results: results.map(qa => ({
+        id: qa.id.toString(),
+        question: qa.question,
+        answer: qa.answer,
+        category: qa.category,
+        score: 0.9 // Simple scoring for now
+      })),
       query: query
     })
 
