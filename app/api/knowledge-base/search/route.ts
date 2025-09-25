@@ -15,6 +15,16 @@ export async function POST(req: NextRequest) {
 
     console.log('Searching knowledge base for:', query, 'user:', userEmail)
 
+    // First, let's see what Q&A pairs exist for this user
+    const allQAs = await sql`
+      SELECT id, question, answer, category
+      FROM knowledge_base 
+      WHERE user_email = ${userEmail}
+      LIMIT 10
+    `
+    console.log('All Q&A pairs for user:', allQAs.length)
+    console.log('Sample Q&A pairs:', allQAs.slice(0, 3))
+    
     // Search the knowledge base for relevant Q&A pairs
     const results = await sql`
       SELECT id, question, answer, category
