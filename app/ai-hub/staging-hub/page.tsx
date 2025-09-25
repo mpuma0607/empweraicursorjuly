@@ -41,7 +41,7 @@ export default function StagingHubPage() {
                   <li>• Download high-quality staged images</li>
                   <li>• Perfect for MLS listings and marketing</li>
                 </ul>
-                <Link href="/ai-hub/stage-it">
+                <Link href="/ai-hub/stageit">
                   <Button className="w-full group-hover:bg-blue-600 transition-colors">
                     Start Staging
                     <ArrowRight className="w-4 h-4 ml-2" />
