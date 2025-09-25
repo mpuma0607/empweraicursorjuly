@@ -165,14 +165,34 @@ export async function POST(req: NextRequest) {
       user_email: userEmail
     }))
 
-    // TODO: Store in database and create embeddings
-    // For now, we'll just return the processed data
-    // In the next step, we'll add database storage and vector embeddings
+    // Store in database
+    const { neon } = await import('@neondatabase/serverless')
+    const sql = neon(process.env.DATABASE_URL!)
+    
+    // Create knowledge_base table if it doesn't exist
+    await sql`
+      CREATE TABLE IF NOT EXISTS knowledge_base (
+        id SERIAL PRIMARY KEY,
+        question TEXT NOT NULL,
+        answer TEXT NOT NULL,
+        category TEXT DEFAULT 'General',
+        user_email TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `
+    
+    // Insert Q&A pairs into database
+    for (const qa of qaPairs) {
+      await sql`
+        INSERT INTO knowledge_base (question, answer, category, user_email)
+        VALUES (${qa.question}, ${qa.answer}, ${qa.category}, ${qa.user_email})
+      `
+    }
 
     return NextResponse.json({ 
       success: true, 
       qaPairs,
-      message: `Successfully processed ${qaPairs.length} Q&A pairs`
+      message: `Successfully processed and saved ${qaPairs.length} Q&A pairs`
     })
 
   } catch (error) {

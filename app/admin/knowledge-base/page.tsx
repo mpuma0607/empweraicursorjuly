@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useMemberSpaceUser } from "@/hooks/use-memberspace-user"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -23,10 +23,36 @@ export default function KnowledgeBasePage() {
   const { user } = useMemberSpaceUser()
   const [qaPairs, setQaPairs] = useState<QAPair[]>([])
   const [isUploading, setIsUploading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [showAddForm, setShowAddForm] = useState(false)
   const [newQA, setNewQA] = useState({ question: "", answer: "", category: "" })
   const { toast } = useToast()
+
+  // Load existing Q&A pairs
+  useEffect(() => {
+    if (user?.email) {
+      loadQAPairs()
+    }
+  }, [user?.email])
+
+  const loadQAPairs = async () => {
+    try {
+      setIsLoading(true)
+      const response = await fetch(`/api/knowledge-base/load-qa?userEmail=${encodeURIComponent(user.email)}`)
+      
+      if (response.ok) {
+        const data = await response.json()
+        setQaPairs(data.qaPairs)
+      } else {
+        console.error('Failed to load Q&A pairs')
+      }
+    } catch (error) {
+      console.error('Error loading Q&A pairs:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   // Check if user is admin (you can customize this logic)
   if (!user?.email) {
@@ -76,11 +102,13 @@ export default function KnowledgeBasePage() {
 
       const data = await response.json()
       console.log('CSV upload success:', data)
-      setQaPairs(data.qaPairs)
+      
+      // Reload Q&A pairs from database
+      await loadQAPairs()
       
       toast({
         title: "CSV uploaded successfully",
-        description: `Processed ${data.qaPairs.length} Q&A pairs.`,
+        description: `Processed and saved ${data.qaPairs.length} Q&A pairs.`,
       })
     } catch (error) {
       console.error('Error uploading CSV:', error)
