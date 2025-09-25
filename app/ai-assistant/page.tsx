@@ -50,9 +50,24 @@ export default function AIAssistantPage() {
 
   const checkUserConnections = async () => {
     try {
-      const currentUserEmail = user?.email
+      // Try to get email from user object first, then fallback to localStorage
+      let currentUserEmail = user?.email
       
       if (!currentUserEmail) {
+        // Fallback to localStorage like other pages
+        try {
+          const storedEmail = localStorage.getItem('userEmail')
+          if (storedEmail) {
+            currentUserEmail = storedEmail
+            console.log('📧 Using email from localStorage:', currentUserEmail)
+          }
+        } catch (error) {
+          console.log('Could not access localStorage:', error)
+        }
+      }
+      
+      if (!currentUserEmail) {
+        console.log('❌ No user email available from MemberSpace or localStorage')
         setUserContext({
           email: '',
           gmailConnected: false,
@@ -61,6 +76,8 @@ export default function AIAssistantPage() {
         })
         return
       }
+      
+      console.log('✅ Using email for connections:', currentUserEmail)
 
       // Check Gmail connection (same as ScriptIT)
       let gmailConnected = false
@@ -134,24 +151,90 @@ export default function AIAssistantPage() {
     try {
       // First, search knowledge base for relevant information
       let knowledgeResults = []
+      console.log('🚀 STARTING KNOWLEDGE BASE SEARCH')
+      console.log('📝 Input:', input.trim())
+      console.log('👤 User object:', user)
+      console.log('📧 User email:', user?.email)
+      
       try {
-        const knowledgeResponse = await fetch('/api/knowledge-base/search', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            query: input.trim(),
-            userEmail: user?.email
-          })
-        })
+        console.log('🔍 Searching knowledge base for:', input.trim())
+        console.log('👤 User email:', user?.email)
         
-        if (knowledgeResponse.ok) {
-          const knowledgeData = await knowledgeResponse.json()
-          knowledgeResults = knowledgeData.results || []
+        if (!user?.email) {
+          console.warn('⚠️ No user email available for knowledge base search')
+          console.log('🔧 Trying to get email from localStorage...')
+          const storedEmail = localStorage.getItem('userEmail') || localStorage.getItem('currentUserEmail')
+          console.log('📧 Stored email:', storedEmail)
+          
+          // Use stored email or userContext email as fallback
+          const emailToUse = storedEmail || userContext?.email
+          console.log('📧 Using email:', emailToUse)
+          
+          if (emailToUse) {
+            // Add timeout to prevent hanging
+            const searchPromise = fetch('/api/knowledge-base/search', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                query: input.trim(),
+                userEmail: emailToUse
+              })
+            })
+            
+            const timeoutPromise = new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('Knowledge base search timeout')), 5000)
+            )
+            
+            const knowledgeResponse = await Promise.race([searchPromise, timeoutPromise])
+            
+            console.log('📡 Knowledge base response status:', knowledgeResponse.status)
+            
+            if (knowledgeResponse.ok) {
+              const knowledgeData = await knowledgeResponse.json()
+              knowledgeResults = knowledgeData.results || []
+              console.log('✅ Knowledge base results:', knowledgeResults.length, 'items')
+              console.log('📋 Knowledge base data:', knowledgeResults)
+            } else {
+              const errorText = await knowledgeResponse.text()
+              console.error('❌ Knowledge base search failed:', knowledgeResponse.status, errorText)
+            }
+          }
+        } else {
+          // Add timeout to prevent hanging
+          const searchPromise = fetch('/api/knowledge-base/search', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              query: input.trim(),
+              userEmail: user?.email
+            })
+          })
+          
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Knowledge base search timeout')), 5000)
+          )
+          
+          const knowledgeResponse = await Promise.race([searchPromise, timeoutPromise])
+          
+          console.log('📡 Knowledge base response status:', knowledgeResponse.status)
+          
+          if (knowledgeResponse.ok) {
+            const knowledgeData = await knowledgeResponse.json()
+            knowledgeResults = knowledgeData.results || []
+            console.log('✅ Knowledge base results:', knowledgeResults.length, 'items')
+            console.log('📋 Knowledge base data:', knowledgeResults)
+          } else {
+            const errorText = await knowledgeResponse.text()
+            console.error('❌ Knowledge base search failed:', knowledgeResponse.status, errorText)
+          }
         }
       } catch (error) {
-        console.error('Error searching knowledge base:', error)
+        console.error('💥 Error searching knowledge base:', error)
+        // Continue without knowledge base results
       }
 
       const response = await fetch('/api/ai-assistant/chat', {
