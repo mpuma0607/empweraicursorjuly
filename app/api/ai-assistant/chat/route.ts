@@ -61,7 +61,33 @@ ${knowledgeContext}
 
 Always be helpful, professional, and specific to real estate. Use the knowledge base information when relevant to provide accurate answers. If you don't know something, say so and offer to help them find the right resource.
 
-IMPORTANT: When including URLs or links in your response, format them as proper HTML links using <a href="URL" target="_blank">link text</a> so they are clickable.`
+IMPORTANT: When including URLs or links in your response, format them as proper HTML links using <a href="URL" target="_blank">link text</a> so they are clickable.
+
+EMAIL SENDING CAPABILITIES:
+If the user asks you to send an email (like "email john@example.com about meeting on Tuesday"), you can send emails using their connected Gmail or Outlook account. 
+
+To send an email, respond with a special JSON format:
+{
+  "action": "send_email",
+  "to": "recipient@example.com",
+  "subject": "Email Subject",
+  "body": "Email body content"
+}
+
+CALENDAR CAPABILITIES:
+If the user asks you to create a calendar event or meeting (like "schedule a meeting with john@example.com on Tuesday at 2pm"), you can create calendar events using their connected Gmail or Outlook account.
+
+To create a calendar event, respond with a special JSON format:
+{
+  "action": "create_calendar_event",
+  "title": "Meeting Title",
+  "startTime": "2024-01-15T14:00:00",
+  "endTime": "2024-01-15T15:00:00",
+  "description": "Meeting description",
+  "attendees": ["john@example.com"]
+}
+
+This will automatically create the calendar event using their connected calendar account.`
 
     // Prepare conversation history
     const messages: Message[] = [
@@ -82,6 +108,96 @@ IMPORTANT: When including URLs or links in your response, format them as proper 
     })
 
     const response = completion.choices[0]?.message?.content || 'I apologize, but I could not generate a response.'
+
+    // Check if the response contains an email action
+    try {
+      const emailActionMatch = response.match(/\{[\s\S]*"action":\s*"send_email"[\s\S]*\}/)
+      if (emailActionMatch) {
+        const emailAction = JSON.parse(emailActionMatch[0])
+        
+        if (emailAction.action === 'send_email' && emailAction.to && emailAction.subject && emailAction.body) {
+          console.log('AI Assistant attempting to send email:', emailAction)
+          
+          // Send the email
+          const emailResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/ai-assistant/send-email`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              to: emailAction.to,
+              subject: emailAction.subject,
+              body: emailAction.body,
+              userEmail: userContext?.email
+            })
+          })
+
+          if (emailResponse.ok) {
+            const emailResult = await emailResponse.json()
+            return NextResponse.json({ 
+              response: `✅ Email sent successfully to ${emailAction.to}!\n\nSubject: ${emailAction.subject}\n\n${emailAction.body}`,
+              emailSent: true,
+              emailResult
+            })
+          } else {
+            const error = await emailResponse.text()
+            return NextResponse.json({ 
+              response: `❌ Failed to send email: ${error}`,
+              emailSent: false
+            })
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error parsing email action:', error)
+      // Continue with normal response if parsing fails
+    }
+
+    // Check if the response contains a calendar action
+    try {
+      const calendarActionMatch = response.match(/\{[\s\S]*"action":\s*"create_calendar_event"[\s\S]*\}/)
+      if (calendarActionMatch) {
+        const calendarAction = JSON.parse(calendarActionMatch[0])
+        
+        if (calendarAction.action === 'create_calendar_event' && calendarAction.title && calendarAction.startTime && calendarAction.endTime) {
+          console.log('AI Assistant attempting to create calendar event:', calendarAction)
+          
+          // Create the calendar event
+          const calendarResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/ai-assistant/create-calendar-event`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              title: calendarAction.title,
+              startTime: calendarAction.startTime,
+              endTime: calendarAction.endTime,
+              description: calendarAction.description || '',
+              attendees: calendarAction.attendees || [],
+              userEmail: userContext?.email
+            })
+          })
+
+          if (calendarResponse.ok) {
+            const calendarResult = await calendarResponse.json()
+            return NextResponse.json({ 
+              response: `✅ Calendar event created successfully!\n\nTitle: ${calendarAction.title}\nTime: ${new Date(calendarAction.startTime).toLocaleString()} - ${new Date(calendarAction.endTime).toLocaleString()}\nAttendees: ${calendarAction.attendees?.join(', ') || 'None'}`,
+              calendarCreated: true,
+              calendarResult
+            })
+          } else {
+            const error = await calendarResponse.text()
+            return NextResponse.json({ 
+              response: `❌ Failed to create calendar event: ${error}`,
+              calendarCreated: false
+            })
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error parsing calendar action:', error)
+      // Continue with normal response if parsing fails
+    }
 
     return NextResponse.json({ response })
 
