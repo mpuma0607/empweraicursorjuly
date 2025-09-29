@@ -63,15 +63,41 @@ export async function POST(req: NextRequest) {
     console.log('🔍 Searching for query:', query)
     console.log('🔍 Search pattern:', `%${query}%`)
     
+    // Extract key terms from the query
+    const keyTerms = query.toLowerCase().split(' ').filter(term => 
+      term.length > 2 && 
+      !['link', 'me', 'to', 'the', 'and', 'for', 'with', 'works'].includes(term)
+    )
+    console.log('🔍 Key terms extracted:', keyTerms)
+    
+    // Try multiple search approaches
+    let whereConditions = []
+    let params = []
+    
+    // Original query
+    whereConditions.push(`LOWER(question) LIKE LOWER($${params.length + 1}) OR LOWER(answer) LIKE LOWER($${params.length + 1})`)
+    params.push(`%${query}%`)
+    
+    // Individual key terms
+    keyTerms.forEach(term => {
+      whereConditions.push(`LOWER(question) LIKE LOWER($${params.length + 1}) OR LOWER(answer) LIKE LOWER($${params.length + 1})`)
+      params.push(`%${term}%`)
+    })
+    
+    // Special case for "moxi" variations
+    if (query.toLowerCase().includes('moxi')) {
+      whereConditions.push(`LOWER(question) LIKE LOWER($${params.length + 1}) OR LOWER(answer) LIKE LOWER($${params.length + 1})`)
+      params.push(`%moxi%`)
+    }
+    
+    const whereClause = whereConditions.join(' OR ')
+    console.log('🔍 Where clause:', whereClause)
+    console.log('🔍 Params:', params)
+    
     const results = await sql`
       SELECT id, question, answer, category
       FROM knowledge_base 
-      WHERE (
-        LOWER(question) LIKE LOWER(${'%' + query + '%'}) OR
-        LOWER(answer) LIKE LOWER(${'%' + query + '%'}) OR
-        LOWER(question) LIKE LOWER(${'%' + query.toLowerCase() + '%'}) OR
-        LOWER(answer) LIKE LOWER(${'%' + query.toLowerCase() + '%'})
-      )
+      WHERE (${whereClause})
       ORDER BY 
         CASE 
           WHEN LOWER(question) LIKE LOWER(${'%' + query + '%'}) THEN 1
@@ -94,6 +120,16 @@ export async function POST(req: NextRequest) {
     `
     console.log('🧪 Test search for "moxi":', testResults.length, 'results')
     console.log('🧪 Test results:', testResults)
+    
+    // Test with case insensitive search
+    const testResults2 = await sql`
+      SELECT id, question, answer, category
+      FROM knowledge_base 
+      WHERE LOWER(question) LIKE '%moxi%'
+      LIMIT 3
+    `
+    console.log('🧪 Test search for "moxi" (case insensitive):', testResults2.length, 'results')
+    console.log('🧪 Test results 2:', testResults2)
 
     return NextResponse.json({ 
       success: true, 
