@@ -63,23 +63,29 @@ export async function POST(req: NextRequest) {
     for (const record of records) {
       const agent = {
         id: `agent_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        name: record.name || record.full_name || record.agent_name || 'Unknown',
-        email: record.email || record.email_address || '',
-        phone: record.phone || record.phone_number || record.telephone || '',
-        level: record.level || record.agent_level || record.experience || 'New Agent',
+        name: record.name || record.full_name || record.agent_name || record['agent name'] || 'Unknown',
+        email: record.email || record.email_address || record['email address'] || '',
+        phone: record.phone || record.phone_number || record.telephone || record['phone number'] || '',
+        level: record.level || record.agent_level || record.experience || record['agent level'] || 'New Agent',
         goals: record.goals || record.objectives || '',
         notes: record.notes || record.comments || '',
-        joinDate: record.join_date || record.start_date || new Date().toISOString().split('T')[0],
-        lastContact: record.last_contact || ''
+        joinDate: record.join_date || record.start_date || record['join date'] || new Date().toISOString().split('T')[0],
+        lastContact: record.last_contact || record['last contact'] || ''
       }
 
-      // Insert into database
-      await sql`
-        INSERT INTO agents (name, email, phone, level, goals, notes, join_date, last_contact)
-        VALUES (${agent.name}, ${agent.email}, ${agent.phone}, ${agent.level}, ${agent.goals}, ${agent.notes}, ${agent.joinDate}, ${agent.lastContact})
-      `
+      console.log('Processing agent:', agent.name, agent.email)
 
-      agents.push(agent)
+      // Insert into database
+      try {
+        await sql`
+          INSERT INTO agents (name, email, phone, level, goals, notes, join_date, last_contact)
+          VALUES (${agent.name}, ${agent.email}, ${agent.phone}, ${agent.level}, ${agent.goals}, ${agent.notes}, ${agent.joinDate}, ${agent.lastContact})
+        `
+        agents.push(agent)
+      } catch (insertError) {
+        console.error('Error inserting agent:', insertError)
+        // Continue with other agents
+      }
     }
 
     return NextResponse.json({

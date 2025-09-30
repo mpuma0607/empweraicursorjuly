@@ -32,12 +32,18 @@ ${customInstructions ? `Custom Instructions: ${customInstructions}` : ''}
 SCRIPT REQUIREMENTS:
 1. Use the specified tonality naturally throughout
 2. Tailor content to the agent's experience level
-3. Format for the specified delivery method (email, phone, text, social DM, in-person)
+3. Format for the specified delivery method with appropriate length:
+   - EMAIL: 150-300 words, professional format
+   - PHONE: 30-60 seconds speaking time, conversational
+   - TEXT: 160 characters or less, casual and direct
+   - SOCIAL DM: 100-200 characters, friendly and engaging
+   - IN-PERSON: 30-90 seconds speaking time, natural conversation starter
 4. Include the agent's name naturally and personally
 5. Create curiosity and desire to discuss further
 6. Use embedded commands and subtle psychological triggers
 7. Include a clear, compelling call to action
 8. Make it sound natural and conversational, not scripted
+9. DO NOT make up specific data, numbers, or statistics - keep it general
 
 PSYCHOLOGICAL ELEMENTS (subtly integrated):
 - Use embedded commands that create curiosity ("I'd love to hear your thoughts on...")

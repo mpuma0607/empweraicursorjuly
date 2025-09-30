@@ -101,11 +101,20 @@ Please provide a JSON response with:
 
     const analysisText = completion.choices[0]?.message?.content || 'Analysis failed'
     
+    console.log('AI analysis response:', analysisText.substring(0, 200) + '...')
+    
     // Try to parse JSON response, fallback to structured response
     let analysis
     try {
-      analysis = JSON.parse(analysisText)
-    } catch {
+      // Try to extract JSON from the response
+      const jsonMatch = analysisText.match(/\{[\s\S]*\}/)
+      if (jsonMatch) {
+        analysis = JSON.parse(jsonMatch[0])
+      } else {
+        throw new Error('No JSON found in response')
+      }
+    } catch (parseError) {
+      console.log('JSON parse failed, using fallback:', parseError)
       // Fallback if AI doesn't return JSON
       analysis = {
         insights: analysisText,

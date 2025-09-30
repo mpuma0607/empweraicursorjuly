@@ -24,6 +24,7 @@ export default function RealRecruitPage() {
   })
   const [generatedScript, setGeneratedScript] = useState("")
   const [isGenerating, setIsGenerating] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
   const { toast } = useToast()
 
   const scriptTypes = [
@@ -372,9 +373,28 @@ export default function RealRecruitPage() {
               <CardContent>
                 {generatedScript ? (
                   <div className="space-y-4">
-                    <div className="p-4 bg-gray-50 rounded-lg">
-                      <pre className="whitespace-pre-wrap text-sm text-gray-700">{generatedScript}</pre>
+                    <div className="flex justify-between items-center">
+                      <h3 className="font-medium">Generated Script</h3>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setIsEditing(!isEditing)}
+                      >
+                        {isEditing ? 'Done Editing' : 'Edit Script'}
+                      </Button>
                     </div>
+                    {isEditing ? (
+                      <Textarea
+                        value={generatedScript}
+                        onChange={(e) => setGeneratedScript(e.target.value)}
+                        className="min-h-[300px]"
+                        placeholder="Edit your script here..."
+                      />
+                    ) : (
+                      <div className="p-4 bg-gray-50 rounded-lg">
+                        <pre className="whitespace-pre-wrap text-sm text-gray-700">{generatedScript}</pre>
+                      </div>
+                    )}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                       <Button onClick={handleCopy} variant="outline" size="sm">
                         <Copy className="w-4 h-4 mr-2" />
