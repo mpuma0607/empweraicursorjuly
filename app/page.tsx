@@ -60,6 +60,12 @@ export default function HomePage() {
         hostname === 'begginsuniversity.com' ||
         hostname === 'www.begginsuniversity.com') {
       portalUrl = "https://begginsuniversity.com/portal"
+    } else if (hostname === 'c21coastal.com' ||
+               hostname === 'www.c21coastal.com' ||
+               hostname === 'coastal.thenextlevelu.com' ||
+               hostname === 'century21coastal.com' ||
+               hostname === 'www.century21coastal.com') {
+      portalUrl = "https://c21coastal.com/portal"
     } else if (hostname === 'getempowerai.com' ||
                hostname === 'www.getempowerai.com') {
       portalUrl = "https://getempowerai.com/portal"

@@ -22,13 +22,14 @@ export default function ClientLayout({
   const pathname = usePathname()
   const isHomePage = pathname === "/"
   const isBegginsHomePage = pathname === "/beggins-home"
+  const isC21CoastalHomePage = pathname === "/c21-coastal-home"
   const isAIAssistant = pathname === "/ai-assistant"
 
   return (
     <TenantProvider>
       <TrackingWrapper>
         <div className="min-h-screen flex flex-col">
-          {!isHomePage && !isBegginsHomePage && <Navigation />}
+          {!isHomePage && !isBegginsHomePage && !isC21CoastalHomePage && <Navigation />}
           <main className="flex-1">{children}</main>
           {!isAIAssistant && <Footer />}
           <TenantSwitcher />

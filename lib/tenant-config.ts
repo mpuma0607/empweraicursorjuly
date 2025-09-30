@@ -2,6 +2,7 @@ import { defaultTenantConfig } from "@/lib/tenants/default"
 import { brokeragePrivateConfig } from "@/lib/tenants/brokerage-private"
 import { internationalConfig } from "@/lib/tenants/international"
 import { century21BegginsConfig } from "@/lib/tenants/century21-beggins"
+import { century21CoastalConfig } from "@/lib/tenants/century21-coastal"
 import { empowerAiConfig } from "@/lib/tenants/empower-ai"
 import { empowerBetaConfig } from "@/lib/tenants/empower-beta"
 import type { TenantConfig } from "@/lib/types"
@@ -11,6 +12,7 @@ const tenantConfigs: Record<string, TenantConfig> = {
   "brokerage-private": brokeragePrivateConfig,
   international: internationalConfig,
   "century21-beggins": century21BegginsConfig,
+  "century21-coastal": century21CoastalConfig,
   "empower-ai": empowerAiConfig,
   "empower-beta": empowerBetaConfig,
 }
@@ -42,6 +44,9 @@ export function getTenantConfig(): TenantConfig {
   if (hostname === "beggins.thenextlevelu.com") {
     return century21BegginsConfig
   }
+  if (hostname === "coastal.thenextlevelu.com") {
+    return century21CoastalConfig
+  }
   if (hostname === "brokerage.thenextlevelu.com") {
     return brokeragePrivateConfig
   }
@@ -51,6 +56,10 @@ export function getTenantConfig(): TenantConfig {
 
   // Check for Empower AI domains
   if (hostname === "getempowerai.com" || hostname === "www.getempowerai.com") {
+    // Check if we're on the C21 Coastal home page
+    if (window.location.pathname === "/c21-coastal-home") {
+      return century21CoastalConfig
+    }
     return empowerAiConfig
   }
   if (hostname === "empoweraibeta.com" || hostname === "www.empoweraibeta.com") {
@@ -60,6 +69,9 @@ export function getTenantConfig(): TenantConfig {
   // Fallback to partial matches (existing logic)
   if (hostname.includes("beggins") || hostname.includes("century21-beggins")) {
     return century21BegginsConfig
+  }
+  if (hostname.includes("coastal") || hostname.includes("century21-coastal") || hostname.includes("c21coastal")) {
+    return century21CoastalConfig
   }
   if (hostname.includes("brokerage1") || hostname.includes("brokerage-private")) {
     return brokeragePrivateConfig
@@ -83,6 +95,7 @@ export function getAllTenants() {
     { id: "empower-ai", name: "Empower AI" },
     { id: "empower-beta", name: "Empower Beta" },
     { id: "century21-beggins", name: "Beggins University" },
+    { id: "century21-coastal", name: "Century 21 Coastal Advantage" },
     { id: "brokerage-private", name: "Private Brokerage" },
     { id: "international", name: "International Platform" },
     { id: "default", name: "The Next Level U (Legacy)" },
