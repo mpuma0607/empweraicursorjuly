@@ -347,7 +347,7 @@ export default function RealReportsPage() {
                   </Card>
 
                   {/* Analysis Results */}
-                  {selectedReport.status === 'completed' && (
+                  {selectedReport.status === 'completed' && selectedReport.insights && (
                     <div className="space-y-6">
                       {/* Key Metrics */}
                       {selectedReport.keyMetrics && (

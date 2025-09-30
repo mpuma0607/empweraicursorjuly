@@ -131,113 +131,207 @@ export default function RealRecruitPage() {
   }
 
   const handleEmailToSelf = async () => {
-    try {
-      const response = await fetch('/api/send-script-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-email': user?.email || '',
-        },
-        body: JSON.stringify({
-          to: 'self',
-          subject: `Recruiting Script - ${formData.scriptType} for ${formData.agentName}`,
-          script: generatedScript,
-          tool: 'RealRecruit'
-        })
-      })
-
-      if (response.ok) {
-        toast({
-          title: "Email sent",
-          description: "Script sent to your email.",
-        })
-      } else {
-        throw new Error('Failed to send email')
-      }
-    } catch (error) {
-      console.error('Error sending email:', error)
+    if (!generatedScript) {
       toast({
-        title: "Email failed",
-        description: "Failed to send email. Please try again.",
-        variant: "destructive"
+        title: "No Script Available",
+        description: "Please generate a script first.",
+        variant: "destructive",
       })
+      return
     }
-  }
 
-  const handleEmailToRecruit = async () => {
-    if (!formData.agentEmail) {
+    if (!user?.email) {
       toast({
-        title: "Email required",
-        description: "Please enter the agent's email address.",
-        variant: "destructive"
+        title: "Email Required",
+        description: "Please log in to send email.",
+        variant: "destructive",
       })
       return
     }
 
     try {
-      const response = await fetch('/api/send-script-email', {
-        method: 'POST',
+      const response = await fetch("/api/send-script-email", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'x-user-email': user?.email || '',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          to: 'recruit',
-          recipientEmail: formData.agentEmail,
-          subject: `Recruiting Script - ${formData.scriptType}`,
+          to: user.email,
+          name: user.name || 'User',
           script: generatedScript,
-          tool: 'RealRecruit'
-        })
+          formData: {
+            agentName: formData.agentName,
+            brokerageName: user.company || 'Your Company',
+            scriptType: formData.scriptType,
+            topic: 'Recruiting',
+            customTopic: formData.context || '',
+            additionalDetails: formData.customInstructions || '',
+            agentEmail: formData.agentEmail || '',
+            scriptTypeCategory: 'Recruiting',
+            difficultConversationType: '',
+            tonality: formData.tonality,
+          },
+        }),
       })
 
-      if (response.ok) {
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error("API response error:", response.status, errorText)
+        throw new Error(errorText || `HTTP ${response.status}: ${response.statusText}`)
+      }
+
+      const data = await response.json()
+      console.log("Email API response:", data)
+
+      if (data.success) {
         toast({
-          title: "Email sent",
-          description: `Script sent to ${formData.agentName}.`,
+          title: "Email Sent Successfully",
+          description: "Check your inbox for your professional script!",
         })
       } else {
-        throw new Error('Failed to send email')
+        throw new Error(data.error || "Failed to send email")
       }
     } catch (error) {
-      console.error('Error sending email:', error)
+      console.error("Error sending email:", error)
       toast({
-        title: "Email failed",
-        description: "Failed to send email. Please try again.",
-        variant: "destructive"
+        title: "Email Sending Failed",
+        description: error instanceof Error ? error.message : "Failed to send email. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleEmailToRecruit = async () => {
+    if (!generatedScript) {
+      toast({
+        title: "No Script Available",
+        description: "Please generate a script first.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (!formData.agentEmail) {
+      toast({
+        title: "Agent Email Required",
+        description: "Please enter the agent's email address.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      const response = await fetch("/api/send-script-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          to: formData.agentEmail,
+          name: formData.agentName,
+          script: generatedScript,
+          formData: {
+            agentName: formData.agentName,
+            brokerageName: user?.company || 'Your Company',
+            scriptType: formData.scriptType,
+            topic: 'Recruiting',
+            customTopic: formData.context || '',
+            additionalDetails: formData.customInstructions || '',
+            agentEmail: formData.agentEmail || '',
+            scriptTypeCategory: 'Recruiting',
+            difficultConversationType: '',
+            tonality: formData.tonality,
+          },
+        }),
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error("API response error:", response.status, errorText)
+        throw new Error(errorText || `HTTP ${response.status}: ${response.statusText}`)
+      }
+
+      const data = await response.json()
+      console.log("Email API response:", data)
+
+      if (data.success) {
+        toast({
+          title: "Email Sent Successfully",
+          description: `Your recruiting script has been sent to ${formData.agentName}!`,
+        })
+      } else {
+        throw new Error(data.error || "Failed to send email")
+      }
+    } catch (error) {
+      console.error("Error sending email:", error)
+      toast({
+        title: "Email Sending Failed",
+        description: error instanceof Error ? error.message : "Failed to send email. Please try again.",
+        variant: "destructive",
       })
     }
   }
 
   const handleSaveToCreations = async () => {
+    if (!generatedScript || !user) {
+      toast({
+        title: "Save Failed",
+        description: "Please log in to save your script.",
+        variant: "destructive",
+      })
+      return
+    }
+
     try {
       const response = await fetch('/api/save-to-creations', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-email': user?.email || '',
         },
         body: JSON.stringify({
-          title: `Recruiting Script - ${formData.scriptType} for ${formData.agentName}`,
+          userId: user.id,
+          userEmail: user.email,
+          toolType: 'realrecruit',
+          title: `Recruiting Script - ${formData.agentName || 'Agent'}`,
           content: generatedScript,
-          type: 'recruiting_script',
-          tool: 'RealRecruit'
-        })
+          formData: {
+            agentName: formData.agentName,
+            brokerageName: user.company || 'Your Company',
+            scriptType: formData.scriptType,
+            topic: 'Recruiting',
+            customTopic: formData.context || '',
+            additionalDetails: formData.customInstructions || '',
+            agentEmail: formData.agentEmail || '',
+            scriptTypeCategory: 'Recruiting',
+            difficultConversationType: '',
+            tonality: formData.tonality,
+          },
+          metadata: {
+            agentName: formData.agentName,
+            agentLevel: formData.agentLevel,
+            scriptType: formData.scriptType,
+            tonality: formData.tonality,
+            deliveryType: formData.deliveryType,
+            context: formData.context,
+            customInstructions: formData.customInstructions,
+          }
+        }),
       })
 
-      if (response.ok) {
-        toast({
-          title: "Saved to Creations",
-          description: "Script saved to your creations dashboard.",
-        })
-      } else {
-        throw new Error('Failed to save')
+      if (!response.ok) {
+        throw new Error('Failed to save script')
       }
-    } catch (error) {
-      console.error('Error saving to creations:', error)
+
       toast({
-        title: "Save failed",
-        description: "Failed to save to creations. Please try again.",
-        variant: "destructive"
+        title: "Script Saved",
+        description: "Your script has been saved to your creations dashboard.",
+      })
+    } catch (error) {
+      console.error('Error saving script:', error)
+      toast({
+        title: "Save Failed",
+        description: "Failed to save script. Please try again.",
+        variant: "destructive",
       })
     }
   }

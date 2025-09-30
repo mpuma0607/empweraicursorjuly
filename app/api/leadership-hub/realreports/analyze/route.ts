@@ -7,24 +7,75 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 })
 
-// CSV Parser
+// Enhanced CSV Parser
 function parseCSV(csvText: string): any[] {
-  const lines = csvText.split('\n')
-  const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''))
-  const records = []
+  const lines = csvText.split('\n').filter(line => line.trim())
+  
+  if (lines.length < 2) {
+    console.log('CSV has less than 2 lines')
+    return []
+  }
 
-  for (let i = 1; i < lines.length; i++) {
-    if (lines[i].trim()) {
-      const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''))
-      const record: any = {}
-      headers.forEach((header, index) => {
-        record[header.toLowerCase()] = values[index] || ''
-      })
-      records.push(record)
+  // Find the header row (look for the first line with multiple columns)
+  let headerIndex = 0
+  for (let i = 0; i < lines.length; i++) {
+    const columns = lines[i].split(',').length
+    if (columns > 1) {
+      headerIndex = i
+      break
     }
   }
 
+  const headerLine = lines[headerIndex]
+  console.log('Header line:', headerLine)
+  
+  // Parse headers more carefully
+  const headers = parseCSVLine(headerLine)
+  console.log('Parsed headers:', headers)
+
+  const records = []
+
+  // Process data rows
+  for (let i = headerIndex + 1; i < lines.length; i++) {
+    const line = lines[i].trim()
+    if (line) {
+      const values = parseCSVLine(line)
+      if (values.length > 0) {
+        const record: any = {}
+        headers.forEach((header, index) => {
+          const cleanHeader = header.trim().replace(/"/g, '').toLowerCase()
+          record[cleanHeader] = values[index] ? values[index].trim().replace(/"/g, '') : ''
+        })
+        records.push(record)
+      }
+    }
+  }
+
+  console.log('Parsed records count:', records.length)
   return records
+}
+
+// Helper function to parse CSV line handling quotes and commas
+function parseCSVLine(line: string): string[] {
+  const result = []
+  let current = ''
+  let inQuotes = false
+  
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i]
+    
+    if (char === '"') {
+      inQuotes = !inQuotes
+    } else if (char === ',' && !inQuotes) {
+      result.push(current)
+      current = ''
+    } else {
+      current += char
+    }
+  }
+  
+  result.push(current)
+  return result
 }
 
 export async function POST(req: NextRequest) {
@@ -56,19 +107,22 @@ export async function POST(req: NextRequest) {
     let data = []
     if (report.type.includes('csv')) {
       const csvText = Buffer.from(report.file_data).toString('utf-8')
+      console.log('CSV text length:', csvText.length)
+      console.log('First 500 chars of CSV:', csvText.substring(0, 500))
+      
       data = parseCSV(csvText)
+      console.log('Parsed data rows:', data.length)
+      console.log('First few rows:', data.slice(0, 3))
     } else {
       // For Excel files, we'll provide a message to convert to CSV
       return NextResponse.json({
         error: 'Excel files not supported yet. Please convert to CSV format.'
       }, { status: 400 })
     }
-
-    console.log('Parsed data rows:', data.length)
     
     if (data.length === 0) {
-      console.log('No data found in file')
-      return NextResponse.json({ error: 'No data found in file' }, { status: 400 })
+      console.log('No data found in file - CSV might be empty or malformed')
+      return NextResponse.json({ error: 'No data found in file. Please check your CSV format.' }, { status: 400 })
     }
 
     // Analyze the actual data
