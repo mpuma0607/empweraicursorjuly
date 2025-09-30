@@ -103,10 +103,14 @@ export default function RealRosterPage() {
       console.log('Upload response status:', response.status)
 
       if (!response.ok) {
-        throw new Error('Failed to upload CSV')
+        const errorData = await response.json()
+        console.error('Upload error:', errorData)
+        throw new Error(errorData.error || 'Failed to upload CSV')
       }
 
       const data = await response.json()
+      console.log('Upload successful, agents received:', data.agents.length)
+      
       setAgents(data.agents)
       toast({
         title: "CSV uploaded successfully",

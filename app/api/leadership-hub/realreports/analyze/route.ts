@@ -72,20 +72,27 @@ export async function POST(req: NextRequest) {
     }
 
     // Analyze the actual data
-    const analysisPrompt = `Analyze this financial/real estate data and provide insights:
+    const analysisPrompt = `You are a financial analyst. Analyze this data and provide insights. The data could be any type of financial report (commissions, expenses, revenue, agent performance, etc.).
 
-Data Sample: ${JSON.stringify(data.slice(0, 5))} // First 5 rows for context
+Data Sample: ${JSON.stringify(data.slice(0, 5))}
 Total Records: ${data.length}
-Custom Instructions: ${report.custom_instructions || 'Provide general financial analysis'}
+Custom Instructions: ${report.custom_instructions || 'Analyze the data and provide key insights'}
+
+Instructions:
+1. Look at the column headers to understand what type of data this is
+2. Identify key metrics, trends, and patterns
+3. Calculate relevant statistics (totals, averages, growth rates, etc.)
+4. Provide actionable insights based on the data
+5. Don't make up specific numbers - work with what's in the data
 
 Please provide a JSON response with:
 {
-  "insights": "Detailed analysis of the data",
+  "insights": "Detailed analysis based on the actual data",
   "summary": "Executive summary of key findings", 
   "trends": ["Trend 1", "Trend 2", "Trend 3"],
   "keyMetrics": {
-    "Metric Name": "Value",
-    "Another Metric": "Value"
+    "Metric Name": "Calculated Value",
+    "Another Metric": "Calculated Value"
   }
 }`
 

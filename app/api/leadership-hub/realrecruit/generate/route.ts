@@ -7,7 +7,7 @@ const openai = new OpenAI({
 
 export async function POST(req: NextRequest) {
   try {
-    const { agentName, agentLevel, scriptType, tonality, deliveryType, context, customInstructions } = await req.json()
+    const { agentName, agentLevel, scriptType, tonality, deliveryType, context, customInstructions, userInfo } = await req.json()
 
     console.log('RealRecruit API called with:', { agentName, agentLevel, scriptType, tonality, deliveryType })
 
@@ -29,6 +29,11 @@ Agent Name: ${agentName}
 ${context ? `Context: ${context}` : ''}
 ${customInstructions ? `Custom Instructions: ${customInstructions}` : ''}
 
+USER INFORMATION (use these instead of placeholders):
+- Your Name: ${userInfo?.name || 'Your Name'}
+- Your Email: ${userInfo?.email || 'your@email.com'}
+- Your Company: ${userInfo?.company || 'Your Real Estate Company'}
+
 SCRIPT REQUIREMENTS:
 1. Use the specified tonality naturally throughout
 2. Tailor content to the agent's experience level
@@ -44,6 +49,7 @@ SCRIPT REQUIREMENTS:
 7. Include a clear, compelling call to action
 8. Make it sound natural and conversational, not scripted
 9. DO NOT make up specific data, numbers, or statistics - keep it general
+10. Use the actual user information provided above instead of placeholders like [Your Name], [Your Company], etc.
 
 PSYCHOLOGICAL ELEMENTS (subtly integrated):
 - Use embedded commands that create curiosity ("I'd love to hear your thoughts on...")

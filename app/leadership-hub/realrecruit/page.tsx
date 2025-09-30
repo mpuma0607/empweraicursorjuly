@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FileText, Send, Copy, Download, ArrowLeft, Mail, Save } from "lucide-react"
 import Link from "next/link"
 import { useToast } from "@/components/ui/use-toast"
+import { useMemberSpaceUser } from "@/hooks/use-memberspace-user"
 
 export default function RealRecruitPage() {
   const [formData, setFormData] = useState({
@@ -26,6 +27,7 @@ export default function RealRecruitPage() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const { toast } = useToast()
+  const { user } = useMemberSpaceUser()
 
   const scriptTypes = [
     { value: "first-outreach", label: "First Outreach" },
@@ -78,8 +80,16 @@ export default function RealRecruitPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-user-email': user?.email || '',
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({
+          ...formData,
+          userInfo: {
+            name: user?.name || 'Your Name',
+            email: user?.email || 'your@email.com',
+            company: user?.company || 'Your Real Estate Company'
+          }
+        })
       })
 
       if (!response.ok) {
@@ -126,6 +136,7 @@ export default function RealRecruitPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-user-email': user?.email || '',
         },
         body: JSON.stringify({
           to: 'self',
@@ -154,11 +165,21 @@ export default function RealRecruitPage() {
   }
 
   const handleEmailToRecruit = async () => {
+    if (!formData.agentEmail) {
+      toast({
+        title: "Email required",
+        description: "Please enter the agent's email address.",
+        variant: "destructive"
+      })
+      return
+    }
+
     try {
       const response = await fetch('/api/send-script-email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-user-email': user?.email || '',
         },
         body: JSON.stringify({
           to: 'recruit',
@@ -193,6 +214,7 @@ export default function RealRecruitPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-user-email': user?.email || '',
         },
         body: JSON.stringify({
           title: `Recruiting Script - ${formData.scriptType} for ${formData.agentName}`,
@@ -395,27 +417,31 @@ export default function RealRecruitPage() {
                         <pre className="whitespace-pre-wrap text-sm text-gray-700">{generatedScript}</pre>
                       </div>
                     )}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                      <Button onClick={handleCopy} variant="outline" size="sm">
-                        <Copy className="w-4 h-4 mr-2" />
-                        Copy
-                      </Button>
-                      <Button onClick={handleDownload} variant="outline" size="sm">
-                        <Download className="w-4 h-4 mr-2" />
-                        Download
-                      </Button>
-                      <Button onClick={handleEmailToSelf} variant="outline" size="sm">
-                        <Mail className="w-4 h-4 mr-2" />
-                        Email to Self
-                      </Button>
-                      <Button onClick={handleEmailToRecruit} variant="outline" size="sm">
-                        <Send className="w-4 h-4 mr-2" />
-                        Email to Recruit
-                      </Button>
-                      <Button onClick={handleSaveToCreations} variant="outline" size="sm" className="md:col-span-2">
-                        <Save className="w-4 h-4 mr-2" />
-                        Save to Creations
-                      </Button>
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button onClick={handleCopy} variant="outline" size="sm">
+                          <Copy className="w-4 h-4 mr-2" />
+                          Copy
+                        </Button>
+                        <Button onClick={handleDownload} variant="outline" size="sm">
+                          <Download className="w-4 h-4 mr-2" />
+                          Download
+                        </Button>
+                      </div>
+                      <div className="grid grid-cols-1 gap-2">
+                        <Button onClick={handleEmailToSelf} variant="outline" size="sm">
+                          <Mail className="w-4 h-4 mr-2" />
+                          Email to Self
+                        </Button>
+                        <Button onClick={handleEmailToRecruit} variant="outline" size="sm">
+                          <Send className="w-4 h-4 mr-2" />
+                          Email to Recruit
+                        </Button>
+                        <Button onClick={handleSaveToCreations} variant="outline" size="sm">
+                          <Save className="w-4 h-4 mr-2" />
+                          Save to Creations
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 ) : (
