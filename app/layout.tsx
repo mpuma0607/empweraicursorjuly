@@ -174,7 +174,10 @@ export default function RootLayout({
                               window.location.hostname === 'www.begginsagents.com' ||
                               window.location.hostname.includes('coastal') ||
                               window.location.hostname === 'c21coastal.com' ||
-                              window.location.hostname === 'www.c21coastal.com'
+                              window.location.hostname === 'www.c21coastal.com' ||
+                              window.location.hostname.includes('portfolio') ||
+                              window.location.hostname === 'c21agenthome.com' ||
+                              window.location.hostname === 'www.c21agenthome.com'
                             )) {
                               return;
                             }

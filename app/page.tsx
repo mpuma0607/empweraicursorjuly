@@ -66,6 +66,12 @@ export default function HomePage() {
                hostname === 'century21coastal.com' ||
                hostname === 'www.century21coastal.com') {
       portalUrl = "https://c21coastal.com/portal"
+    } else if (hostname === 'c21agenthome.com' ||
+               hostname === 'www.c21agenthome.com' ||
+               hostname === 'portfolio.thenextlevelu.com' ||
+               hostname === 'c21portfolio.com' ||
+               hostname === 'www.c21portfolio.com') {
+      portalUrl = "https://c21agenthome.com/portal"
     } else if (hostname === 'getempowerai.com' ||
                hostname === 'www.getempowerai.com') {
       portalUrl = "https://getempowerai.com/portal"
