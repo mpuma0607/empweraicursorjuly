@@ -46,13 +46,13 @@ export default function RealReportsPage() {
     const file = event.target.files?.[0]
     if (!file) return
 
-    const validTypes = ['.csv', '.xlsx', '.xls']
+    const validTypes = ['.csv']
     const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase()
     
     if (!validTypes.includes(fileExtension)) {
       toast({
         title: "Invalid file type",
-        description: "Please upload a CSV or Excel file.",
+        description: "Please upload a CSV file. Excel support coming soon.",
         variant: "destructive"
       })
       return
@@ -235,13 +235,13 @@ export default function RealReportsPage() {
                     <Input
                       id="file-upload"
                       type="file"
-                      accept=".csv,.xlsx,.xls"
+                      accept=".csv"
                       onChange={handleFileUpload}
                       disabled={isUploading}
                       className="hidden"
                     />
                     <p className="text-xs text-gray-500 mt-2">
-                      Supports CSV and Excel files
+                      Supports CSV files (Excel support coming soon)
                     </p>
                   </div>
 

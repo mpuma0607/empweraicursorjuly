@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { neon } from '@neondatabase/serverless'
 import OpenAI from 'openai'
-import * as XLSX from 'xlsx'
 
 const sql = neon(process.env.DATABASE_URL!)
 const openai = new OpenAI({
@@ -28,14 +27,6 @@ function parseCSV(csvText: string): any[] {
   return records
 }
 
-// Excel Parser
-function parseExcel(buffer: Buffer): any[] {
-  const workbook = XLSX.read(buffer, { type: 'buffer' })
-  const sheetName = workbook.SheetNames[0]
-  const worksheet = workbook.Sheets[sheetName]
-  return XLSX.utils.sheet_to_json(worksheet)
-}
-
 export async function POST(req: NextRequest) {
   try {
     const { reportId } = await req.json()
@@ -57,13 +48,16 @@ export async function POST(req: NextRequest) {
 
     const report = reportData[0]
 
-    // Parse the actual file data
+    // Parse the actual file data (CSV only for now)
     let data = []
     if (report.type.includes('csv')) {
       const csvText = Buffer.from(report.file_data).toString('utf-8')
       data = parseCSV(csvText)
-    } else if (report.type.includes('sheet') || report.type.includes('excel')) {
-      data = parseExcel(Buffer.from(report.file_data))
+    } else {
+      // For Excel files, we'll provide a message to convert to CSV
+      return NextResponse.json({
+        error: 'Excel files not supported yet. Please convert to CSV format.'
+      }, { status: 400 })
     }
 
     if (data.length === 0) {
