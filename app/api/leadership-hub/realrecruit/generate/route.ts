@@ -7,9 +7,12 @@ const openai = new OpenAI({
 
 export async function POST(req: NextRequest) {
   try {
-    const { agentName, agentLevel, scriptType, tonality, context, customInstructions } = await req.json()
+    const { agentName, agentLevel, scriptType, tonality, deliveryType, context, customInstructions } = await req.json()
 
-    if (!agentName || !agentLevel || !scriptType || !tonality) {
+    console.log('RealRecruit API called with:', { agentName, agentLevel, scriptType, tonality, deliveryType })
+
+    if (!agentName || !agentLevel || !scriptType || !tonality || !deliveryType) {
+      console.log('Missing required fields')
       return NextResponse.json({ 
         error: 'Missing required fields' 
       }, { status: 400 })
@@ -57,6 +60,8 @@ The script should feel like a natural conversation starter that makes the recipi
     })
 
     const script = completion.choices[0]?.message?.content || 'Failed to generate script'
+
+    console.log('Generated script:', script.substring(0, 100) + '...')
 
     return NextResponse.json({ 
       success: true,

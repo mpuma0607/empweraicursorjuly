@@ -25,15 +25,22 @@ function parseCSV(csvText: string): any[] {
 
 export async function POST(req: NextRequest) {
   try {
+    console.log('RealRoster upload API called')
     const formData = await req.formData()
     const file = formData.get('file') as File
 
+    console.log('File received:', file?.name, file?.size)
+
     if (!file) {
+      console.log('No file provided')
       return NextResponse.json({ error: 'File is required' }, { status: 400 })
     }
 
     const csvText = await file.text()
+    console.log('CSV text length:', csvText.length)
+    
     const records = parseCSV(csvText)
+    console.log('Parsed records:', records.length)
 
     // Create agents table if it doesn't exist
     await sql`

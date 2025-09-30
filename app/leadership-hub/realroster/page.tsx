@@ -73,7 +73,12 @@ export default function RealRosterPage() {
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
-    if (!file) return
+    if (!file) {
+      console.log('No file selected')
+      return
+    }
+
+    console.log('File selected:', file.name, file.size)
 
     if (!file.name.endsWith('.csv')) {
       toast({
@@ -89,10 +94,13 @@ export default function RealRosterPage() {
       const formData = new FormData()
       formData.append('file', file)
 
+      console.log('Uploading CSV file...')
       const response = await fetch('/api/leadership-hub/realroster/upload', {
         method: 'POST',
         body: formData
       })
+
+      console.log('Upload response status:', response.status)
 
       if (!response.ok) {
         throw new Error('Failed to upload CSV')

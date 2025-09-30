@@ -31,6 +31,8 @@ export async function POST(req: NextRequest) {
   try {
     const { reportId } = await req.json()
 
+    console.log('RealReports analyze called with reportId:', reportId)
+
     if (!reportId) {
       return NextResponse.json({ error: 'Report ID is required' }, { status: 400 })
     }
@@ -43,10 +45,12 @@ export async function POST(req: NextRequest) {
     `
 
     if (reportData.length === 0) {
+      console.log('Report not found in database')
       return NextResponse.json({ error: 'Report not found' }, { status: 404 })
     }
 
     const report = reportData[0]
+    console.log('Found report:', report.name, 'Type:', report.type)
 
     // Parse the actual file data (CSV only for now)
     let data = []
@@ -60,7 +64,10 @@ export async function POST(req: NextRequest) {
       }, { status: 400 })
     }
 
+    console.log('Parsed data rows:', data.length)
+    
     if (data.length === 0) {
+      console.log('No data found in file')
       return NextResponse.json({ error: 'No data found in file' }, { status: 400 })
     }
 
