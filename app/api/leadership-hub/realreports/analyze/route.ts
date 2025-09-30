@@ -67,25 +67,29 @@ export async function POST(req: NextRequest) {
     // Analyze the actual data
     const analysisPrompt = `Analyze this financial/real estate data and provide insights:
 
-Data: ${JSON.stringify(data.slice(0, 10))} // First 10 rows for context
+Data Sample: ${JSON.stringify(data.slice(0, 5))} // First 5 rows for context
+Total Records: ${data.length}
 Custom Instructions: ${report.custom_instructions || 'Provide general financial analysis'}
 
-Please provide:
-1. Key metrics and statistics
-2. Trends and patterns
-3. Executive summary
-4. Actionable insights
-
-Format as JSON with: insights, summary, trends (array), keyMetrics (object)`
+Please provide a JSON response with:
+{
+  "insights": "Detailed analysis of the data",
+  "summary": "Executive summary of key findings", 
+  "trends": ["Trend 1", "Trend 2", "Trend 3"],
+  "keyMetrics": {
+    "Metric Name": "Value",
+    "Another Metric": "Value"
+  }
+}`
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4',
       messages: [
-        { role: 'system', content: 'You are a financial analyst specializing in real estate data. Provide detailed, actionable insights.' },
+        { role: 'system', content: 'You are a financial analyst specializing in real estate data. Always respond with valid JSON format as requested.' },
         { role: 'user', content: analysisPrompt }
       ],
-      max_tokens: 1500,
-      temperature: 0.3,
+      max_tokens: 2000,
+      temperature: 0.2,
     })
 
     const analysisText = completion.choices[0]?.message?.content || 'Analysis failed'

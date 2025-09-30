@@ -314,22 +314,24 @@ export default function RealRosterPage() {
                       <Users className="w-12 h-12 mx-auto mb-4 text-gray-300" />
                       <p className="text-gray-500 mb-4">No agents in your roster yet</p>
                       <div className="space-y-2">
-                        <Label htmlFor="csv-upload" className="cursor-pointer">
-                          <Button asChild>
-                            <span>
-                              <Upload className="w-4 h-4 mr-2" />
-                              Upload CSV
-                            </span>
-                          </Button>
-                        </Label>
-                        <Input
-                          id="csv-upload"
-                          type="file"
-                          accept=".csv"
-                          onChange={handleFileUpload}
-                          disabled={isUploading}
-                          className="hidden"
-                        />
+                        <div>
+                          <Label htmlFor="csv-upload" className="cursor-pointer">
+                            <Button asChild>
+                              <span>
+                                <Upload className="w-4 h-4 mr-2" />
+                                Upload CSV
+                              </span>
+                            </Button>
+                          </Label>
+                          <Input
+                            id="csv-upload"
+                            type="file"
+                            accept=".csv"
+                            onChange={handleFileUpload}
+                            disabled={isUploading}
+                            className="hidden"
+                          />
+                        </div>
                         {isUploading && (
                           <p className="text-sm text-gray-500">Uploading...</p>
                         )}

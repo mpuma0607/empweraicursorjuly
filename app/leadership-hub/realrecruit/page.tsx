@@ -7,16 +7,18 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { FileText, Send, Copy, Download, ArrowLeft } from "lucide-react"
+import { FileText, Send, Copy, Download, ArrowLeft, Mail, Save } from "lucide-react"
 import Link from "next/link"
 import { useToast } from "@/components/ui/use-toast"
 
 export default function RealRecruitPage() {
   const [formData, setFormData] = useState({
     agentName: "",
+    agentEmail: "",
     agentLevel: "",
     scriptType: "",
     tonality: "",
+    deliveryType: "",
     context: "",
     customInstructions: ""
   })
@@ -51,8 +53,16 @@ export default function RealRecruitPage() {
     { value: "authoritative", label: "Authoritative" }
   ]
 
+  const deliveryTypes = [
+    { value: "email", label: "Email" },
+    { value: "phone", label: "Phone Call" },
+    { value: "text", label: "Text Message" },
+    { value: "social-dm", label: "Social Media DM" },
+    { value: "in-person", label: "In Person" }
+  ]
+
   const handleGenerate = async () => {
-    if (!formData.agentName || !formData.scriptType || !formData.tonality) {
+    if (!formData.agentName || !formData.scriptType || !formData.tonality || !formData.deliveryType) {
       toast({
         title: "Missing Information",
         description: "Please fill in all required fields.",
@@ -109,6 +119,106 @@ export default function RealRecruitPage() {
     URL.revokeObjectURL(url)
   }
 
+  const handleEmailToSelf = async () => {
+    try {
+      const response = await fetch('/api/send-script-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: 'self',
+          subject: `Recruiting Script - ${formData.scriptType} for ${formData.agentName}`,
+          script: generatedScript,
+          tool: 'RealRecruit'
+        })
+      })
+
+      if (response.ok) {
+        toast({
+          title: "Email sent",
+          description: "Script sent to your email.",
+        })
+      } else {
+        throw new Error('Failed to send email')
+      }
+    } catch (error) {
+      console.error('Error sending email:', error)
+      toast({
+        title: "Email failed",
+        description: "Failed to send email. Please try again.",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleEmailToRecruit = async () => {
+    try {
+      const response = await fetch('/api/send-script-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: 'recruit',
+          recipientEmail: formData.agentEmail,
+          subject: `Recruiting Script - ${formData.scriptType}`,
+          script: generatedScript,
+          tool: 'RealRecruit'
+        })
+      })
+
+      if (response.ok) {
+        toast({
+          title: "Email sent",
+          description: `Script sent to ${formData.agentName}.`,
+        })
+      } else {
+        throw new Error('Failed to send email')
+      }
+    } catch (error) {
+      console.error('Error sending email:', error)
+      toast({
+        title: "Email failed",
+        description: "Failed to send email. Please try again.",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleSaveToCreations = async () => {
+    try {
+      const response = await fetch('/api/save-to-creations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: `Recruiting Script - ${formData.scriptType} for ${formData.agentName}`,
+          content: generatedScript,
+          type: 'recruiting_script',
+          tool: 'RealRecruit'
+        })
+      })
+
+      if (response.ok) {
+        toast({
+          title: "Saved to Creations",
+          description: "Script saved to your creations dashboard.",
+        })
+      } else {
+        throw new Error('Failed to save')
+      }
+    } catch (error) {
+      console.error('Error saving to creations:', error)
+      toast({
+        title: "Save failed",
+        description: "Failed to save to creations. Please try again.",
+        variant: "destructive"
+      })
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
@@ -148,6 +258,19 @@ export default function RealRecruitPage() {
                     />
                   </div>
                   <div>
+                    <Label htmlFor="agentEmail">Agent Email</Label>
+                    <Input
+                      id="agentEmail"
+                      type="email"
+                      value={formData.agentEmail}
+                      onChange={(e) => setFormData({ ...formData, agentEmail: e.target.value })}
+                      placeholder="agent@email.com"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
                     <Label htmlFor="agentLevel">Agent Level *</Label>
                     <Select value={formData.agentLevel} onValueChange={(value) => setFormData({ ...formData, agentLevel: value })}>
                       <SelectTrigger>
@@ -162,9 +285,10 @@ export default function RealRecruitPage() {
                       </SelectContent>
                     </Select>
                   </div>
+                  <div></div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <Label htmlFor="scriptType">Script Type *</Label>
                     <Select value={formData.scriptType} onValueChange={(value) => setFormData({ ...formData, scriptType: value })}>
@@ -190,6 +314,21 @@ export default function RealRecruitPage() {
                         {tonalities.map((tone) => (
                           <SelectItem key={tone.value} value={tone.value}>
                             {tone.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="deliveryType">Delivery Method *</Label>
+                    <Select value={formData.deliveryType} onValueChange={(value) => setFormData({ ...formData, deliveryType: value })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select delivery method" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {deliveryTypes.map((delivery) => (
+                          <SelectItem key={delivery.value} value={delivery.value}>
+                            {delivery.label}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -236,7 +375,7 @@ export default function RealRecruitPage() {
                     <div className="p-4 bg-gray-50 rounded-lg">
                       <pre className="whitespace-pre-wrap text-sm text-gray-700">{generatedScript}</pre>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                       <Button onClick={handleCopy} variant="outline" size="sm">
                         <Copy className="w-4 h-4 mr-2" />
                         Copy
@@ -244,6 +383,18 @@ export default function RealRecruitPage() {
                       <Button onClick={handleDownload} variant="outline" size="sm">
                         <Download className="w-4 h-4 mr-2" />
                         Download
+                      </Button>
+                      <Button onClick={handleEmailToSelf} variant="outline" size="sm">
+                        <Mail className="w-4 h-4 mr-2" />
+                        Email to Self
+                      </Button>
+                      <Button onClick={handleEmailToRecruit} variant="outline" size="sm">
+                        <Send className="w-4 h-4 mr-2" />
+                        Email to Recruit
+                      </Button>
+                      <Button onClick={handleSaveToCreations} variant="outline" size="sm" className="md:col-span-2">
+                        <Save className="w-4 h-4 mr-2" />
+                        Save to Creations
                       </Button>
                     </div>
                   </div>
