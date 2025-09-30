@@ -179,12 +179,15 @@ export async function POST(req: NextRequest) {
     `
     
     // Insert Q&A pairs into database (GLOBAL, not user-specific)
+    console.log('💾 Inserting Q&A pairs into database...')
     for (const qa of qaPairs) {
+      console.log('📝 Inserting:', qa.question.substring(0, 50) + '...')
       await sql`
         INSERT INTO knowledge_base (question, answer, category)
         VALUES (${qa.question}, ${qa.answer}, ${qa.category})
       `
     }
+    console.log('✅ Successfully inserted', qaPairs.length, 'Q&A pairs')
 
     return NextResponse.json({ 
       success: true, 

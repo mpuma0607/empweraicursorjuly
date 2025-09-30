@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     // Check Gmail connection first (Google Calendar)
     let gmailConnected = false
     try {
-      const googleResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/google/status`, {
+      const googleResponse = await fetch(`${req.nextUrl.origin}/api/auth/google/status`, {
         headers: {
           'x-user-email': userEmail
         }
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     // Check Outlook connection
     let outlookConnected = false
     try {
-      const microsoftResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/outlook/auth/status?email=${encodeURIComponent(userEmail)}`)
+      const microsoftResponse = await fetch(`${req.nextUrl.origin}/api/outlook/auth/status?email=${encodeURIComponent(userEmail)}`)
       if (microsoftResponse.ok) {
         const data = await microsoftResponse.json()
         outlookConnected = data.connected
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
     // Try Gmail/Google Calendar first, then Outlook
     if (gmailConnected) {
       try {
-        const calendarResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/calendar/create-event`, {
+        const calendarResponse = await fetch(`${req.nextUrl.origin}/api/calendar/create-event`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
     if (outlookConnected) {
       try {
         // For Outlook, we'll use the same calendar API but it should handle Outlook OAuth
-        const calendarResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/calendar/create-event`, {
+        const calendarResponse = await fetch(`${req.nextUrl.origin}/api/calendar/create-event`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
