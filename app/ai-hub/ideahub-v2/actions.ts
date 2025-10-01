@@ -306,16 +306,16 @@ async function buildTransformationUrl(baseImagePublicId: string, formData: FormD
   // Start with base transformation - NO CROPPING FOR UPLOADED IMAGES
   // Only apply transformations to AI-generated images, preserve uploaded image dimensions
   const isCustomImage = !!formData.customImage // Check if this is an uploaded image
-  let transformationUrl = `https://res.cloudinary.com/${cloudName}/image/upload`
   
   if (isCustomImage) {
-    // For uploaded images, preserve original dimensions completely
+    // For uploaded images, return the original URL with minimal optimization only
     console.log("Preserving uploaded image dimensions - no cropping applied")
-    transformationUrl += `/q_auto,f_auto`
-  } else {
-    // For AI-generated images, maintain quality without forced cropping
-    transformationUrl += `/q_auto,f_auto`
+    return `https://res.cloudinary.com/${cloudName}/image/upload/q_auto,f_auto/${baseImagePublicId}`
   }
+  
+  // For AI-generated images, apply dynamic sizing
+  let transformationUrl = `https://res.cloudinary.com/${cloudName}/image/upload`
+  transformationUrl += `/q_auto,f_auto`
 
   // Add logo overlay if branding is requested
   if (formData.wantBranding) {
