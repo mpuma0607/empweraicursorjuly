@@ -238,6 +238,16 @@ export default function IdeaHubEmpowerForm() {
   const [step, setStep] = useState(1)
   const [isGenerating, setIsGenerating] = useState(false)
   const [isSendingEmail, setIsSendingEmail] = useState(false)
+  const resultsRef = useRef<HTMLDivElement>(null)
+
+  // Auto-scroll to results when Step 3 loads (mobile UX improvement)
+  useEffect(() => {
+    if (step === 3 && result && resultsRef.current) {
+      setTimeout(() => {
+        resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 300) // Small delay to ensure content is rendered
+    }
+  }, [step, result])
   const [isSaving, setIsSaving] = useState(false)
   const [isListening, setIsListening] = useState(false)
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)

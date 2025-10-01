@@ -216,10 +216,28 @@ LIGHTING & MOOD:
 
 The final image should look like it belongs in a luxury real estate magazine - professional, aspirational, and perfectly aligned with the topic.`
 
+    // Determine image size based on content type
+    const getImageSize = (contentType: string): "1024x1024" | "1792x1024" | "1024x1792" => {
+      const sizeMap: Record<string, "1024x1024" | "1792x1024" | "1024x1792"> = {
+        'social-media-post': '1024x1024',     // Square for Instagram/Facebook
+        'blog-article': '1792x1024',          // Landscape for blog headers
+        'email-marketing': '1792x1024',       // Landscape for email banners
+        'linkedin-post': '1792x1024',         // Landscape for LinkedIn
+        'video-script': '1792x1024',          // Landscape for video thumbnails
+        'instagram-caption': '1024x1024',     // Square
+        'facebook-post': '1024x1024',         // Square
+        'twitter-thread': '1792x1024',        // Landscape
+      }
+      return sizeMap[contentType] || '1024x1024' // Default to square
+    }
+
+    const imageSize = getImageSize(formData.contentType)
+    console.log(`Generating ${imageSize} image for content type: ${formData.contentType}`)
+
     const imageResponse = await openaiClient.images.generate({
       model: "dall-e-3",
       prompt: imagePrompt,
-      size: "1024x1024",
+      size: imageSize,
       quality: "standard",
       n: 1,
     })
@@ -282,10 +300,22 @@ async function buildTransformationUrl(baseImagePublicId: string, formData: FormD
     selectedBrand: formData.selectedBrand,
     hasCustomLogo: !!formData.customLogo,
     includeContact: formData.includeContact,
+    isCustomImage: !!formData.customImage,
   })
 
-  // Start with base transformation
-  let transformationUrl = `https://res.cloudinary.com/${cloudName}/image/upload/c_fill,w_1200,h_630`
+  // Start with base transformation - NO CROPPING FOR UPLOADED IMAGES
+  // Only apply transformations to AI-generated images, preserve uploaded image dimensions
+  const hasResizeTransformation = !formData.customImage // Only resize if NOT a custom uploaded image
+  let transformationUrl = `https://res.cloudinary.com/${cloudName}/image/upload`
+  
+  if (hasResizeTransformation) {
+    // For AI-generated images, maintain quality without forced cropping
+    transformationUrl += `/q_auto,f_auto`
+  } else {
+    // For uploaded images, preserve original dimensions completely
+    console.log("Preserving uploaded image dimensions - no cropping applied")
+    transformationUrl += `/q_auto,f_auto`
+  }
 
   // Add logo overlay if branding is requested
   if (formData.wantBranding) {
