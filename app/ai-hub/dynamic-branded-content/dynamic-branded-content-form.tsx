@@ -875,12 +875,13 @@ export default function DynamicBrandedContentForm() {
           <Card className="border-0 shadow-md overflow-hidden">
             <CardContent className="p-0">
               {result?.imageUrl && (
-                <div className="relative w-full max-w-[600px] mx-auto" style={{ aspectRatio: "1200/630" }}>
+                <div className="relative w-full max-w-[600px] mx-auto">
                   <Image
                     src={result.imageUrl || "/placeholder.svg"}
                     alt="Generated content image with custom branding"
-                    fill
-                    className="object-cover rounded-t-lg"
+                    width={600}
+                    height={400}
+                    className="w-full h-auto rounded-t-lg"
                   />
                 </div>
               )}
