@@ -248,6 +248,7 @@ export default function IdeaHubBegginsForm() {
   const [showImageHelp, setShowImageHelp] = useState(false)
   const [showLogoHelp, setShowLogoHelp] = useState(false)
   const resultsRef = useRef<HTMLDivElement>(null)
+  const settingsRef = useRef<HTMLDivElement>(null)
   const recognitionRef = useRef<any>(null)
 
   const { user, loading: userLoading } = useMemberSpaceUser()
@@ -308,6 +309,18 @@ export default function IdeaHubBegginsForm() {
       }))
     }
   }, [user, userLoading])
+
+  // Auto-scroll to settings section when Step 2 loads (mobile UX improvement)
+  useEffect(() => {
+    if (step === 2 && settingsRef.current) {
+      setTimeout(() => {
+        settingsRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        })
+      }, 300) // Small delay to ensure content is rendered
+    }
+  }, [step])
 
   // Auto-scroll to results when they're generated
   useEffect(() => {
@@ -976,7 +989,7 @@ export default function IdeaHubBegginsForm() {
 
   const renderStepTwo = () => (
     <div className="space-y-6">
-      <div className="text-center">
+      <div ref={settingsRef} className="text-center">
         <h3 className="text-xl font-bold mb-4">Review Your Settings</h3>
         <div className="text-left space-y-2 bg-gray-50 p-4 rounded-lg">
           <p>
