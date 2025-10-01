@@ -174,18 +174,49 @@ async function generateAndProcessImage(formData: FormData, topic: string): Promi
 
   try {
     console.log("Generating image with DALL-E...")
-    // Generate image using OpenAI DALL-E
-    const imagePrompt = `Create a professional, high-quality real estate themed image for: ${topic}. 
-    
-    Style: Modern, clean, professional
-    Colors: Warm, inviting, professional real estate colors
-    Content: Should be relevant to real estate and the topic
-    Quality: High resolution, suitable for social media
-    Avoid: Text, logos, or branding in the generated image
-    
-    ${formData.textColor === 'white' ? 
-      'IMPORTANT: Ensure the image has darker background areas or add a subtle dark overlay where text will be placed for optimal white text visibility.' : 
-      'IMPORTANT: Ensure the image has lighter background areas or add a subtle light overlay where text will be placed for optimal black text visibility.'}`
+    // Generate image using OpenAI DALL-E with enhanced, contextual prompting
+    const imagePrompt = `Create a stunning, photorealistic real estate image for social media that perfectly captures: ${topic}
+
+PHOTOGRAPHY STYLE:
+- Professional real estate photography aesthetic
+- Shot with high-end DSLR camera (Canon 5D Mark IV or similar)
+- Natural lighting with golden hour warmth when applicable
+- Sharp focus, beautiful depth of field, professionally composed
+- Magazine-quality, aspirational lifestyle imagery
+
+CONTEXTUAL REQUIREMENTS FOR "${topic}":
+- The image must be HIGHLY RELEVANT and contextual to this specific topic
+- If about buyers/sellers, show real people in authentic moments (diverse, relatable, happy)
+- If about homes, showcase beautiful residential architecture with curb appeal
+- If about tips/advice, show the lifestyle benefit or outcome
+- If about market trends, show upscale neighborhoods or modern homes
+- If about investment, show luxury properties or successful homeowners
+
+VISUAL ELEMENTS:
+- Include relevant human elements when contextually appropriate (people viewing homes, families, agents helping clients)
+- Showcase beautiful homes: modern architecture, classic charm, or coastal properties
+- Capture emotional moments: joy of homeownership, excitement of touring, satisfaction of closing
+- Use aspirational settings: well-designed interiors, manicured landscapes, inviting curb appeal
+
+TECHNICAL SPECIFICATIONS:
+- Photorealistic, NOT illustrated or cartoon style
+- High resolution, optimized for Instagram/Facebook
+- Vivid colors with professional color grading
+- Leave the bottom right area slightly less busy for logo placement
+- NO text, numbers, signs, or any written content in the image
+- Professional composition following rule of thirds
+
+LIGHTING & MOOD:
+- Natural, warm lighting that creates an inviting atmosphere
+- Bright and optimistic feel that inspires action
+- Professionally lit to highlight architectural details
+- Golden hour or soft daylight aesthetic
+
+${formData.textColor === 'white' ? 
+  'IMPORTANT: Ensure the image has darker background areas or add a subtle dark overlay where text will be placed for optimal white text visibility.' : 
+  'IMPORTANT: Ensure the image has lighter background areas or add a subtle light overlay where text will be placed for optimal black text visibility.'}
+
+The final image should look like it belongs in a luxury real estate magazine - professional, aspirational, and perfectly aligned with the topic.`
 
     const imageResponse = await openaiClient.images.generate({
       model: "dall-e-3",

@@ -257,39 +257,92 @@ export default function DynamicBrandedContentPage() {
     }
   }
 
-  // Download a branded image
+  // Download a branded image with cross-browser compatibility (Edge, Chrome, Firefox, Safari)
   const downloadImage = async (imageUrl: string, filename: string) => {
     try {
-      // Fetch the image as a blob to ensure proper download
-      const response = await fetch(imageUrl)
-      if (!response.ok) throw new Error("Failed to fetch image")
+      // Detect browser for specific handling
+      const isEdge = /Edg/.test(navigator.userAgent)
+      const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent)
+      
+      console.log(`Downloading image on ${isEdge ? 'Edge' : isSafari ? 'Safari' : 'Chrome/Firefox'}`)
+      
+      // Add CORS mode and credentials for better browser compatibility
+      const response = await fetch(imageUrl, {
+        mode: 'cors',
+        credentials: 'omit',
+        cache: 'no-cache',
+        headers: {
+          'Accept': 'image/*',
+        }
+      })
+      
+      if (!response.ok) {
+        console.error(`Fetch failed with status: ${response.status}`)
+        throw new Error(`Failed to fetch image: ${response.statusText}`)
+      }
 
       const blob = await response.blob()
+      console.log(`Blob created: ${blob.size} bytes, type: ${blob.type}`)
+      
+      // Edge-specific handling
+      if (isEdge && (window as any).navigator.msSaveOrOpenBlob) {
+        // Legacy Edge (EdgeHTML) support
+        (window as any).navigator.msSaveOrOpenBlob(blob, filename || "branded-content.jpg")
+        console.log('Downloaded using msSaveOrOpenBlob (Legacy Edge)')
+        return
+      }
+      
+      // Modern browsers including Chromium Edge
       const blobUrl = URL.createObjectURL(blob)
-
       const link = document.createElement("a")
       link.href = blobUrl
       link.download = filename || "branded-content.jpg"
+      
+      // Required for Firefox
+      link.style.display = 'none'
       document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-
-      // Clean up the blob URL
-      URL.revokeObjectURL(blobUrl)
+      
+      // Trigger download with a small delay for Edge
+      if (isEdge) {
+        setTimeout(() => {
+          link.click()
+          document.body.removeChild(link)
+          // Clean up the blob URL after a delay
+          setTimeout(() => URL.revokeObjectURL(blobUrl), 100)
+        }, 100)
+      } else {
+        link.click()
+        document.body.removeChild(link)
+        // Clean up the blob URL
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 100)
+      }
+      
+      console.log('Download initiated successfully')
     } catch (error) {
-      console.error("Error downloading image:", error)
-      // Fallback: try direct link method
+      console.error("Primary download method failed:", error)
+      
+      // Fallback 1: Try direct link method
       try {
+        console.log('Attempting fallback download method...')
         const link = document.createElement("a")
         link.href = imageUrl
         link.download = filename || "branded-content.jpg"
         link.target = "_blank"
+        link.rel = "noopener noreferrer"
         document.body.appendChild(link)
         link.click()
         document.body.removeChild(link)
+        console.log('Fallback download initiated')
       } catch (fallbackError) {
         console.error("Fallback download also failed:", fallbackError)
-        alert("Download failed. Please try right-clicking the image and selecting 'Save As'")
+        
+        // Fallback 2: Open in new tab as last resort
+        try {
+          window.open(imageUrl, '_blank')
+          alert("Image opened in new tab. Please right-click and select 'Save As' to download.")
+        } catch (finalError) {
+          alert("Download failed. Please try right-clicking the image and selecting 'Save As'")
+        }
       }
     }
   }
