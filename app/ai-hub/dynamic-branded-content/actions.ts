@@ -146,9 +146,9 @@ async function processCustomImage(formData: FormData): Promise<string> {
       throw new Error(`Upload failed: ${uploadResult.error?.message || JSON.stringify(uploadResult)}`)
     }
 
-    console.log("Custom image uploaded successfully, building transformation URL...")
-    // Apply transformations and return final URL
-    return buildTransformationUrl(uploadResult.public_id, formData)
+    console.log("Custom image uploaded successfully, returning original URL...")
+    // For uploaded images, return the original URL with minimal optimization only
+    return `https://res.cloudinary.com/${cloudName}/image/upload/q_auto,f_auto/${uploadResult.public_id}`
   } catch (error) {
     console.error("Detailed error in processCustomImage:", error)
     if (error instanceof Error) {

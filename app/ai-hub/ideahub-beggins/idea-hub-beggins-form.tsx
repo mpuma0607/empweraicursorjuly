@@ -989,9 +989,9 @@ export default function IdeaHubBegginsForm() {
 
   const renderStepTwo = () => (
     <div className="space-y-6">
-      <div className="text-center">
+      <div ref={settingsRef} className="text-center">
         <h3 className="text-xl font-bold mb-4">Review Your Settings</h3>
-        <div ref={settingsRef} className="text-left space-y-2 bg-gray-50 p-4 rounded-lg">
+        <div className="text-left space-y-2 bg-gray-50 p-4 rounded-lg">
           <p>
             <strong>Topic:</strong> {formData.primaryTopic || formData.alternateTopic}
           </p>
