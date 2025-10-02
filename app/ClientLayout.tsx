@@ -25,14 +25,15 @@ export default function ClientLayout({
   const isC21CoastalHomePage = pathname === "/c21-coastal-home"
   const isC21PortfolioHomePage = pathname === "/c21-portfolio-home"
   const isAIAssistant = pathname === "/ai-assistant"
+  const isBrokerageIntake = pathname === "/brokerage-intake"
 
   return (
     <TenantProvider>
       <TrackingWrapper>
         <div className="min-h-screen flex flex-col">
-          {!isHomePage && !isBegginsHomePage && !isC21CoastalHomePage && !isC21PortfolioHomePage && <Navigation />}
+          {!isHomePage && !isBegginsHomePage && !isC21CoastalHomePage && !isC21PortfolioHomePage && !isBrokerageIntake && <Navigation />}
           <main className="flex-1">{children}</main>
-          {!isAIAssistant && <Footer />}
+          {!isAIAssistant && !isBrokerageIntake && <Footer />}
           <TenantSwitcher />
           <Toaster />
         </div>
