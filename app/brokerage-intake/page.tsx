@@ -4,7 +4,12 @@ import Image from "next/image"
 
 export default function BrokerageIntakePage() {
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+    <div 
+      className="min-h-screen flex flex-col items-center justify-center p-4"
+      style={{
+        background: 'linear-gradient(135deg, #47525F 0%, #222831 100%)'
+      }}
+    >
       {/* Empower AI Logo */}
       <div className="mb-8">
         <Image
