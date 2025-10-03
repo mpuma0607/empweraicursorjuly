@@ -26,15 +26,84 @@ interface SmartyResponse {
   reason?: string
 }
 
+export async function validateAndCorrectAddress(address: string): Promise<{correctedAddress: string, cities: string[]} | null> {
+  try {
+    console.log("=== Smarty Address Verification: Validating and correcting address ===")
+    console.log("Original address:", address)
+
+    if (!process.env.SMARTY_AUTH_ID || !process.env.SMARTY_AUTH_TOKEN) {
+      console.log("❌ Smarty API credentials not configured")
+      return null
+    }
+
+    // Use Address Verification API to validate the address
+    const encodedAddress = encodeURIComponent(address)
+    const apiUrl = `https://us-street.api.smarty.com/street-address?auth-id=${process.env.SMARTY_AUTH_ID}&auth-token=${process.env.SMARTY_AUTH_TOKEN}&street=${encodedAddress}`
+
+    console.log("Smarty API URL:", apiUrl)
+
+    const response = await fetch(apiUrl, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json; charset=utf-8"
+      }
+    })
+
+    console.log("Smarty API Response Status:", response.status)
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.log("Smarty API Error Response:", errorText)
+      return null
+    }
+
+    const data: any[] = await response.json()
+    console.log("Smarty API Response:", JSON.stringify(data, null, 2))
+
+    if (!data || data.length === 0) {
+      console.log("No data returned from Smarty API")
+      return null
+    }
+
+    const result = data[0]
+    
+    if (result.status) {
+      console.log("Smarty API Error Status:", result.status, result.reason)
+      return null
+    }
+
+    // Get the corrected address components
+    const components = result.components
+    if (!components) {
+      console.log("No components found in response")
+      return null
+    }
+
+    // Build corrected address
+    const correctedAddress = `${components.primary_number} ${components.street_name} ${components.street_suffix} ${components.city_name} ${components.state_abbreviation} ${components.zipcode}`
+    console.log("Corrected address:", correctedAddress)
+
+    // Get all cities for this zip code
+    const zipCode = components.zipcode
+    const cities = await getCitiesForZipCode(zipCode)
+    
+    return {
+      correctedAddress,
+      cities
+    }
+
+  } catch (error) {
+    console.error("Smarty Address Verification Error:", error)
+    return null
+  }
+}
+
 export async function getCitiesForZipCode(zipCode: string): Promise<string[]> {
   try {
     console.log("=== Smarty ZIP Code API: Getting cities for zip code ===")
     console.log("Zip Code:", zipCode)
-    console.log("SMARTY_AUTH_ID exists:", !!process.env.SMARTY_AUTH_ID)
-    console.log("SMARTY_AUTH_TOKEN exists:", !!process.env.SMARTY_AUTH_TOKEN)
 
     if (!process.env.SMARTY_AUTH_ID || !process.env.SMARTY_AUTH_TOKEN) {
-      console.log("❌ Smarty API credentials not configured")
       throw new Error("Smarty API credentials not configured")
     }
 

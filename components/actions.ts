@@ -3,7 +3,7 @@
 import OpenAI from "openai"
 import { generateText } from "ai"
 import { openai } from "@ai-sdk/openai"
-import { getCitiesForZipCode, extractZipCodeFromAddress, buildAddressWithCity } from "@/lib/smarty-api"
+import { validateAndCorrectAddress, getCitiesForZipCode, extractZipCodeFromAddress, buildAddressWithCity } from "@/lib/smarty-api"
 
 const openaiInstance = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -299,45 +299,82 @@ async function fetchComparableHomesWithFallback(address: string) {
 
     console.log("📍 Extracted zip code:", zipCode)
 
-    // Get all valid cities for this zip code from Smarty
-    const validCities = await getCitiesForZipCode(zipCode)
-    console.log("🏙️ Valid cities for zip", zipCode, ":", validCities)
+    // Use Smarty to validate and correct the address, then get all cities
+    const smartyResult = await validateAndCorrectAddress(address)
+    
+    if (smartyResult) {
+      console.log("🏙️ Smarty validation successful!")
+      console.log("📍 Corrected address:", smartyResult.correctedAddress)
+      console.log("🏙️ Available cities:", smartyResult.cities)
+      
+      // First try the corrected address from Smarty
+      try {
+        console.log("🔄 Trying Smarty corrected address")
+        const result = await fetchComparableHomes(smartyResult.correctedAddress)
+        console.log("✅ Success with Smarty corrected address!")
+        return result
+      } catch (error) {
+        console.log("❌ Smarty corrected address failed:", error instanceof Error ? error.message : String(error))
+      }
+      
+      // If corrected address fails, try each city from the zip code
+      if (smartyResult.cities.length > 0) {
+        for (const city of smartyResult.cities) {
+          try {
+            console.log(`🔄 Trying city: ${city}`)
+            
+            // Build address with this city using Smarty's components
+            const parts = smartyResult.correctedAddress.split(' ')
+            const streetAndSuffix = parts.slice(0, -3).join(' ') // Everything except city, state, zip
+            const state = parts[parts.length - 2]
+            const zip = parts[parts.length - 1]
+            
+            const newAddress = `${streetAndSuffix} ${city} ${state} ${zip}`
+            console.log("📍 New address with city:", newAddress)
+            
+            const result = await fetchComparableHomes(newAddress)
+            console.log(`✅ Success with city: ${city}`)
+            return result
+          } catch (error) {
+            console.log(`❌ Failed with city ${city}:`, error instanceof Error ? error.message : String(error))
+            continue
+          }
+        }
+      }
+    } else {
+      console.log("❌ Smarty validation failed, trying fallback approach")
+      
+      // Fallback: get cities for zip code and try each one
+      const validCities = await getCitiesForZipCode(zipCode)
+      console.log("🏙️ Valid cities for zip", zipCode, ":", validCities)
 
-    if (validCities.length > 0) {
-      // Try each valid city until one works
-      for (const city of validCities) {
-        try {
-          console.log(`🔄 Trying city: ${city}`)
-          
-          // Simple approach: split by spaces and rebuild
-          const parts = address.trim().split(/\s+/)
-          console.log("📍 Address parts:", parts)
-          
-          // Find the state and zip (last two parts)
-          const state = parts[parts.length - 2] // "fl"
-          const zip = parts[parts.length - 1]   // "33543"
-          
-          // Everything before state/zip is the street + current city
-          // We need to remove the current city and add the new one
-          const streetParts = parts.slice(0, -2) // ["28702", "falling", "leaves", "way", "wesley", "chapel"]
-          
-          // Remove the last word (current city) and add new city
-          const street = streetParts.slice(0, -1).join(' ') // "28702 falling leaves way"
-          const newAddress = `${street} ${city} ${state} ${zip}`
-          
-          console.log("📍 Street:", street)
-          console.log("📍 New city:", city)
-          console.log("📍 State:", state)
-          console.log("📍 Zip:", zip)
-          
-          console.log("📍 New address with city:", newAddress)
-          
-          const result = await fetchComparableHomes(newAddress)
-          console.log(`✅ Success with city: ${city}`)
-          return result
-        } catch (error) {
-          console.log(`❌ Failed with city ${city}:`, error instanceof Error ? error.message : String(error))
-          continue
+      if (validCities.length > 0) {
+        for (const city of validCities) {
+          try {
+            console.log(`🔄 Trying city: ${city}`)
+            
+            // Simple fallback: replace city in original address
+            const addressRegex = /^(.+?)\s+([A-Za-z\s]+?)\s+([A-Z]{2})\s+(\d{5})$/
+            const match = address.match(addressRegex)
+            
+            let newAddress
+            if (match) {
+              const [, street, , state, zip] = match
+              newAddress = `${street} ${city} ${state} ${zip}`
+            } else {
+              // Last resort: simple replacement
+              newAddress = address.replace(/\s+[A-Za-z\s]+\s+[A-Z]{2}\s+\d{5}$/, ` ${city} FL ${zipCode}`)
+            }
+            
+            console.log("📍 New address with city:", newAddress)
+            
+            const result = await fetchComparableHomes(newAddress)
+            console.log(`✅ Success with city: ${city}`)
+            return result
+          } catch (error) {
+            console.log(`❌ Failed with city ${city}:`, error instanceof Error ? error.message : String(error))
+            continue
+          }
         }
       }
     }
