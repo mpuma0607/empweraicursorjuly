@@ -3,6 +3,7 @@
 import OpenAI from "openai"
 import { generateText } from "ai"
 import { openai } from "@ai-sdk/openai"
+import { getCitiesForZipCode, extractZipCodeFromAddress, buildAddressWithCity } from "@/lib/smarty-api"
 
 const openaiInstance = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -99,8 +100,8 @@ export async function analyzeComparables(address: string) {
     console.log("Address:", address)
     console.log("RAPIDAPI_ZILLOW_KEY exists:", !!process.env.RAPIDAPI_ZILLOW_KEY)
 
-    // Fetch comparable homes data using the exact working format
-    const comparableData = await fetchComparableHomes(address)
+    // Try to fetch comparable homes data with fallback for city name issues
+    const comparableData = await fetchComparableHomesWithFallback(address)
     console.log("Comparable data result:", {
       totalComparables: comparableData.totalComparables,
       hasComparables: comparableData.comparables.length > 0,
@@ -269,6 +270,69 @@ Format each section with detailed bullet points using specific data from the com
         usingRealData: false,
       },
     }
+  }
+}
+
+async function fetchComparableHomesWithFallback(address: string) {
+  try {
+    console.log("=== QuickCMA with Smarty Fallback ===")
+    console.log("Original address:", address)
+
+    // First, try the original address
+    try {
+      const result = await fetchComparableHomes(address)
+      console.log("✅ Original address worked!")
+      return result
+    } catch (error) {
+      console.log("❌ Original address failed:", error instanceof Error ? error.message : String(error))
+      console.log("🔄 Trying Smarty API fallback...")
+    }
+
+    // Extract components from the address
+    const addressParts = address.trim().split(/\s+/)
+    const zipCode = extractZipCodeFromAddress(address)
+    
+    if (!zipCode) {
+      console.log("❌ Could not extract zip code from address")
+      throw new Error("Could not extract zip code from address for fallback")
+    }
+
+    console.log("📍 Extracted zip code:", zipCode)
+
+    // Get all valid cities for this zip code
+    const validCities = await getCitiesForZipCode(zipCode)
+    console.log("🏙️ Valid cities for zip", zipCode, ":", validCities)
+
+    if (validCities.length === 0) {
+      console.log("❌ No valid cities found for zip code")
+      throw new Error("No valid cities found for this zip code")
+    }
+
+    // Try each valid city until one works
+    for (const city of validCities) {
+      try {
+        console.log(`🔄 Trying city: ${city}`)
+        
+        // Rebuild address with this city
+        const newAddress = address.replace(/\b[A-Za-z\s]+\b(?=\s+\w{2}\s+\d{5})/, city)
+        console.log("📍 New address:", newAddress)
+        
+        const result = await fetchComparableHomes(newAddress)
+        console.log(`✅ Success with city: ${city}`)
+        return result
+      } catch (error) {
+        console.log(`❌ Failed with city ${city}:`, error instanceof Error ? error.message : String(error))
+        continue
+      }
+    }
+
+    // If all cities failed, throw the original error
+    throw new Error("No comparable properties found for this address with any valid city name for this zip code")
+
+  } catch (error) {
+    console.error("=== QuickCMA Fallback Error ===")
+    console.error("Error message:", error instanceof Error ? error.message : String(error))
+    throw error
   }
 }
 
