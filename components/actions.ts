@@ -323,45 +323,18 @@ async function fetchComparableHomesWithFallback(address: string) {
           try {
             console.log(`🔄 Trying city: ${city}`)
             
-            // Build address with this city using Smarty's components
-            // Smarty corrected address: "28702 Falling Leaves Way Wesley Chapel FL 33543"
-            // We need to replace "Wesley Chapel" with the new city
-            const correctedAddress = smartyResult.correctedAddress
-            const parts = correctedAddress.split(' ')
+            // Use the original address and simply replace the city part
+            // Original: "28702 falling leaves way wesley chapel fl 33543"
+            // Replace "wesley chapel" with the new city
+            const originalAddress = address // "28702 falling leaves way wesley chapel fl 33543"
+            const newAddress = originalAddress.replace(/\bwesley chapel\b/i, city)
             
-            // Find where the city starts (before state and zip)
-            const stateIndex = parts.findIndex(part => part === 'FL')
-            const zipIndex = parts.findIndex(part => /^\d{5}$/.test(part)) // Find 5-digit zip code
+            console.log("📍 Original address:", originalAddress)
+            console.log("📍 New address with city:", newAddress)
             
-            if (stateIndex > 0 && zipIndex > stateIndex) {
-              // Extract street (everything before city)
-              // City is everything between street and state, so we need to find where city starts
-              // Look for the last word before state that's not a street suffix
-              const streetSuffixes = ['Way', 'Street', 'Avenue', 'Road', 'Drive', 'Lane', 'Court', 'Place', 'Boulevard']
-              let cityStartIndex = stateIndex - 1
-              
-              // Find where the city actually starts by looking for street suffix
-              for (let i = stateIndex - 1; i >= 0; i--) {
-                if (streetSuffixes.includes(parts[i])) {
-                  cityStartIndex = i + 1
-                  break
-                }
-              }
-              
-              const streetParts = parts.slice(0, cityStartIndex)
-              const street = streetParts.join(' ')
-              
-              // Build new address with new city
-              const newAddress = `${street} ${city} ${parts[stateIndex]} ${parts[zipIndex]}`
-              console.log("📍 New address with city:", newAddress)
-              
-              const result = await fetchComparableHomes(newAddress)
-              console.log(`✅ Success with city: ${city}`)
-              return result
-            } else {
-              console.log("❌ Could not parse corrected address properly")
-              continue
-            }
+            const result = await fetchComparableHomes(newAddress)
+            console.log(`✅ Success with city: ${city}`)
+            return result
           } catch (error) {
             console.log(`❌ Failed with city ${city}:`, error instanceof Error ? error.message : String(error))
             continue
