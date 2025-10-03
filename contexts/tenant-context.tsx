@@ -32,7 +32,7 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
     root.style.setProperty("--color-text", tenantConfig.branding.colors.text)
 
     // Update document title
-    document.title = `${tenantConfig.branding.name} - Real Estate Platform`
+    document.title = `${tenantConfig.name} - Real Estate Platform`
   }, [])
 
   const t = (key: string): string => {

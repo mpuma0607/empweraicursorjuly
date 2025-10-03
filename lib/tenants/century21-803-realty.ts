@@ -28,7 +28,7 @@ export const century21803RealtyConfig: TenantConfig = {
     ideaHub: true,
     dynamicBrandedContent: true,
     chatbot: true,
-    customHomePage: true
+    customHomePage: "/c21-803-realty-home"
   },
   localization: {
     currency: 'USD',
