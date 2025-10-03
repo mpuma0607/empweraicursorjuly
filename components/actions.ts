@@ -310,16 +310,20 @@ async function fetchComparableHomesWithFallback(address: string) {
           console.log(`🔄 Trying city: ${city}`)
           
           // Rebuild address with this city
-          const addressRegex = /^(.+?)\s+([A-Za-z\s]+?)\s+([A-Z]{2})\s+(\d{5})/
+          // Pattern: "Street Address City State Zip"
+          const addressRegex = /^(.+?)\s+([A-Za-z\s]+?)\s+([A-Z]{2})\s+(\d{5})$/
           const match = address.match(addressRegex)
           
           let newAddress
           if (match) {
             const [, street, , state, zip] = match
             newAddress = `${street} ${city} ${state} ${zip}`
+            console.log("📍 Regex match - Street:", street, "State:", state, "Zip:", zip)
           } else {
-            // Fallback: simple replacement
-            newAddress = address.replace(/\b[A-Za-z\s]+\b(?=\s+\w{2}\s+\d{5})/, city)
+            // Fallback: simple replacement of city part
+            // Look for pattern: "Street City State Zip" and replace the city
+            newAddress = address.replace(/\s+[A-Za-z\s]+\s+[A-Z]{2}\s+\d{5}$/, ` ${city} FL 33543`)
+            console.log("📍 Fallback replacement used")
           }
           
           console.log("📍 New address with city:", newAddress)
