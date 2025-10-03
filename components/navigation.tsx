@@ -419,7 +419,7 @@ export default function Navigation() {
       }
 
       // Add Empower AI-specific profile links
-      if (item.title === "Profile" && (tenantConfig.id === "empower-ai" || tenantConfig.id === "empower-beta")) {
+      if (item.title === "Profile" && (tenantConfig.id === "empower-ai" || tenantConfig.id === "empower-beta" || tenantConfig.id === "century21-803-realty")) {
         // Add Branding Profile as the first item
         filteredSubmenu.unshift({
           title: "Branding Profile",

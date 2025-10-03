@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
     }
     // Use tenant-specific redirect URI for Century 21 803 Realty
     else if (host.includes('21goldconnect.com') || host.includes('803.thenextlevelu.com')) {
-      redirectUri = 'https://21goldconnect.com/api/auth/google/callback'
+      redirectUri = 'https://21goldconnect.com/api/century21-803-realty/auth/google/callback'
     }
     
     console.log('Using redirect URI:', redirectUri)
