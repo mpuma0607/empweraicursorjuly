@@ -299,49 +299,56 @@ async function fetchComparableHomesWithFallback(address: string) {
 
     console.log("📍 Extracted zip code:", zipCode)
 
-    // Check if Smarty API credentials are configured
-    if (!process.env.SMARTY_AUTH_ID || !process.env.SMARTY_AUTH_TOKEN) {
-      console.log("⚠️ Smarty API credentials not configured, trying without city name")
-      
-      // Try without city name as fallback
-      try {
-        const addressParts = address.trim().split(/\s+/)
-        const stateZip = addressParts.slice(-2).join(' ') // Get last two parts (state zip)
-        const street = addressParts.slice(0, -2).join(' ') // Get everything except last two parts
-        const addressWithoutCity = `${street} ${stateZip}`
-        
-        console.log("🔄 Trying address without city:", addressWithoutCity)
-        const result = await fetchComparableHomes(addressWithoutCity)
-        console.log("✅ Success without city name!")
-        return result
-      } catch (error) {
-        console.log("❌ Failed without city name:", error instanceof Error ? error.message : String(error))
-        throw new Error("Smarty API not configured and address without city also failed")
-      }
-    }
-
-    // Get all valid cities for this zip code
+    // Get all valid cities for this zip code from Smarty
     const validCities = await getCitiesForZipCode(zipCode)
     console.log("🏙️ Valid cities for zip", zipCode, ":", validCities)
 
-    if (validCities.length === 0) {
-      console.log("❌ No valid cities found for zip code, trying without city name")
-      
-      // Try without city name as last resort
-      try {
-        const addressParts = address.trim().split(/\s+/)
-        const stateZip = addressParts.slice(-2).join(' ') // Get last two parts (state zip)
-        const street = addressParts.slice(0, -2).join(' ') // Get everything except last two parts
-        const addressWithoutCity = `${street} ${stateZip}`
-        
-        console.log("🔄 Trying address without city:", addressWithoutCity)
-        const result = await fetchComparableHomes(addressWithoutCity)
-        console.log("✅ Success without city name!")
-        return result
-      } catch (error) {
-        console.log("❌ Failed without city name:", error instanceof Error ? error.message : String(error))
-        throw new Error("No valid cities found for this zip code and address without city also failed")
+    if (validCities.length > 0) {
+      // Try each valid city until one works
+      for (const city of validCities) {
+        try {
+          console.log(`🔄 Trying city: ${city}`)
+          
+          // Rebuild address with this city
+          const addressRegex = /^(.+?)\s+([A-Za-z\s]+?)\s+([A-Z]{2})\s+(\d{5})/
+          const match = address.match(addressRegex)
+          
+          let newAddress
+          if (match) {
+            const [, street, , state, zip] = match
+            newAddress = `${street} ${city} ${state} ${zip}`
+          } else {
+            // Fallback: simple replacement
+            newAddress = address.replace(/\b[A-Za-z\s]+\b(?=\s+\w{2}\s+\d{5})/, city)
+          }
+          
+          console.log("📍 New address with city:", newAddress)
+          
+          const result = await fetchComparableHomes(newAddress)
+          console.log(`✅ Success with city: ${city}`)
+          return result
+        } catch (error) {
+          console.log(`❌ Failed with city ${city}:`, error instanceof Error ? error.message : String(error))
+          continue
+        }
       }
+    }
+
+    // If Smarty didn't help, try without city name as last resort
+    console.log("🔄 Trying address without city name")
+    try {
+      const addressParts = address.trim().split(/\s+/)
+      const stateZip = addressParts.slice(-2).join(' ') // Get last two parts (state zip)
+      const street = addressParts.slice(0, -2).join(' ') // Get everything except last two parts
+      const addressWithoutCity = `${street} ${stateZip}`
+      
+      console.log("📍 Address without city:", addressWithoutCity)
+      const result = await fetchComparableHomes(addressWithoutCity)
+      console.log("✅ Success without city name!")
+      return result
+    } catch (error) {
+      console.log("❌ Failed without city name:", error instanceof Error ? error.message : String(error))
+      throw new Error("Address verification failed and address without city also failed")
     }
 
     // Try each valid city until one works
