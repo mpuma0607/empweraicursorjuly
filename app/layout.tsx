@@ -53,6 +53,10 @@ export default function RootLayout({
                                  hostname === 'begginsuniversity.com' ||
                                  hostname === 'www.begginsuniversity.com') {
                               subdomain = 'begginsuniversity';
+                            } else if (hostname === '21goldconnect.com' ||
+                                       hostname === 'www.21goldconnect.com' ||
+                                       hostname === '803.thenextlevelu.com') {
+                              subdomain = '21goldconnect';
                             } else {
                               // For getempowerai.com and all other domains, use getempowerai
                               subdomain = 'getempowerai';
