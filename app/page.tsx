@@ -72,6 +72,10 @@ export default function HomePage() {
                hostname === 'c21portfolio.com' ||
                hostname === 'www.c21portfolio.com') {
       portalUrl = "https://c21agenthome.com/portal"
+    } else if (hostname === '21goldconnect.com' ||
+               hostname === 'www.21goldconnect.com' ||
+               hostname === '803.thenextlevelu.com') {
+      portalUrl = "https://21goldconnect.com/portal"
     } else if (hostname === 'getempowerai.com' ||
                hostname === 'www.getempowerai.com') {
       portalUrl = "https://getempowerai.com/portal"

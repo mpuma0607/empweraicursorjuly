@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     
     // Parse state to get tenant and origin info
     let stateData = null
-    let targetOrigin = process.env.NEXT_PUBLIC_APP_URL || 'https://getempowerai.com'
+    let targetOrigin = 'https://21goldconnect.com'
     let returnUrl = `${targetOrigin}/profile/email-integration`
     
     try {
@@ -91,18 +91,8 @@ export async function GET(request: NextRequest) {
       )
     }
     
-    // Exchange code for tokens - use tenant-specific redirect URI
-    const host = request.headers.get('host') || 'getempowerai.com'
-    let redirectUri = process.env.GOOGLE_OAUTH_REDIRECT_URI || 'https://getempowerai.com/api/auth/google/callback'
-    
-    // Use tenant-specific redirect URI for BegginsU
-    if (host.includes('begginsuniversity.com')) {
-      redirectUri = 'https://begginsuniversity.com/api/beggins/auth/google/callback'
-    }
-    // Use tenant-specific redirect URI for Century 21 803 Realty
-    else if (host.includes('21goldconnect.com') || host.includes('803.thenextlevelu.com')) {
-      redirectUri = 'https://21goldconnect.com/api/auth/google/callback'
-    }
+    // Exchange code for tokens - use Century 21 803 Realty specific redirect URI
+    const redirectUri = 'https://21goldconnect.com/api/century21-803-realty/auth/google/callback'
     
     console.log('Using redirect URI for token exchange:', redirectUri)
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
@@ -154,37 +144,37 @@ export async function GET(request: NextRequest) {
       )
     }
     
-         const userInfo = await userInfoResponse.json()
-     
-     // Store tokens securely in database
-     const expiresAt = new Date()
-     expiresAt.setHours(expiresAt.getHours() + 1) // Google tokens typically expire in 1 hour
-     
-     await oauthTokens.store(userInfo.email, {
-       accessToken: tokenData.access_token,
-       refreshToken: tokenData.refresh_token,
-       expiresAt,
-       scopes: [
-         'https://www.googleapis.com/auth/userinfo.email',
-         'https://www.googleapis.com/auth/userinfo.profile',
-         'https://www.googleapis.com/auth/gmail.send',
-         'https://www.googleapis.com/auth/calendar.events',
-         'https://www.googleapis.com/auth/calendar.events.readonly'
-       ]
-     })
-     
-     console.log(`OAuth completed successfully for ${userInfo.email}`)
-     
-     // Always redirect back to email integration page with success
-     // This ensures the main page gets the OAuth result regardless of popup/redirect
-     return NextResponse.redirect(
-       `${returnUrl}?success=oauth_completed&email=${encodeURIComponent(userInfo.email)}`
-     )
+    const userInfo = await userInfoResponse.json()
+    
+    // Store tokens securely in database
+    const expiresAt = new Date()
+    expiresAt.setHours(expiresAt.getHours() + 1) // Google tokens typically expire in 1 hour
+    
+    await oauthTokens.store(userInfo.email, {
+      accessToken: tokenData.access_token,
+      refreshToken: tokenData.refresh_token,
+      expiresAt,
+      scopes: [
+        'https://www.googleapis.com/auth/userinfo.email',
+        'https://www.googleapis.com/auth/userinfo.profile',
+        'https://www.googleapis.com/auth/gmail.send',
+        'https://www.googleapis.com/auth/calendar.events',
+        'https://www.googleapis.com/auth/calendar.events.readonly'
+      ]
+    })
+    
+    console.log(`OAuth completed successfully for ${userInfo.email}`)
+    
+    // Always redirect back to email integration page with success
+    // This ensures the main page gets the OAuth result regardless of popup/redirect
+    return NextResponse.redirect(
+      `${returnUrl}?success=oauth_completed&email=${encodeURIComponent(userInfo.email)}`
+    )
     
   } catch (error) {
     console.error('Error in OAuth callback:', error)
     // Try to get target origin from request if available
-    const host = request.headers.get('host') || 'getempowerai.com'
+    const host = request.headers.get('host') || '21goldconnect.com'
     const protocol = request.headers.get('x-forwarded-proto') || 'https'
     const fallbackOrigin = `${protocol}://${host}`
     return NextResponse.redirect(

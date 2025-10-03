@@ -25,6 +25,7 @@ export async function GET(request: NextRequest) {
     const stateData = {
       csrf: randomBytes(16).toString('hex'),
       tenant: host.includes('beggins') ? 'century21-beggins' : 
+              host.includes('21goldconnect') || host.includes('803') ? 'century21-803-realty' :
               host.includes('empowerai') ? 'empower-ai' : 'empower-ai',
       origin: currentOrigin,
       returnUrl: `${currentOrigin}/profile/email-integration`
@@ -37,6 +38,10 @@ export async function GET(request: NextRequest) {
     // Use tenant-specific redirect URI for BegginsU
     if (host.includes('begginsuniversity.com')) {
       redirectUri = 'https://begginsuniversity.com/api/beggins/auth/google/callback'
+    }
+    // Use tenant-specific redirect URI for Century 21 803 Realty
+    else if (host.includes('21goldconnect.com') || host.includes('803.thenextlevelu.com')) {
+      redirectUri = 'https://21goldconnect.com/api/auth/google/callback'
     }
     
     console.log('Using redirect URI:', redirectUri)

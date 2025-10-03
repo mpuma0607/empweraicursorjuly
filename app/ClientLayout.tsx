@@ -24,6 +24,7 @@ export default function ClientLayout({
   const isBegginsHomePage = pathname === "/beggins-home"
   const isC21CoastalHomePage = pathname === "/c21-coastal-home"
   const isC21PortfolioHomePage = pathname === "/c21-portfolio-home"
+  const isC21803RealtyHomePage = pathname === "/c21-803-realty-home"
   const isAIAssistant = pathname === "/ai-assistant"
   const isBrokerageIntake = pathname === "/brokerage-intake"
 
@@ -31,7 +32,7 @@ export default function ClientLayout({
     <TenantProvider>
       <TrackingWrapper>
         <div className="min-h-screen flex flex-col">
-          {!isHomePage && !isBegginsHomePage && !isC21CoastalHomePage && !isC21PortfolioHomePage && !isBrokerageIntake && <Navigation />}
+          {!isHomePage && !isBegginsHomePage && !isC21CoastalHomePage && !isC21PortfolioHomePage && !isC21803RealtyHomePage && !isBrokerageIntake && <Navigation />}
           <main className="flex-1">{children}</main>
           {!isAIAssistant && !isBrokerageIntake && <Footer />}
           <TenantSwitcher />

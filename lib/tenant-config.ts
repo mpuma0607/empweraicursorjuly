@@ -4,6 +4,7 @@ import { internationalConfig } from "@/lib/tenants/international"
 import { century21BegginsConfig } from "@/lib/tenants/century21-beggins"
 import { century21CoastalConfig } from "@/lib/tenants/century21-coastal"
 import { century21PortfolioConfig } from "@/lib/tenants/century21-portfolio"
+import { century21803RealtyConfig } from "@/lib/tenants/century21-803-realty"
 import { empowerAiConfig } from "@/lib/tenants/empower-ai"
 import { empowerBetaConfig } from "@/lib/tenants/empower-beta"
 import type { TenantConfig } from "@/lib/types"
@@ -15,6 +16,7 @@ const tenantConfigs: Record<string, TenantConfig> = {
   "century21-beggins": century21BegginsConfig,
   "century21-coastal": century21CoastalConfig,
   "century21-portfolio": century21PortfolioConfig,
+  "century21-803-realty": century21803RealtyConfig,
   "empower-ai": empowerAiConfig,
   "empower-beta": empowerBetaConfig,
 }
@@ -52,6 +54,9 @@ export function getTenantConfig(): TenantConfig {
   if (hostname === "portfolio.thenextlevelu.com") {
     return century21PortfolioConfig
   }
+  if (hostname === "803.thenextlevelu.com") {
+    return century21803RealtyConfig
+  }
   if (hostname === "brokerage.thenextlevelu.com") {
     return brokeragePrivateConfig
   }
@@ -65,14 +70,22 @@ export function getTenantConfig(): TenantConfig {
     return century21PortfolioConfig
   }
 
+  // Check for Century 21 803 Realty domain
+  if (hostname === "21goldconnect.com" || hostname === "www.21goldconnect.com") {
+    return century21803RealtyConfig
+  }
+
   // Check for Empower AI domains
   if (hostname === "getempowerai.com" || hostname === "www.getempowerai.com") {
-    // Check if we're on the C21 Coastal or Portfolio home page
+    // Check if we're on the C21 Coastal, Portfolio, or 803 Realty home page
     if (window.location.pathname === "/c21-coastal-home") {
       return century21CoastalConfig
     }
     if (window.location.pathname === "/c21-portfolio-home") {
       return century21PortfolioConfig
+    }
+    if (window.location.pathname === "/c21-803-realty-home") {
+      return century21803RealtyConfig
     }
     return empowerAiConfig
   }
@@ -89,6 +102,9 @@ export function getTenantConfig(): TenantConfig {
   }
   if (hostname.includes("portfolio") || hostname.includes("century21-portfolio") || hostname.includes("c21portfolio") || hostname.includes("c21agenthome")) {
     return century21PortfolioConfig
+  }
+  if (hostname.includes("803") || hostname.includes("century21-803") || hostname.includes("21goldconnect")) {
+    return century21803RealtyConfig
   }
   if (hostname.includes("brokerage1") || hostname.includes("brokerage-private")) {
     return brokeragePrivateConfig
@@ -114,6 +130,7 @@ export function getAllTenants() {
     { id: "century21-beggins", name: "Beggins University" },
     { id: "century21-coastal", name: "Century 21 Coastal Advantage" },
     { id: "century21-portfolio", name: "Century 21 Portfolio" },
+    { id: "century21-803-realty", name: "Century 21 803 Realty" },
     { id: "brokerage-private", name: "Private Brokerage" },
     { id: "international", name: "International Platform" },
     { id: "default", name: "The Next Level U (Legacy)" },

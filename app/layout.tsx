@@ -177,7 +177,10 @@ export default function RootLayout({
                               window.location.hostname === 'www.c21coastal.com' ||
                               window.location.hostname.includes('portfolio') ||
                               window.location.hostname === 'c21agenthome.com' ||
-                              window.location.hostname === 'www.c21agenthome.com'
+                              window.location.hostname === 'www.c21agenthome.com' ||
+                              window.location.hostname.includes('803') ||
+                              window.location.hostname === '21goldconnect.com' ||
+                              window.location.hostname === 'www.21goldconnect.com'
                             )) {
                               return;
                             }
