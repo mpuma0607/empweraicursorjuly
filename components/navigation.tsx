@@ -443,7 +443,7 @@ export default function Navigation() {
       }
 
       // Add custom sections for Training Hub if they exist, but exclude onboarding for Beggins
-      if (item.title === "Training Hub" && tenantConfig.features.customSections.length > 0) {
+      if (item.title === "Training Hub" && tenantConfig.features.customSections && tenantConfig.features.customSections.length > 0) {
         const customTrainingSections = tenantConfig.features.customSections.filter((section) => {
           // For Beggins tenant, exclude onboarding from Training Hub since it's now its own hub
           if (tenantConfig.id === "century21-beggins" && section.id === "onboarding") {
