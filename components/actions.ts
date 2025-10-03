@@ -309,22 +309,26 @@ async function fetchComparableHomesWithFallback(address: string) {
         try {
           console.log(`🔄 Trying city: ${city}`)
           
-          // Rebuild address with this city
-          // Pattern: "Street Address City State Zip"
-          const addressRegex = /^(.+?)\s+([A-Za-z\s]+?)\s+([A-Z]{2})\s+(\d{5})$/
-          const match = address.match(addressRegex)
+          // Simple approach: split by spaces and rebuild
+          const parts = address.trim().split(/\s+/)
+          console.log("📍 Address parts:", parts)
           
-          let newAddress
-          if (match) {
-            const [, street, , state, zip] = match
-            newAddress = `${street} ${city} ${state} ${zip}`
-            console.log("📍 Regex match - Street:", street, "State:", state, "Zip:", zip)
-          } else {
-            // Fallback: simple replacement of city part
-            // Look for pattern: "Street City State Zip" and replace the city
-            newAddress = address.replace(/\s+[A-Za-z\s]+\s+[A-Z]{2}\s+\d{5}$/, ` ${city} FL 33543`)
-            console.log("📍 Fallback replacement used")
-          }
+          // Find the state and zip (last two parts)
+          const state = parts[parts.length - 2] // "fl"
+          const zip = parts[parts.length - 1]   // "33543"
+          
+          // Everything before state/zip is the street + current city
+          // We need to remove the current city and add the new one
+          const streetParts = parts.slice(0, -2) // ["28702", "falling", "leaves", "way", "wesley", "chapel"]
+          
+          // Remove the last word (current city) and add new city
+          const street = streetParts.slice(0, -1).join(' ') // "28702 falling leaves way"
+          const newAddress = `${street} ${city} ${state} ${zip}`
+          
+          console.log("📍 Street:", street)
+          console.log("📍 New city:", city)
+          console.log("📍 State:", state)
+          console.log("📍 Zip:", zip)
           
           console.log("📍 New address with city:", newAddress)
           
