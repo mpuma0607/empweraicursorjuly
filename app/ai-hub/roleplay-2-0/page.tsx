@@ -108,12 +108,37 @@ export default function RolePlay2Page() {
     setIsAnalyzing(true)
     
     try {
+      console.log('Starting analysis...')
+      console.log('Audio chunks count:', audioChunks.length)
+      console.log('Recording duration:', recordingDuration)
+      
       // Combine audio chunks
       const audioBlob = new Blob(audioChunks, { type: 'audio/webm;codecs=opus' })
+      console.log('Audio blob size:', audioBlob.size, 'bytes')
       
-      // Convert to base64 for API
-      const arrayBuffer = await audioBlob.arrayBuffer()
-      const base64Audio = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)))
+      // Check if audio is too large (limit to 25MB)
+      if (audioBlob.size > 25 * 1024 * 1024) {
+        alert('Audio file too large. Please record a shorter conversation.')
+        setIsAnalyzing(false)
+        return
+      }
+      
+      // Convert to base64 for API - use a more efficient method
+      const reader = new FileReader()
+      const base64Promise = new Promise<string>((resolve, reject) => {
+        reader.onload = () => {
+          const result = reader.result as string
+          // Remove data URL prefix
+          const base64 = result.split(',')[1]
+          resolve(base64)
+        }
+        reader.onerror = reject
+      })
+      
+      reader.readAsDataURL(audioBlob)
+      const base64Audio = await base64Promise
+      
+      console.log('Base64 audio length:', base64Audio.length)
       
       // Send to analysis API
       const response = await fetch('/api/roleplay-2-0/analyze', {
@@ -128,16 +153,21 @@ export default function RolePlay2Page() {
         })
       })
       
+      console.log('Analysis response status:', response.status)
+      
       if (!response.ok) {
-        throw new Error('Analysis failed')
+        const errorText = await response.text()
+        console.error('Analysis failed:', errorText)
+        throw new Error(`Analysis failed: ${response.status} - ${errorText}`)
       }
       
       const analysisData = await response.json()
+      console.log('Analysis completed successfully')
       setAnalysis(analysisData)
       
     } catch (error) {
       console.error('Error analyzing conversation:', error)
-      alert('Failed to analyze conversation. Please try again.')
+      alert(`Failed to analyze conversation: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
       setIsAnalyzing(false)
     }
