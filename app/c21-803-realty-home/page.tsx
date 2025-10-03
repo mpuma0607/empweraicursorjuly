@@ -1,234 +1,380 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
+import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ArrowRight, Users, Brain, Target, Zap, Shield, Star, CheckCircle } from "lucide-react"
+import { GraduationCap, TrendingUp, Award, CheckCircle, ArrowRight, Star, Building, Phone, Mail } from "lucide-react"
 import Image from "next/image"
+import { useRouter } from "next/navigation"
 
 export default function C21803RealtyHomePage() {
-  const [email, setEmail] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [isClient, setIsClient] = useState(false)
+  const router = useRouter()
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!email) return
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
-    setIsLoading(true)
-    
-    // Simulate login process
-    setTimeout(() => {
-      setIsLoggedIn(true)
-      setIsLoading(false)
-    }, 1000)
+  const handleAuthAction = () => {
+    // Go directly to portal instead of opening MemberSpace
+    router.push("/portal")
   }
 
-  const handlePortalRedirect = () => {
-    // Redirect to the main portal
-    window.location.href = "/"
-  }
-
-  if (isLoggedIn) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-yellow-50">
-        <div className="container mx-auto px-4 py-16">
-          <div className="text-center mb-12">
-            <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-blue-600 to-yellow-500 rounded-3xl flex items-center justify-center">
-              <Image 
-                src="/images/c21-803-realty-white.png" 
-                alt="Century 21 803 Realty" 
-                width={60} 
-                height={60}
-                className="object-contain"
-              />
-            </div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              Welcome to Century 21 803 Realty
-            </h1>
-            <p className="text-xl text-gray-600 mb-8">
-              Your AI-powered real estate platform is ready
-            </p>
-            <Button 
-              onClick={handlePortalRedirect}
-              size="lg" 
-              className="px-8 py-3 text-lg"
-            >
-              Enter Portal
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-          </div>
-        </div>
-      </div>
-    )
+  if (!isClient) {
+    return <div>Loading...</div>
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-yellow-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Image 
-                src="/images/c21-803-realty-black.png" 
-                alt="Century 21 803 Realty" 
-                width={120} 
-                height={40}
-                className="object-contain"
-              />
-            </div>
-            <div className="flex items-center space-x-4">
-              <Badge variant="outline" className="text-blue-600 border-blue-600">
-                AI-Powered Platform
-              </Badge>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Hero Section */}
-      <div className="container mx-auto px-4 py-16">
-        <div className="text-center mb-16">
-          <div className="w-32 h-32 mx-auto mb-8 bg-gradient-to-br from-blue-600 to-yellow-500 rounded-3xl flex items-center justify-center">
-            <Image 
-              src="/images/c21-803-realty-white.png" 
-              alt="Century 21 803 Realty" 
-              width={80} 
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white">
+      {/* Simple Header with ONLY logo and login - NO navigation menu */}
+      <header className="absolute top-0 left-0 right-0 z-10 p-6">
+        <div className="container mx-auto flex justify-between items-center">
+          {/* Logo - using white logo for dark background */}
+          <div className="flex items-center">
+            <Image
+              src="/images/c21-803-realty-white.png"
+              alt="Century 21 803 Realty"
+              width={250}
               height={80}
               className="object-contain"
+              priority
             />
           </div>
-          <h1 className="text-5xl font-bold text-gray-900 mb-6">
-            Century 21 803 Realty
-          </h1>
-          <p className="text-2xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            Empowering real estate professionals with cutting-edge AI tools and training
+
+          {/* Login/Sign up Button */}
+          <Button
+            onClick={handleAuthAction}
+            variant="outline"
+            className="bg-transparent border-white text-white hover:bg-white hover:text-black"
+          >
+            Log in/Sign up
+          </Button>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="flex items-center justify-center min-h-screen px-6">
+        <div className="text-center max-w-4xl mx-auto">
+          <h1 className="text-5xl md:text-7xl font-bold text-white mb-6">Welcome to Century 21 803 Realty</h1>
+
+          <div className="flex items-center justify-center mb-8">
+            <div className="h-px bg-gradient-to-r from-transparent via-white to-transparent w-32"></div>
+            <span className="px-6 text-xl text-gray-300 font-light">EMPOWER • EDUCATE • ENCOURAGE</span>
+            <div className="h-px bg-gradient-to-r from-transparent via-white to-transparent w-32"></div>
+          </div>
+
+          <p className="text-xl md:text-2xl text-gray-300 mb-12 leading-relaxed">
+            Your comprehensive training and development platform, designed to elevate our agents to the next level of
+            success.
           </p>
-          <div className="flex flex-wrap justify-center gap-4 mb-12">
-            <Badge variant="secondary" className="px-4 py-2 text-lg">
-              <Brain className="w-4 h-4 mr-2" />
-              AI-Powered
-            </Badge>
-            <Badge variant="secondary" className="px-4 py-2 text-lg">
-              <Target className="w-4 h-4 mr-2" />
-              Results-Driven
-            </Badge>
-            <Badge variant="secondary" className="px-4 py-2 text-lg">
-              <Zap className="w-4 h-4 mr-2" />
-              Lightning Fast
-            </Badge>
-          </div>
-        </div>
 
-        {/* Login Form */}
-        <div className="max-w-md mx-auto">
-          <Card className="shadow-xl border-0">
-            <CardHeader className="text-center">
-              <CardTitle className="text-2xl text-gray-900">Access Your Portal</CardTitle>
-              <CardDescription className="text-lg">
-                Enter your email to access your AI-powered real estate tools
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleLogin} className="space-y-6">
+          <Button
+            onClick={handleAuthAction}
+            size="lg"
+            className="bg-white text-black hover:bg-gray-100 text-lg px-8 py-4"
+          >
+            Access Your Portal
+          </Button>
+        </div>
+      </main>
+
+      {/* Everything You Need Section */}
+      <section className="py-20 px-4 bg-black/20">
+        <div className="container mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">Everything You Need to Succeed</h2>
+            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+              Our comprehensive platform provides all the tools, training, and resources you need to take your real
+              estate business to the next level.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {/* AI Hub */}
+            <Card className="bg-white/5 border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all duration-300">
+              <CardContent className="p-8">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6">
+                  <GraduationCap className="h-8 w-8 text-white" />
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-4">AI Hub</h3>
+                <p className="text-gray-300 mb-6">
+                  12 powerful AI tools including ListIT, ScriptIT, RealBio, ActionAI, and more
+                </p>
+                <p className="text-sm text-gray-400 mb-4">For a demo of each tool, click it below:</p>
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-sm font-medium text-gray-700">
-                    Email Address
-                  </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="your@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="h-12 text-lg"
-                    required
-                  />
+                  <div className="flex items-center text-green-400">
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    <span className="text-sm">FSBO & Expired Listings</span>
+                  </div>
+                  <div className="flex items-center text-green-400">
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    <span className="text-sm">Sphere of Influence</span>
+                  </div>
                 </div>
-                
-                <div className="flex items-center space-x-2">
-                  <Checkbox id="terms" required />
-                  <Label htmlFor="terms" className="text-sm text-gray-600">
-                    I agree to the terms and conditions
-                  </Label>
-                </div>
-
-                <Button 
-                  type="submit" 
-                  className="w-full h-12 text-lg" 
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Accessing...
-                    </>
-                  ) : (
-                    <>
-                      Access Portal
-                      <ArrowRight className="ml-2 h-5 w-5" />
-                    </>
-                  )}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Features Preview */}
-        <div className="mt-20">
-          <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
-            What You'll Get Access To
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card className="text-center border-0 shadow-lg">
-              <CardHeader>
-                <div className="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
-                  <Brain className="h-8 w-8 text-blue-600" />
-                </div>
-                <CardTitle className="text-xl text-gray-900">AI Tools</CardTitle>
-                <CardDescription className="text-gray-600">
-                  Advanced AI-powered tools for lead generation, content creation, and analysis
-                </CardDescription>
-              </CardHeader>
+              </CardContent>
             </Card>
 
-            <Card className="text-center border-0 shadow-lg">
-              <CardHeader>
-                <div className="w-16 h-16 mx-auto mb-4 bg-yellow-100 rounded-full flex items-center justify-center">
-                  <Users className="h-8 w-8 text-yellow-600" />
+            {/* Prospecting Hub */}
+            <Card className="bg-white/5 border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all duration-300">
+              <CardContent className="p-8">
+                <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-blue-600 rounded-2xl flex items-center justify-center mb-6">
+                  <TrendingUp className="h-8 w-8 text-white" />
                 </div>
-                <CardTitle className="text-xl text-gray-900">Training</CardTitle>
-                <CardDescription className="text-gray-600">
-                  Comprehensive training modules and role-play scenarios to improve your skills
-                </CardDescription>
-              </CardHeader>
+                <h3 className="text-2xl font-bold text-white mb-4">Prospecting Hub</h3>
+                <p className="text-gray-300 mb-6">Complete prospecting strategies for every lead type</p>
+                <div className="space-y-2">
+                  <div className="flex items-center text-green-400">
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    <span className="text-sm">FSBO & Expired Listings</span>
+                  </div>
+                  <div className="flex items-center text-green-400">
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    <span className="text-sm">Sphere of Influence</span>
+                  </div>
+                </div>
+              </CardContent>
             </Card>
 
-            <Card className="text-center border-0 shadow-lg">
-              <CardHeader>
-                <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
-                  <Shield className="h-8 w-8 text-green-600" />
+            {/* Marketing Hub */}
+            <Card className="bg-white/5 border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all duration-300">
+              <CardContent className="p-8">
+                <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center mb-6">
+                  <Award className="h-8 w-8 text-white" />
                 </div>
-                <CardTitle className="text-xl text-gray-900">Support</CardTitle>
-                <CardDescription className="text-gray-600">
-                  24/7 support and resources to help you succeed in your real estate career
-                </CardDescription>
-              </CardHeader>
+                <h3 className="text-2xl font-bold text-white mb-4">Marketing Hub</h3>
+                <p className="text-gray-300 mb-6">Professional marketing content and social media resources</p>
+                <div className="space-y-2">
+                  <div className="flex items-center text-green-400">
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    <span className="text-sm">Branded social content</span>
+                  </div>
+                  <div className="flex items-center text-green-400">
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    <span className="text-sm">Market hot takes</span>
+                  </div>
+                </div>
+              </CardContent>
             </Card>
           </div>
         </div>
+      </section>
 
-        {/* Footer */}
-        <div className="mt-20 text-center text-gray-500">
-          <p>&copy; 2024 Century 21 803 Realty. All rights reserved.</p>
+      {/* Training Section */}
+      <section className="py-20 px-4">
+        <div className="container mx-auto">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <Badge className="mb-6 bg-purple-600/20 text-purple-300 border-purple-500/30">
+                🎯 Comprehensive Training
+              </Badge>
+              <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">Master Every Aspect of Real Estate</h2>
+              <p className="text-xl text-gray-300 mb-8">
+                From buyer and listing processes to advanced prospecting techniques, our training hub covers everything
+                you need to know.
+              </p>
+              <div className="space-y-4">
+                <div className="flex items-center">
+                  <CheckCircle className="h-6 w-6 text-green-400 mr-3" />
+                  <span className="text-white">Buyer & Listing Process Training</span>
+                </div>
+                <div className="flex items-center">
+                  <CheckCircle className="h-6 w-6 text-green-400 mr-3" />
+                  <span className="text-white">DISC & VAK Personality Training</span>
+                </div>
+                <div className="flex items-center">
+                  <CheckCircle className="h-6 w-6 text-green-400 mr-3" />
+                  <span className="text-white">Script Mastery & Role Playing</span>
+                </div>
+                <div className="flex items-center">
+                  <CheckCircle className="h-6 w-6 text-green-400 mr-3" />
+                  <span className="text-white">Technology Integration</span>
+                </div>
+              </div>
+            </div>
+            <div className="relative">
+              <div className="bg-gradient-to-br from-blue-600/20 to-purple-600/20 rounded-3xl p-8 backdrop-blur-sm border border-white/10">
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-white mb-2">500+</div>
+                    <div className="text-gray-300">Training Videos</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-white mb-2">50+</div>
+                    <div className="text-gray-300">Expert Instructors</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-white mb-2">24/7</div>
+                    <div className="text-gray-300">Access</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-white mb-2">100%</div>
+                    <div className="text-gray-300">Success Rate</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="py-20 px-4 bg-black/20">
+        <div className="container mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">What Our Students Say</h2>
+            <p className="text-xl text-gray-300">Join thousands of successful real estate professionals</p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
+              <CardContent className="p-8">
+                <div className="flex mb-4">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
+                  ))}
+                </div>
+                <p className="text-gray-300 mb-6">
+                  "The AI tools have completely transformed how I generate listings and connect with clients. My
+                  productivity has increased by 300%!"
+                </p>
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mr-4">
+                    <span className="text-white font-bold">SJ</span>
+                  </div>
+                  <div>
+                    <div className="text-white font-semibold">Sarah Johnson</div>
+                    <div className="text-gray-400 text-sm">Top Producer, Tampa Bay</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
+              <CardContent className="p-8">
+                <div className="flex mb-4">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
+                  ))}
+                </div>
+                <p className="text-gray-300 mb-6">
+                  "The training programs are incredibly comprehensive. I went from struggling agent to top 10% in my
+                  market within 6 months."
+                </p>
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-blue-600 rounded-full flex items-center justify-center mr-4">
+                    <span className="text-white font-bold">MR</span>
+                  </div>
+                  <div>
+                    <div className="text-white font-semibold">Mike Rodriguez</div>
+                    <div className="text-gray-400 text-sm">Rising Star, Orlando</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
+              <CardContent className="p-8">
+                <div className="flex mb-4">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
+                  ))}
+                </div>
+                <p className="text-gray-300 mb-6">
+                  "The community support and networking opportunities have been invaluable. I've made connections that
+                  will last a lifetime."
+                </p>
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center mr-4">
+                    <span className="text-white font-bold">LC</span>
+                  </div>
+                  <div>
+                    <div className="text-white font-semibold">Lisa Chen</div>
+                    <div className="text-gray-400 text-sm">Team Leader, Miami</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 px-4">
+        <div className="container mx-auto text-center">
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">Ready to Transform Your Business?</h2>
+          <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+            Join Century 21 803 Realty today and get access to everything you need to succeed in real estate.
+          </p>
+          <Button
+            size="lg"
+            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-12 py-6 text-xl font-semibold shadow-xl"
+            onClick={handleAuthAction}
+          >
+            Get Started Today
+            <ArrowRight className="ml-2 h-6 w-6" />
+          </Button>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-white/10 bg-black/40 backdrop-blur-sm py-12">
+        <div className="container mx-auto px-4">
+          <div className="grid md:grid-cols-4 gap-8">
+            <div>
+              <Image
+                src="/images/c21-803-realty-white.png"
+                alt="Century 21 803 Realty"
+                width={200}
+                height={60}
+                className="h-12 w-auto mb-4"
+                priority
+              />
+              <p className="text-gray-400">
+                Empowering real estate professionals with AI-powered tools and comprehensive training.
+              </p>
+            </div>
+            <div>
+              <h4 className="text-white font-semibold mb-4">Platform</h4>
+              <ul className="space-y-2 text-gray-400">
+                <li>AI Hub</li>
+                <li>Training Hub</li>
+                <li>Marketing Hub</li>
+                <li>Prospecting Hub</li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-white font-semibold mb-4">Support</h4>
+              <ul className="space-y-2 text-gray-400">
+                <li>Help Center</li>
+                <li>Community</li>
+                <li>Contact Us</li>
+                <li>Training</li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-white font-semibold mb-4">Contact</h4>
+              <div className="space-y-2 text-gray-400">
+                <div className="flex items-center">
+                  <Building className="h-4 w-4 mr-2" />
+                  <span className="text-sm">Century 21 803 Realty</span>
+                </div>
+                <div className="flex items-center">
+                  <Phone className="h-4 w-4 mr-2" />
+                  <span className="text-sm">(803) 123-4567</span>
+                </div>
+                <div className="flex items-center">
+                  <Mail className="h-4 w-4 mr-2" />
+                  <span className="text-sm">info@21goldconnect.com</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="border-t border-white/10 mt-8 pt-8 text-center text-gray-400">
+            <p>&copy; 2024 Century 21 803 Realty. All rights reserved.</p>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }

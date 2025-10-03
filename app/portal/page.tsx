@@ -29,6 +29,10 @@ export default function PortalPage() {
           hostname === 'begginsuniversity.com' ||
           hostname === 'www.begginsuniversity.com') {
         signInUrl = "https://begginsuniversity.com?msopen=/member/sign_in"
+      } else if (hostname === '21goldconnect.com' ||
+                 hostname === 'www.21goldconnect.com' ||
+                 hostname === '803.thenextlevelu.com') {
+        signInUrl = "https://21goldconnect.com?msopen=/member/sign_in"
       } else if (hostname === 'getempowerai.com' ||
                  hostname === 'www.getempowerai.com') {
         signInUrl = "https://getempowerai.com?msopen=/member/sign_in"
