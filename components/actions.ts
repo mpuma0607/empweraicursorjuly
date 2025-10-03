@@ -331,11 +331,24 @@ async function fetchComparableHomesWithFallback(address: string) {
             
             // Find where the city starts (before state and zip)
             const stateIndex = parts.findIndex(part => part === 'FL')
-            const zipIndex = parts.findIndex(part => part === '33543')
+            const zipIndex = parts.findIndex(part => /^\d{5}$/.test(part)) // Find 5-digit zip code
             
             if (stateIndex > 0 && zipIndex > stateIndex) {
               // Extract street (everything before city)
-              const streetParts = parts.slice(0, stateIndex - 1) // "28702", "Falling", "Leaves", "Way"
+              // City is everything between street and state, so we need to find where city starts
+              // Look for the last word before state that's not a street suffix
+              const streetSuffixes = ['Way', 'Street', 'Avenue', 'Road', 'Drive', 'Lane', 'Court', 'Place', 'Boulevard']
+              let cityStartIndex = stateIndex - 1
+              
+              // Find where the city actually starts by looking for street suffix
+              for (let i = stateIndex - 1; i >= 0; i--) {
+                if (streetSuffixes.includes(parts[i])) {
+                  cityStartIndex = i + 1
+                  break
+                }
+              }
+              
+              const streetParts = parts.slice(0, cityStartIndex)
               const street = streetParts.join(' ')
               
               // Build new address with new city
