@@ -28,14 +28,15 @@ interface SmartyResponse {
 
 export async function getCitiesForZipCode(zipCode: string): Promise<string[]> {
   try {
-    console.log("=== Smarty API: Getting cities for zip code ===")
+    console.log("=== Smarty Address Verification API: Getting cities for zip code ===")
     console.log("Zip Code:", zipCode)
 
     if (!process.env.SMARTY_AUTH_ID || !process.env.SMARTY_AUTH_TOKEN) {
       throw new Error("Smarty API credentials not configured")
     }
 
-    const apiUrl = `https://us-zipcode.api.smarty.com/lookup?auth-id=${process.env.SMARTY_AUTH_ID}&auth-token=${process.env.SMARTY_AUTH_TOKEN}&zipcode=${zipCode}`
+    // Use Address Verification API with just zip code
+    const apiUrl = `https://us-street.api.smarty.com/street-address?auth-id=${process.env.SMARTY_AUTH_ID}&auth-token=${process.env.SMARTY_AUTH_TOKEN}&zipcode=${zipCode}`
 
     console.log("Smarty API URL:", apiUrl)
 
@@ -43,7 +44,7 @@ export async function getCitiesForZipCode(zipCode: string): Promise<string[]> {
       method: "GET",
       headers: {
         "Content-Type": "application/json; charset=utf-8",
-        "Host": "us-zipcode.api.smarty.com"
+        "Host": "us-street.api.smarty.com"
       }
     })
 
@@ -55,29 +56,18 @@ export async function getCitiesForZipCode(zipCode: string): Promise<string[]> {
       throw new Error(`Smarty API failed: ${response.status} - ${response.statusText}`)
     }
 
-    const data: SmartyResponse[] = await response.json()
-    console.log("Smarty API Response:", data)
+    const data: any[] = await response.json()
+    console.log("Smarty API Response:", JSON.stringify(data, null, 2))
 
     if (!data || data.length === 0) {
       console.log("No data returned from Smarty API")
       return []
     }
 
-    const result = data[0]
-    
-    if (result.status) {
-      console.log("Smarty API Error Status:", result.status, result.reason)
-      return []
-    }
-
-    if (!result.city_states || result.city_states.length === 0) {
-      console.log("No city_states found in response")
-      return []
-    }
-
-    // Extract all city names from the response
-    const cities = result.city_states.map(cityState => cityState.city)
+    // Extract unique city names from the address verification results
+    const cities = [...new Set(data.map(result => result.components?.city_name).filter(Boolean))]
     console.log("Cities found for zip code", zipCode, ":", cities)
+    console.log("Number of cities:", cities.length)
 
     return cities
 

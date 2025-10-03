@@ -299,13 +299,49 @@ async function fetchComparableHomesWithFallback(address: string) {
 
     console.log("📍 Extracted zip code:", zipCode)
 
+    // Check if Smarty API credentials are configured
+    if (!process.env.SMARTY_AUTH_ID || !process.env.SMARTY_AUTH_TOKEN) {
+      console.log("⚠️ Smarty API credentials not configured, trying without city name")
+      
+      // Try without city name as fallback
+      try {
+        const addressParts = address.trim().split(/\s+/)
+        const stateZip = addressParts.slice(-2).join(' ') // Get last two parts (state zip)
+        const street = addressParts.slice(0, -2).join(' ') // Get everything except last two parts
+        const addressWithoutCity = `${street} ${stateZip}`
+        
+        console.log("🔄 Trying address without city:", addressWithoutCity)
+        const result = await fetchComparableHomes(addressWithoutCity)
+        console.log("✅ Success without city name!")
+        return result
+      } catch (error) {
+        console.log("❌ Failed without city name:", error instanceof Error ? error.message : String(error))
+        throw new Error("Smarty API not configured and address without city also failed")
+      }
+    }
+
     // Get all valid cities for this zip code
     const validCities = await getCitiesForZipCode(zipCode)
     console.log("🏙️ Valid cities for zip", zipCode, ":", validCities)
 
     if (validCities.length === 0) {
-      console.log("❌ No valid cities found for zip code")
-      throw new Error("No valid cities found for this zip code")
+      console.log("❌ No valid cities found for zip code, trying without city name")
+      
+      // Try without city name as last resort
+      try {
+        const addressParts = address.trim().split(/\s+/)
+        const stateZip = addressParts.slice(-2).join(' ') // Get last two parts (state zip)
+        const street = addressParts.slice(0, -2).join(' ') // Get everything except last two parts
+        const addressWithoutCity = `${street} ${stateZip}`
+        
+        console.log("🔄 Trying address without city:", addressWithoutCity)
+        const result = await fetchComparableHomes(addressWithoutCity)
+        console.log("✅ Success without city name!")
+        return result
+      } catch (error) {
+        console.log("❌ Failed without city name:", error instanceof Error ? error.message : String(error))
+        throw new Error("No valid cities found for this zip code and address without city also failed")
+      }
     }
 
     // Try each valid city until one works
@@ -313,8 +349,20 @@ async function fetchComparableHomesWithFallback(address: string) {
       try {
         console.log(`🔄 Trying city: ${city}`)
         
-        // Rebuild address with this city
-        const newAddress = address.replace(/\b[A-Za-z\s]+\b(?=\s+\w{2}\s+\d{5})/, city)
+        // Better address rebuilding - replace the city part more precisely
+        // Look for pattern: "Street City State Zip"
+        const addressRegex = /^(.+?)\s+([A-Za-z\s]+?)\s+([A-Z]{2})\s+(\d{5})/
+        const match = address.match(addressRegex)
+        
+        let newAddress
+        if (match) {
+          const [, street, , state, zip] = match
+          newAddress = `${street} ${city} ${state} ${zip}`
+        } else {
+          // Fallback: simple replacement
+          newAddress = address.replace(/\b[A-Za-z\s]+\b(?=\s+\w{2}\s+\d{5})/, city)
+        }
+        
         console.log("📍 New address:", newAddress)
         
         const result = await fetchComparableHomes(newAddress)
