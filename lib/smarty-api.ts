@@ -30,8 +30,11 @@ export async function getCitiesForZipCode(zipCode: string): Promise<string[]> {
   try {
     console.log("=== Smarty ZIP Code API: Getting cities for zip code ===")
     console.log("Zip Code:", zipCode)
+    console.log("SMARTY_AUTH_ID exists:", !!process.env.SMARTY_AUTH_ID)
+    console.log("SMARTY_AUTH_TOKEN exists:", !!process.env.SMARTY_AUTH_TOKEN)
 
     if (!process.env.SMARTY_AUTH_ID || !process.env.SMARTY_AUTH_TOKEN) {
+      console.log("❌ Smarty API credentials not configured")
       throw new Error("Smarty API credentials not configured")
     }
 
@@ -43,8 +46,7 @@ export async function getCitiesForZipCode(zipCode: string): Promise<string[]> {
     const response = await fetch(apiUrl, {
       method: "GET",
       headers: {
-        "Content-Type": "application/json; charset=utf-8",
-        "Host": "us-zipcode.api.smarty.com"
+        "Content-Type": "application/json; charset=utf-8"
       }
     })
 
@@ -91,8 +93,8 @@ export async function getCitiesForZipCode(zipCode: string): Promise<string[]> {
 
 export function extractZipCodeFromAddress(address: string): string | null {
   // Extract zip code from address using regex
-  // Look for 5-digit zip code pattern
-  const zipMatch = address.match(/\b(\d{5})\b/)
+  // Look for 5-digit zip code pattern at the END of the address
+  const zipMatch = address.match(/\b(\d{5})\b\s*$/)
   return zipMatch ? zipMatch[1] : null
 }
 
