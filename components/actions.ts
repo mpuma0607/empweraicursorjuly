@@ -324,17 +324,31 @@ async function fetchComparableHomesWithFallback(address: string) {
             console.log(`🔄 Trying city: ${city}`)
             
             // Build address with this city using Smarty's components
-            const parts = smartyResult.correctedAddress.split(' ')
-            const streetAndSuffix = parts.slice(0, -3).join(' ') // Everything except city, state, zip
-            const state = parts[parts.length - 2]
-            const zip = parts[parts.length - 1]
+            // Smarty corrected address: "28702 Falling Leaves Way Wesley Chapel FL 33543"
+            // We need to replace "Wesley Chapel" with the new city
+            const correctedAddress = smartyResult.correctedAddress
+            const parts = correctedAddress.split(' ')
             
-            const newAddress = `${streetAndSuffix} ${city} ${state} ${zip}`
-            console.log("📍 New address with city:", newAddress)
+            // Find where the city starts (before state and zip)
+            const stateIndex = parts.findIndex(part => part === 'FL')
+            const zipIndex = parts.findIndex(part => part === '33543')
             
-            const result = await fetchComparableHomes(newAddress)
-            console.log(`✅ Success with city: ${city}`)
-            return result
+            if (stateIndex > 0 && zipIndex > stateIndex) {
+              // Extract street (everything before city)
+              const streetParts = parts.slice(0, stateIndex - 1) // "28702", "Falling", "Leaves", "Way"
+              const street = streetParts.join(' ')
+              
+              // Build new address with new city
+              const newAddress = `${street} ${city} ${parts[stateIndex]} ${parts[zipIndex]}`
+              console.log("📍 New address with city:", newAddress)
+              
+              const result = await fetchComparableHomes(newAddress)
+              console.log(`✅ Success with city: ${city}`)
+              return result
+            } else {
+              console.log("❌ Could not parse corrected address properly")
+              continue
+            }
           } catch (error) {
             console.log(`❌ Failed with city ${city}:`, error instanceof Error ? error.message : String(error))
             continue
