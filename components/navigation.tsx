@@ -324,7 +324,8 @@ export default function Navigation() {
         item.title === "Marketing Hub" &&
         (tenantConfig.id === "empower-ai" ||
           tenantConfig.id === "empower-beta" ||
-          tenantConfig.id === "century21-beggins")
+          tenantConfig.id === "century21-beggins" ||
+          tenantConfig.id === "century21-803-realty")
       ) {
         // Add Dynamic Branded Content as the first item
         filteredSubmenu.unshift({
