@@ -177,92 +177,105 @@ export default function RolePlay2Page() {
           </p>
         </div>
 
-        {/* Main RolePlay Interface */}
+        {/* Cerebras RolePlay Interface */}
         <Card className="mb-8">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Volume2 className="h-5 w-5" />
-              Conversation Practice
+              AI Roleplay Practice
             </CardTitle>
             <CardDescription>
-              Start a role-play conversation and get AI-powered coaching feedback
+              Practice with Cerebras AI and get real-time coaching feedback
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {!conversationStarted && !conversationEnded && (
-              <div className="text-center py-8">
-                <div className="mb-6">
-                  <div className="w-24 h-24 mx-auto mb-4 bg-primary/10 rounded-full flex items-center justify-center">
-                    <Play className="h-12 w-12 text-primary" />
+            {/* Recording Controls */}
+            <div className="mb-6">
+              {!conversationStarted && !conversationEnded && (
+                <div className="text-center py-4">
+                  <div className="mb-4">
+                    <h3 className="text-lg font-semibold mb-2">Ready to Practice?</h3>
+                    <p className="text-muted-foreground mb-4">
+                      Start recording to capture your conversation for AI analysis
+                    </p>
                   </div>
-                  <h3 className="text-xl font-semibold mb-2">Ready to Practice?</h3>
-                  <p className="text-muted-foreground mb-6">
-                    Click start to begin your role-play conversation. The AI will analyze your performance and provide detailed feedback.
-                  </p>
+                  <Button onClick={startConversation} size="lg" className="px-8">
+                    <Mic className="h-4 w-4 mr-2" />
+                    Start Recording & Practice
+                  </Button>
                 </div>
-                <Button onClick={startConversation} size="lg" className="px-8">
-                  <Mic className="h-4 w-4 mr-2" />
-                  Start Conversation
-                </Button>
-              </div>
-            )}
+              )}
 
-            {conversationStarted && (
-              <div className="text-center py-8">
-                <div className="mb-6">
-                  <div className="w-24 h-24 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
-                    <Mic className="h-12 w-12 text-red-600" />
+              {conversationStarted && (
+                <div className="text-center py-4 bg-red-50 rounded-lg border border-red-200">
+                  <div className="mb-4">
+                    <div className="w-16 h-16 mx-auto mb-3 bg-red-100 rounded-full flex items-center justify-center">
+                      <Mic className="h-8 w-8 text-red-600" />
+                    </div>
+                    <h3 className="text-lg font-semibold mb-2 text-red-800">Recording in Progress</h3>
+                    <p className="text-red-600 mb-3">
+                      Duration: <span className="font-mono text-xl font-bold">{formatDuration(recordingDuration)}</span>
+                    </p>
+                    <Badge variant="destructive" className="mb-4">
+                      <Mic className="h-3 w-3 mr-1" />
+                      Recording
+                    </Badge>
                   </div>
-                  <h3 className="text-xl font-semibold mb-2">Recording in Progress</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Duration: <span className="font-mono text-lg">{formatDuration(recordingDuration)}</span>
-                  </p>
-                  <Badge variant="destructive" className="mb-4">
-                    <Mic className="h-3 w-3 mr-1" />
-                    Recording
-                  </Badge>
+                  <Button onClick={endConversation} variant="destructive" size="lg" className="px-8">
+                    <Square className="h-4 w-4 mr-2" />
+                    Stop Recording
+                  </Button>
                 </div>
-                <Button onClick={endConversation} variant="destructive" size="lg" className="px-8">
-                  <Square className="h-4 w-4 mr-2" />
-                  End Conversation
-                </Button>
-              </div>
-            )}
+              )}
 
-            {conversationEnded && !analysis && (
-              <div className="text-center py-8">
-                <div className="mb-6">
-                  <div className="w-24 h-24 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
-                    <BarChart3 className="h-12 w-12 text-green-600" />
+              {conversationEnded && !analysis && (
+                <div className="text-center py-4 bg-green-50 rounded-lg border border-green-200">
+                  <div className="mb-4">
+                    <div className="w-16 h-16 mx-auto mb-3 bg-green-100 rounded-full flex items-center justify-center">
+                      <BarChart3 className="h-8 w-8 text-green-600" />
+                    </div>
+                    <h3 className="text-lg font-semibold mb-2 text-green-800">Conversation Complete</h3>
+                    <p className="text-green-600 mb-3">
+                      Duration: <span className="font-mono text-xl font-bold">{formatDuration(recordingDuration)}</span>
+                    </p>
+                    <p className="text-green-600 mb-4">
+                      Ready to analyze your performance?
+                    </p>
                   </div>
-                  <h3 className="text-xl font-semibold mb-2">Conversation Complete</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Duration: <span className="font-mono text-lg">{formatDuration(recordingDuration)}</span>
-                  </p>
-                  <p className="text-muted-foreground mb-6">
-                    Ready to analyze your performance?
-                  </p>
+                  <Button 
+                    onClick={analyzeConversation} 
+                    size="lg" 
+                    className="px-8 bg-green-600 hover:bg-green-700"
+                    disabled={isAnalyzing}
+                  >
+                    {isAnalyzing ? (
+                      <>
+                        <Clock className="h-4 w-4 mr-2 animate-spin" />
+                        Analyzing...
+                      </>
+                    ) : (
+                      <>
+                        <BarChart3 className="h-4 w-4 mr-2" />
+                        Analyze Performance
+                      </>
+                    )}
+                  </Button>
                 </div>
-                <Button 
-                  onClick={analyzeConversation} 
-                  size="lg" 
-                  className="px-8"
-                  disabled={isAnalyzing}
-                >
-                  {isAnalyzing ? (
-                    <>
-                      <Clock className="h-4 w-4 mr-2 animate-spin" />
-                      Analyzing...
-                    </>
-                  ) : (
-                    <>
-                      <BarChart3 className="h-4 w-4 mr-2" />
-                      Analyze Performance
-                    </>
-                  )}
-                </Button>
-              </div>
-            )}
+              )}
+            </div>
+
+            {/* Cerebras AI Interface */}
+            <div className="bg-white p-4 rounded-lg border border-gray-200">
+              <iframe
+                src="https://cerebras.vercel.app/"
+                width="100%"
+                height="700"
+                style={{ border: "none", borderRadius: "8px" }}
+                title="Cerebras Voice AI - Real Estate Roleplay Training"
+                allow="microphone *; camera *; fullscreen *; autoplay *; clipboard-read; clipboard-write"
+                sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals allow-presentation allow-downloads allow-pointer-lock allow-top-navigation"
+              />
+            </div>
           </CardContent>
         </Card>
 
